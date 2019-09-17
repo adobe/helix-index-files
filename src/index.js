@@ -11,15 +11,73 @@
  */
 
 const { wrap } = require('@adobe/helix-status');
+const algoliasearch = require('algoliasearch');
+const request = require('request-promise-native');
+const p = require('path');
+
+function makeparents(filename = '') {
+  const parent = p.dirname(filename[0] === '/' ? filename : `/${filename}`);
+  if (parent === '/' || parent === '.' || !parent) {
+    return ['/'];
+  }
+  return [...makeparents(parent), parent];
+}
+
 /**
  * This is the main function
  * @param {string} name name of the person to greet
  * @returns {object} a greeting
  */
-function main({ name = 'world' } = {}) {
-  return {
-    body: `Hello, ${name}.`,
+async function main({
+  owner, repo, ref, branch, path, token, sha, ALGOLIA_APP_ID, ALGOLIA_API_KEY,
+}) {
+  if (!(owner && repo && ref && branch && path && token && sha
+    && ALGOLIA_API_KEY && ALGOLIA_APP_ID)) {
+    throw new Error('Missing required parameters');
+  }
+  const algolia = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
+  const index = algolia.initIndex(`${owner}--${repo}`);
+
+  const filters = `sha:${sha} AND path:${path} AND branch:${branch}`;
+  const { nbHits } = await index.search({
+    attributesToRetrieve: ['path', 'name'],
+    filters,
+  });
+  if (nbHits) {
+    // document already exists, do nothing
+    return {
+      status: 'existing',
+    };
+  }
+
+  const type = p.extname(path).replace(/ /g, '');
+
+  const doc = {
+    objectID: `${branch}--${path}`,
+    name: p.basename(path),
+    parents: makeparents(`/${path}`),
+    dir: p.dirname(path),
+    type,
   };
+
+  const url = `https://adobeioruntime.net/api/v1/web/helix-pages/dynamic%40v1/idx_json?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
+
+  try {
+    const response = await request({
+      url,
+      json: true,
+    });
+    Object.assign(doc, response);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.log(`Unable to load full metadata for${url}`);
+  }
+
+  index.setSettings({
+    attributesForFaceting: ['refs', 'filterOnly(path)', 'type', 'parents'],
+  });
+
+  return index.saveObjects([doc]);
 }
 
 module.exports = { main: wrap(main) };
