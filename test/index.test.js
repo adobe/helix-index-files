@@ -15,16 +15,35 @@
 'use strict';
 
 const assert = require('assert');
+const { AssertionError } = require('assert');
+const { condit } = require('@adobe/helix-testutils');
 const index = require('../src/index.js').main;
 
 describe('Index Tests', () => {
-  it('index function is present', async () => {
-    const result = await index({});
-    assert.deepEqual(result, { body: 'Hello, world.' });
+  it('index function bails if neccessary arguments are missing', async () => {
+    try {
+      await index();
+      assert.fail('this should not happen');
+    } catch (e) {
+      if (e instanceof AssertionError) {
+        throw e;
+      }
+      assert.ok(e);
+    }
   });
 
-  it('index function returns an object', async () => {
-    const result = await index();
-    assert.equal(typeof result, 'object');
-  });
+  condit('index function updates index', condit.hasenvs(['ALGOLIA_API_KEY', 'ALGOLIA_APP_ID']), async () => {
+    const result = await index({
+      owner: 'adobe',
+      repo: 'helix-home',
+      ref: '954d95a1733f41d9214c18e7b6d650da9a0d47fc',
+      branch: 'master',
+      sha: 'fake' + new Date().getTime(),
+      path: 'hackathons/6-sxb.md',
+      ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
+      ALGOLIA_API_KEY: process.env.ALGOLIA_API_KEY
+    });
+
+    console.log(result);
+  }).timeout(10000);
 });

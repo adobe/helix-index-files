@@ -29,6 +29,7 @@
   "homepage": "https://github.com/adobe/helix-service#readme",
   "dependencies": {
     "@adobe/helix-status": "4.3.3",
+    "@adobe/helix-testutils": "^0.2.0",
     "algoliasearch": "^3.34.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7"

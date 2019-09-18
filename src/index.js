@@ -31,7 +31,7 @@ function makeparents(filename = '') {
 async function main({
   owner, repo, ref, branch, path, token, sha, ALGOLIA_APP_ID, ALGOLIA_API_KEY,
 }) {
-  if (!(owner && repo && ref && branch && path && token && sha
+  if (!(owner && repo && ref && branch && path && sha
     && ALGOLIA_API_KEY && ALGOLIA_APP_ID)) {
     throw new Error('Missing required parameters');
   }
@@ -39,45 +39,64 @@ async function main({
   const index = algolia.initIndex(`${owner}--${repo}`);
 
   const filters = `sha:${sha} AND path:${path} AND branch:${branch}`;
-  const { nbHits } = await index.search({
+  const searchresult = await index.search({
     attributesToRetrieve: ['path', 'name'],
     filters,
   });
-  if (nbHits) {
+  console.log(searchresult, filters);
+  if (searchresult.nbHits) {
     // document already exists, do nothing
     return {
       status: 'existing',
     };
   }
 
-  const type = p.extname(path).replace(/ /g, '');
+  const type = p.extname(path).replace(/\./g, '');
 
+  const docs = [];
   const doc = {
     objectID: `${branch}--${path}`,
     name: p.basename(path),
     parents: makeparents(`/${path}`),
     dir: p.dirname(path),
+    path,
+    sha,
     type,
+    branch
   };
 
-  const url = `https://adobeioruntime.net/api/v1/web/helix-pages/dynamic%40v1/idx_json?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
+  const url = `https://adobeioruntime.net/api/v1/web/trieloff/github-com--trieloff--helix-index-pipelines--master-dirty/${type}_json?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
 
   try {
     const response = await request({
       url,
       json: true,
     });
-    Object.assign(doc, response);
+
+    const fragments = response.docs.map(fragment => {
+      return Object.assign({}, doc, fragment);
+    }).map(fragment => {
+      fragment.objectID = fragment.objectID + '#' + fragment.fragmentID;
+      delete fragment.fragmentID;
+      return fragment;
+    });
+    // index all fragments
+    docs.push(...fragments);
+
+    // index the base document, too
+    const meta = response.meta;
+    Object.assign(doc, meta);
+    docs.push(doc);
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.log(`Unable to load full metadata for${url}`);
+    console.log(`Unable to load full metadata for ${url}`, e);
   }
 
   index.setSettings({
-    attributesForFaceting: ['refs', 'filterOnly(path)', 'type', 'parents'],
+    attributesForFaceting: ['filterOnly(sha)', 'filterOnly(path)', 'type', 'parents', 'branch'],
   });
 
-  return index.saveObjects([doc]);
+  return index.saveObjects(docs);
 }
 
 module.exports = { main: wrap(main) };
