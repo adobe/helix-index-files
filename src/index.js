@@ -52,6 +52,7 @@ async function main({
     return {
       statusCode: 304,
       body: {
+        path,
         index: indexname,
         status: 'existing'
       }
@@ -72,7 +73,7 @@ async function main({
     branch
   };
 
-  const url = `https://adobeioruntime.net/api/v1/web/trieloff/github-com--trieloff--helix-index-pipelines--master-dirty/${type}_json?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
+  const url = `https://adobeioruntime.net/api/v1/web/trieloff/github-com--trieloff--helix-index-pipelines--azure-images-dirty/${type}_json?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
 
   try {
     const response = await request({
@@ -103,11 +104,14 @@ async function main({
     attributesForFaceting: ['filterOnly(sha)', 'filterOnly(path)', 'type', 'parents', 'branch'],
   });
 
+  const update = await index.saveObjects(docs);
+
   return {
     statusCode: 201,
     body: {
+      path,
       index: indexname,
-      update: await index.saveObjects(docs)
+      update
     }
   };
 }
