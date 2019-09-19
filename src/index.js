@@ -33,10 +33,13 @@ async function main({
 }) {
   if (!(owner && repo && ref && branch && path && sha
     && ALGOLIA_API_KEY && ALGOLIA_APP_ID)) {
+    console.error('Missing parameters', owner, repo, ref, branch, path, token, sha, !!ALGOLIA_APP_ID, !!ALGOLIA_API_KEY);
     throw new Error('Missing required parameters');
   }
   const algolia = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
-  const index = algolia.initIndex(`${owner}--${repo}`);
+  const indexname = `${owner}--${repo}`;
+  const index = algolia.initIndex(indexname);
+  
 
   const filters = `sha:${sha} AND path:${path} AND branch:${branch}`;
   const searchresult = await index.search({
@@ -47,7 +50,11 @@ async function main({
   if (searchresult.nbHits) {
     // document already exists, do nothing
     return {
-      status: 'existing',
+      statusCode: 304,
+      body: {
+        index: indexname,
+        status: 'existing'
+      }
     };
   }
 
@@ -96,7 +103,13 @@ async function main({
     attributesForFaceting: ['filterOnly(sha)', 'filterOnly(path)', 'type', 'parents', 'branch'],
   });
 
-  return index.saveObjects(docs);
+  return {
+    statusCode: 201,
+    body: {
+      index: indexname,
+      update: await index.saveObjects(docs)
+    }
+  };
 }
 
 module.exports = { main: wrap(main) };
