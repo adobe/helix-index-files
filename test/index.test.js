@@ -38,12 +38,14 @@ describe('Index Tests', () => {
       repo: 'helix-home',
       ref: '954d95a1733f41d9214c18e7b6d650da9a0d47fc',
       branch: 'master',
+      // eslint-disable-next-line prefer-template
       sha: 'fake' + new Date().getTime(),
       path: 'hackathons/6-sxb.md',
       ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
-      ALGOLIA_API_KEY: process.env.ALGOLIA_API_KEY
+      ALGOLIA_API_KEY: process.env.ALGOLIA_API_KEY,
     });
 
-    console.log(result);
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(result, null, 2));
   }).timeout(10000);
 });
