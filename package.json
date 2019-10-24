@@ -32,7 +32,8 @@
     "@adobe/helix-testutils": "^0.2.0",
     "algoliasearch": "^3.34.0",
     "request": "^2.88.0",
-    "request-promise-native": "^1.0.7"
+    "request-promise-native": "^1.0.7",
+    "yaml": "^1.7.2"
   },
   "devDependencies": {
     "@adobe/eslint-config-helix": "1.1.0",

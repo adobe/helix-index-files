@@ -44,8 +44,24 @@ describe('Index Tests', () => {
       ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
       ALGOLIA_API_KEY: process.env.ALGOLIA_API_KEY,
     });
-
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(result, null, 2));
   }).timeout(10000);
+
+  condit('HTML update index', condit.hasenvs(['ALGOLIA_API_KEY', 'ALGOLIA_APP_ID']), async () => {
+    const result = await index({
+      owner: 'anfibiacreativa',
+      repo: 'helix-norddal',
+      ref: 'master',
+      branch: 'master',
+      // eslint-disable-next-line prefer-template
+      sha: 'fake' + new Date().getTime(),
+      path: 'posts/adobe-introduces-ai-powered-personalization-and-streamlined-activation.html',
+      ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
+      ALGOLIA_API_KEY: process.env.ALGOLIA_API_KEY,
+    });
+
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(result, null, 2));
+  }).timeout(20000);
 });

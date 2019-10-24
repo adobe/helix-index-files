@@ -17,6 +17,7 @@ const { wrap } = require('@adobe/helix-status');
 const algoliasearch = require('algoliasearch');
 const request = require('request-promise-native');
 const p = require('path');
+const YAML = require('yaml');
 
 function makeparents(filename = '') {
   const parent = p.dirname(filename[0] === '/' ? filename : `/${filename}`);
@@ -24,6 +25,50 @@ function makeparents(filename = '') {
     return ['/'];
   }
   return [...makeparents(parent), parent];
+}
+
+/**
+ * Load an index configuration from a git repo.
+ *
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} ref
+ *
+ * @returns configuration
+ */
+async function loadConfig(owner, repo, ref) {
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/helix-index.yaml`;
+  try {
+    const response = await request(url);
+    return YAML.parseDocument(response).toJSON() || {};
+  } catch (e) {
+    // config not usable return default one
+    return {
+      indices: {
+        default: {
+          properties: {},
+          attributesForFaceting: [
+            'filterOnly(sha)', 'filterOnly(path)', 'type', 'parents', 'branch',
+          ],
+        },
+      },
+    };
+  }
+}
+
+/**
+ * Return the Adobe I/O Runtime URL to invoke.
+ *
+ * @param {string} type
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} ref
+ * @param {string} path
+ */
+function getRuntimeURL(type, owner, repo, ref, path) {
+  const namespace = 'helix-pages';
+  const package = 'github-com--trieloff--helix-index-pipelines--master-dirty';
+  return `https://adobeioruntime.net/api/v1/web/${namespace}/${package}/${type}_json?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
 }
 
 /**
@@ -39,9 +84,15 @@ async function main({
     console.error('Missing parameters', owner, repo, ref, branch, path, paths, token, sha, !!ALGOLIA_APP_ID, !!ALGOLIA_API_KEY);
     throw new Error('Missing required parameters');
   }
+
+  const config = await loadConfig(owner, repo, ref);
+
+  /* Use the first index definition to setup our index */
+  const indexname = Object.keys(config.indices)[0];
+  const indexconfig = config.indices[indexname];
+
   const algolia = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
-  const indexname = `${owner}--${repo}`;
-  const index = algolia.initIndex(indexname);
+  const index = algolia.initIndex(`${owner}--${repo}--${indexname}`);
 
   if (!paths) {
     // eslint-disable-next-line no-param-reassign
@@ -50,6 +101,11 @@ async function main({
 
   // eslint-disable-next-line no-shadow
   const searchresults = await Promise.all(paths.map((path) => {
+    if (sha === 'initial') {
+      return {
+        nbHits: 0,
+      };
+    }
     const filters = `sha:${sha} AND path:${path} AND branch:${branch}`;
     const searchresult = index.search({
       attributesToRetrieve: ['path', 'name'],
@@ -84,7 +140,7 @@ async function main({
       branch,
     };
 
-    const url = `https://adobeioruntime.net/api/v1/web/trieloff/github-com--trieloff--helix-index-pipelines--azure-images-dirty/${type}_json?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
+    const url = getRuntimeURL(type, owner, repo, ref, path);
 
     try {
       const response = await request({
@@ -95,7 +151,10 @@ async function main({
       const fragments = response.docs
         .map((fragment) => ({ ...doc, ...fragment }))
         .map((fragment) => {
-          fragment.objectID = `${fragment.objectID}#${fragment.fragmentID}`;
+          // do not add an empty # if fragmentID is not defined
+          fragment.objectID = fragment.fragmentID
+            ? `${fragment.objectID}#${fragment.fragmentID}`
+            : fragment.objectID;
           delete fragment.fragmentID;
           return fragment;
         });
@@ -104,10 +163,11 @@ async function main({
 
       // index the base document, too
       const { meta } = response;
-      Object.assign(doc, meta);
-      docs.push(doc);
+      if (meta) {
+        Object.assign(doc, meta);
+        docs.push(doc);
+      }
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.log(`Unable to load full metadata for ${url}`, e);
       return {
         statusCode: 500,
@@ -118,8 +178,13 @@ async function main({
       };
     }
 
+    const customAttributes = Object.keys(indexconfig.properties)
+      .filter((name) => indexconfig.properties[name].faceted);
     await index.setSettings({
-      attributesForFaceting: ['filterOnly(sha)', 'filterOnly(path)', 'type', 'parents', 'branch'],
+      attributesForFacetting: [
+        'filterOnly(sha)', 'filterOnly(path)', 'type', 'parents', 'branch',
+        ...customAttributes,
+      ],
     });
 
     const update = await index.saveObjects(docs);
