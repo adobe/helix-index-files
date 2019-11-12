@@ -1,3 +1,19 @@
+# 1.0.0 (2019-11-12)
+
+
+### Bug Fixes
+
+* **deps:** pin dependencies ([d1af194](https://github.com/adobe/helix-index-files/commit/d1af194))
+
+
+### Features
+
+* **http:** improve response codes ([7140856](https://github.com/adobe/helix-index-files/commit/7140856))
+* **index:** add document and fragments to index ([6be0151](https://github.com/adobe/helix-index-files/commit/6be0151))
+* **index:** allow multiple paths, return multi-status response ([1d9c922](https://github.com/adobe/helix-index-files/commit/1d9c922))
+* **index:** do not add # fragment if none defined ([436c204](https://github.com/adobe/helix-index-files/commit/436c204))
+* **index:** small action to update the index for a single file ([222b977](https://github.com/adobe/helix-index-files/commit/222b977))
+
 ## [1.2.1](https://github.com/adobe/helix-service/compare/v1.2.0...v1.2.1) (2019-09-03)
 
 
