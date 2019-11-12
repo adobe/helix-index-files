@@ -1,5 +1,5 @@
 {
-  "name": "@adobe/helix-index-file",
+  "name": "@adobe/helix-index-files",
   "version": "1.2.1",
   "private": true,
   "description": "Helix File Indexing Service",
@@ -19,14 +19,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/adobe/helix-service"
+    "url": "https://github.com/adobe/helix-index-files"
   },
   "author": "",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/adobe/helix-service/issues"
+    "url": "https://github.com/adobe/helix-index-files/issues"
   },
-  "homepage": "https://github.com/adobe/helix-service#readme",
+  "homepage": "https://github.com/adobe/helix-index-files#readme",
   "dependencies": {
     "@adobe/helix-status": "4.3.3",
     "@adobe/helix-testutils": "^0.2.0",
@@ -71,5 +71,12 @@
   "wsk": {
     "name": "helix-index/index-file@${version}",
     "static": []
+  },
+  "statuspage": {
+    "name": "Helix Index Files",
+    "group": "Publishing"
+  },
+  "newrelic": {
+    "group_policy": "Publishing Repeated Failure"
   }
 }
