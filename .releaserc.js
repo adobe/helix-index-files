@@ -13,7 +13,7 @@ module.exports = {
       message: 'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}'
     }],
     ['@semantic-release/exec', {
-      publishCmd: 'npm run deploy'
+      publishCmd: 'npm run deploy --loglevel silent'
     }],
     '@semantic-release/github',
   ],
