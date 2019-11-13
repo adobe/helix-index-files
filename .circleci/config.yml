@@ -55,7 +55,9 @@ jobs:
       - run:
           name: revert changes to package-lock.json
           command: git checkout -- package-lock.json
-      - helix-post-deploy/config-wsk
+      - run:
+          name: Configure OpenWhisk
+          command: echo -e "APIHOST=https://adobeioruntime.net\nNAMESPACE=helix-index\nAUTH=$WSK_AUTH\n" > ~/.wskprops
       - helix-post-deploy/config-env
       - run:
           name: Semantic Release
