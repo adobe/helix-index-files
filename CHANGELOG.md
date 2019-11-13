@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/adobe/helix-index-files/compare/v1.0.2...v1.0.3) (2019-11-13)
+
+
+### Bug Fixes
+
+* **ci:** trigger release ([f5c0ad6](https://github.com/adobe/helix-index-files/commit/f5c0ad6))
+
 ## [1.0.2](https://github.com/adobe/helix-index-files/compare/v1.0.1...v1.0.2) (2019-11-13)
 
 
