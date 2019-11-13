@@ -70,7 +70,8 @@ jobs:
       - run:
           name: Link Sequences
           command: npm run deploy-sequences
-      - helix-post-deploy/monitoring
+      # disabled until support for custom namespace and action package
+      # - helix-post-deploy/monitoring
 
   branch-deploy:
     executor: node10
