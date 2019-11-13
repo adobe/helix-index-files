@@ -15,7 +15,7 @@
 ## Usage
 
 ```bash
-curl https://adobeioruntime.net/api/v1/web/helix-index/helix-index/index-files@v1
+curl https://adobeioruntime.net/api/v1/web/helix-index/services/index-files@v1
 ```
 
 For more, see the [API documentation](docs/API.md).
