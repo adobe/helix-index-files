@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/adobe/helix-index-files/compare/v1.0.0...v1.0.1) (2019-11-13)
+
+
+### Bug Fixes
+
+* **wsk:** use better package name ([59ce9db](https://github.com/adobe/helix-index-files/commit/59ce9db))
+
 # 1.0.0 (2019-11-12)
 
 
