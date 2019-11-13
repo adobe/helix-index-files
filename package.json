@@ -69,8 +69,7 @@
     }
   },
   "wsk": {
-    "name": "helix-index/index-file@${version}",
-    "static": []
+    "name": "services/index-files@${version}"
   },
   "statuspage": {
     "name": "Helix Index Files",
