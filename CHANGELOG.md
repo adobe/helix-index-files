@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/adobe/helix-index-files/compare/v1.0.3...v1.0.4) (2019-11-13)
+
+
+### Bug Fixes
+
+* **deploy:** use helix-services as usual ([60e84c7](https://github.com/adobe/helix-index-files/commit/60e84c7))
+
 ## [1.0.3](https://github.com/adobe/helix-index-files/compare/v1.0.2...v1.0.3) (2019-11-13)
 
 
