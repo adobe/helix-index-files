@@ -32,7 +32,7 @@
   },
   "homepage": "https://github.com/adobe/helix-index-files#readme",
   "dependencies": {
-    "@adobe/helix-status": "5.3.0",
+    "@adobe/helix-status": "6.0.2",
     "@adobe/helix-testutils": "0.2.0",
     "algoliasearch": "3.34.0",
     "request": "2.88.0",
