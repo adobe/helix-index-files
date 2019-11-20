@@ -1,3 +1,10 @@
+## [1.0.8](https://github.com/adobe/helix-index-files/compare/v1.0.7...v1.0.8) (2019-11-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-status to v7 ([ad121c7](https://github.com/adobe/helix-index-files/commit/ad121c77046610deef21a148ba04aa1abc801502))
+
 ## [1.0.7](https://github.com/adobe/helix-index-files/compare/v1.0.6...v1.0.7) (2019-11-16)
 
 
