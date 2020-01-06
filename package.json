@@ -51,7 +51,7 @@
     "codecov": "3.6.1",
     "commitizen": "4.0.3",
     "cz-conventional-changelog": "3.0.2",
-    "eslint": "6.7.2",
+    "eslint": "6.8.0",
     "eslint-plugin-header": "3.0.0",
     "eslint-plugin-import": "2.19.1",
     "jsdoc-to-markdown": "5.0.3",
@@ -60,7 +60,7 @@
     "lodash": "4.17.15",
     "mocha": "7.0.0",
     "nyc": "15.0.0",
-    "semantic-release": "15.13.31"
+    "semantic-release": "15.14.0"
   },
   "lint-staged": {
     "*.js": "eslint"
