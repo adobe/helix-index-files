@@ -59,31 +59,35 @@ async function loadConfig(owner, repo, ref) {
 /**
  * Return the Adobe I/O Runtime URL to invoke.
  *
+ * @param {string} namespace
+ * @param {string} package
  * @param {string} type
  * @param {string} owner
  * @param {string} repo
  * @param {string} ref
  * @param {string} path
  */
-function getRuntimeURL(type, owner, repo, ref, path) {
-  const namespace = 'helix-pages';
-  const package = 'github-com--trieloff--helix-index-pipelines--master-dirty';
-  return `https://adobeioruntime.net/api/v1/web/${namespace}/${package}/${type}_json?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
+function getRuntimeURL(namespace, package, type, owner, repo, ref, path) {
+  const nsp = package ? `${namespace}/${package}` : namespace;
+  return `https://adobeioruntime.net/api/v1/web/${nsp}/${type}_json?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
 }
 
 /**
  * This is the main function
- * @param {string} name name of the person to greet
- * @returns {object} a greeting
  */
 async function main({
-  owner, repo, ref, branch, path, paths, token, sha, ALGOLIA_APP_ID, ALGOLIA_API_KEY,
+  namespace, package, owner, repo, ref, branch, path, paths, sha, ALGOLIA_APP_ID, ALGOLIA_API_KEY,
 }) {
   if (!(owner && repo && ref && branch && (path || paths) && sha
     && ALGOLIA_API_KEY && ALGOLIA_APP_ID)) {
-    console.error('Missing parameters', owner, repo, ref, branch, path, paths, token, sha, !!ALGOLIA_APP_ID, !!ALGOLIA_API_KEY);
+    console.error('Missing parameters', owner, repo, ref, branch, path, paths, sha, !!ALGOLIA_APP_ID, !!ALGOLIA_API_KEY);
     throw new Error('Missing required parameters');
   }
+
+  const regex = /\/([^/]+)\/((.*)\/)?([^/]+)/;
+
+  // eslint-disable-next-line no-underscore-dangle
+  const result = process.env.__OW_ACTION_NAME.match(regex);
 
   const config = await loadConfig(owner, repo, ref);
 
@@ -140,7 +144,8 @@ async function main({
       branch,
     };
 
-    const url = getRuntimeURL(type, owner, repo, ref, path);
+    const url = getRuntimeURL(namespace || result[1], package || result[3],
+      type, owner, repo, ref, path);
 
     try {
       const response = await request({
