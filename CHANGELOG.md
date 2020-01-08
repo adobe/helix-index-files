@@ -1,3 +1,11 @@
+## [1.0.10](https://github.com/adobe/helix-index-files/compare/v1.0.9...v1.0.10) (2020-01-08)
+
+
+### Bug Fixes
+
+* **index:** Support namespace and package parameters ([a872ad4](https://github.com/adobe/helix-index-files/commit/a872ad4ea910a441bb37ebbad30152fbc2aa4a6a))
+* **index:** Support namespace and package parameters ([6b98e1f](https://github.com/adobe/helix-index-files/commit/6b98e1f0b345ca887921b72153d08b2e91270a78))
+
 ## [1.0.9](https://github.com/adobe/helix-index-files/compare/v1.0.8...v1.0.9) (2020-01-08)
 
 
