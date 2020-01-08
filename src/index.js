@@ -59,31 +59,135 @@ async function loadConfig(owner, repo, ref) {
 /**
  * Return the Adobe I/O Runtime URL to invoke.
  *
+ * @param {string} namespace
+ * @param {string} package
  * @param {string} type
  * @param {string} owner
  * @param {string} repo
  * @param {string} ref
  * @param {string} path
  */
-function getRuntimeURL(type, owner, repo, ref, path) {
-  const namespace = 'helix-pages';
-  const package = 'github-com--trieloff--helix-index-pipelines--master-dirty';
-  return `https://adobeioruntime.net/api/v1/web/${namespace}/${package}/${type}_json?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
+function getRuntimeURL(namespace, package, type, owner, repo, ref, path) {
+  const nsp = package ? `${namespace}/${package}` : namespace;
+  return `https://adobeioruntime.net/api/v1/web/${nsp}/${type}_json@latest?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
+}
+
+/**
+ * Find an existing entry.
+ *
+ * @param {object} index Algolia index
+ * @param {string} sha Expected SHA or "initial"
+ * @param {string} path Associated path of HTML document
+ * @param {string} branch Branch
+ */
+async function search(index, path, sha, branch) {
+  if (sha === 'initial') {
+    return {
+      nbHits: 0,
+      path,
+    };
+  }
+  const filters = `sha:${sha} AND path:${path} AND branch:${branch}`;
+  const searchresult = index.search({
+    attributesToRetrieve: ['path', 'name'],
+    filters,
+  });
+  return searchresult;
+}
+
+/**
+ * Index a HTML document.
+ */
+async function doIndex(
+  index, indexname, indexconfig, path, sha, branch, namespace, package, owner, repo, ref,
+) {
+  const type = p.extname(path).replace(/\./g, '');
+
+  const docs = [];
+  const doc = {
+    objectID: `${branch}--${path}`,
+    name: p.basename(path),
+    parents: makeparents(`/${path}`),
+    dir: p.dirname(path),
+    path,
+    sha,
+    type,
+    branch,
+  };
+
+  const url = getRuntimeURL(namespace, package, type, owner, repo, ref, path);
+
+  try {
+    const response = await request({
+      url,
+      json: true,
+    });
+
+    const fragments = response.docs
+      .map((fragment) => ({ ...doc, ...fragment }))
+      .map((fragment) => {
+        // do not add an empty # if fragmentID is not defined
+        fragment.objectID = fragment.fragmentID
+          ? `${fragment.objectID}#${fragment.fragmentID}`
+          : fragment.objectID;
+        delete fragment.fragmentID;
+        return fragment;
+      });
+    // index all fragments
+    docs.push(...fragments);
+
+    // index the base document, too
+    const { meta } = response;
+    if (meta) {
+      Object.assign(doc, meta);
+      docs.push(doc);
+    }
+  } catch (e) {
+    console.log(`Unable to load full metadata for ${url}`, e);
+    return {
+      statusCode: 500,
+      body: {
+        path,
+        reason: `Unable to load full metadata for ${url}`,
+      },
+    };
+  }
+
+  const customAttributes = Object.keys(indexconfig.properties)
+    .filter((name) => indexconfig.properties[name].faceted);
+  await index.setSettings({
+    attributesForFacetting: [
+      'filterOnly(sha)', 'filterOnly(path)', 'type', 'parents', 'branch',
+      ...customAttributes,
+    ],
+  });
+
+  const update = await index.saveObjects(docs);
+
+  return {
+    statusCode: 201,
+    body: {
+      path,
+      index: indexname,
+      update,
+    },
+  };
 }
 
 /**
  * This is the main function
- * @param {string} name name of the person to greet
- * @returns {object} a greeting
  */
 async function main({
-  owner, repo, ref, branch, path, paths, token, sha, ALGOLIA_APP_ID, ALGOLIA_API_KEY,
+  namespace, package, owner, repo, ref, branch, path, paths, sha, ALGOLIA_APP_ID, ALGOLIA_API_KEY,
 }) {
   if (!(owner && repo && ref && branch && (path || paths) && sha
     && ALGOLIA_API_KEY && ALGOLIA_APP_ID)) {
-    console.error('Missing parameters', owner, repo, ref, branch, path, paths, token, sha, !!ALGOLIA_APP_ID, !!ALGOLIA_API_KEY);
+    console.error('Missing parameters', owner, repo, ref, branch, path, paths, sha, !!ALGOLIA_APP_ID, !!ALGOLIA_API_KEY);
     throw new Error('Missing required parameters');
   }
+
+  // eslint-disable-next-line no-underscore-dangle
+  const [, owNamespace, owPackage] = process.env.__OW_ACTION_NAME.split('/');
 
   const config = await loadConfig(owner, repo, ref);
 
@@ -100,19 +204,7 @@ async function main({
   }
 
   // eslint-disable-next-line no-shadow
-  const searchresults = await Promise.all(paths.map((path) => {
-    if (sha === 'initial') {
-      return {
-        nbHits: 0,
-      };
-    }
-    const filters = `sha:${sha} AND path:${path} AND branch:${branch}`;
-    const searchresult = index.search({
-      attributesToRetrieve: ['path', 'name'],
-      filters,
-    });
-    return searchresult;
-  }));
+  const searchresults = await Promise.all(paths.map((path) => search(index, path, sha, branch)));
 
   const responses = await Promise.all(searchresults.map(async (searchresult) => {
     if (searchresult.nbHits) {
@@ -126,83 +218,15 @@ async function main({
         },
       };
     }
-    const type = p.extname(path).replace(/\./g, '');
-
-    const docs = [];
-    const doc = {
-      objectID: `${branch}--${path}`,
-      name: p.basename(path),
-      parents: makeparents(`/${path}`),
-      dir: p.dirname(path),
-      path,
-      sha,
-      type,
-      branch,
-    };
-
-    const url = getRuntimeURL(type, owner, repo, ref, path);
-
-    try {
-      const response = await request({
-        url,
-        json: true,
-      });
-
-      const fragments = response.docs
-        .map((fragment) => ({ ...doc, ...fragment }))
-        .map((fragment) => {
-          // do not add an empty # if fragmentID is not defined
-          fragment.objectID = fragment.fragmentID
-            ? `${fragment.objectID}#${fragment.fragmentID}`
-            : fragment.objectID;
-          delete fragment.fragmentID;
-          return fragment;
-        });
-      // index all fragments
-      docs.push(...fragments);
-
-      // index the base document, too
-      const { meta } = response;
-      if (meta) {
-        Object.assign(doc, meta);
-        docs.push(doc);
-      }
-    } catch (e) {
-      console.log(`Unable to load full metadata for ${url}`, e);
-      return {
-        statusCode: 500,
-        body: {
-          path,
-          reason: `Unable to load full metadata for ${url}`,
-        },
-      };
-    }
-
-    const customAttributes = Object.keys(indexconfig.properties)
-      .filter((name) => indexconfig.properties[name].faceted);
-    await index.setSettings({
-      attributesForFacetting: [
-        'filterOnly(sha)', 'filterOnly(path)', 'type', 'parents', 'branch',
-        ...customAttributes,
-      ],
-    });
-
-    const update = await index.saveObjects(docs);
-
-    return {
-      statusCode: 201,
-      body: {
-        path,
-        index: indexname,
-        update,
-      },
-    };
+    return doIndex(index, indexname, indexconfig, searchresult.path,
+      sha, branch, namespace || owNamespace, package || owPackage, owner, repo, ref);
   }));
 
   const results = responses.map((response) => ({
     status: response.statusCode,
     ...response.body,
   }));
+
   return {
     statusCode: 207,
     body: {
