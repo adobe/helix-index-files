@@ -94,11 +94,15 @@ async function searchByHash(index, sourceHash, branch) {
 
 /**
  * Fetch documents that will be added to our index.
+ *
+ * @param {Object} ow openwhisk client
+ * @param {Object} params parameters
  */
 async function fetchDocuments(ow, params) {
   const {
-    package, type, owner, repo, ref, branch, path, log,
+    package, owner, repo, ref, branch, path, log,
   } = params;
+  const type = p.extname(path).replace(/\./g, '');
 
   const docs = [];
   const doc = {
@@ -152,6 +156,11 @@ async function fetchDocuments(ow, params) {
   return docs;
 }
 
+/**
+ * Runtime action.
+ *
+ * @param {Object} params parameters
+ */
 async function run(params) {
   const {
     package = 'index-pipelines',
@@ -204,14 +213,9 @@ async function run(params) {
   })));
 
   const responses = await Promise.all(searchresults.map(async ({ path, hit }) => {
-    const type = p.extname(path).replace(/\./g, '');
-    // const url = getRuntimeURL(namespace || owNamespace, package || owPackage,
-    //   type, owner, repo, ref, path);
-    let docs;
-
     try {
-      docs = await fetchDocuments(ow, {
-        package, type, owner, repo, ref, branch, path, log,
+      const docs = await fetchDocuments(ow, {
+        package, owner, repo, ref, branch, path, log,
       });
       if (docs.length === 0) {
         if (hit) {
