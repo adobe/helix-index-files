@@ -1,3 +1,10 @@
+## [1.0.13](https://github.com/adobe/helix-index-files/compare/v1.0.12...v1.0.13) (2020-01-16)
+
+
+### Bug Fixes
+
+* **index:** deleting the wrong entry in the index ([41a306a](https://github.com/adobe/helix-index-files/commit/41a306ab5144bd8bbb1bcc92dcc2e1564a5c46c4))
+
 ## [1.0.12](https://github.com/adobe/helix-index-files/compare/v1.0.11...v1.0.12) (2020-01-16)
 
 
