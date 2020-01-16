@@ -16,6 +16,7 @@
 const { wrap } = require('@adobe/helix-status');
 const algoliasearch = require('algoliasearch');
 const request = require('request-promise-native');
+const { StatusCodeError } = require('request-promise-native/errors');
 const p = require('path');
 const YAML = require('yaml');
 
@@ -73,36 +74,41 @@ function getRuntimeURL(namespace, package, type, owner, repo, ref, path) {
 }
 
 /**
- * Find an existing entry.
+ * Find an existing entry, given its path and branch.
  *
  * @param {object} index Algolia index
- * @param {string} sha Expected SHA or "initial"
  * @param {string} path Associated path of HTML document
  * @param {string} branch Branch
  */
-async function search(index, path, sha, branch) {
-  if (sha === 'initial') {
-    return {
-      nbHits: 0,
-      path,
-    };
-  }
-  const filters = `sha:${sha} AND path:${path} AND branch:${branch}`;
-  const searchresult = index.search({
-    attributesToRetrieve: ['path', 'name'],
+async function searchByPath(index, path, branch) {
+  const filters = `path:${path} AND branch:${branch}`;
+  const searchresult = await index.search({
+    attributesToRetrieve: ['path', 'name', 'objectID', 'sourceHash'],
     filters,
   });
-  return searchresult;
+  return searchresult.nbHits !== 0 ? searchresult.hits[0] : null;
 }
 
 /**
- * Index a HTML document.
+ * Find an existing entry, given its source hash.
+ *
+ * @param {object} index Algolia index
+ * @param {string} sourceHash source hash
+ * @param {string} branch Branch
  */
-async function doIndex(
-  index, indexname, indexconfig, path, sha, branch, namespace, package, owner, repo, ref,
-) {
-  const type = p.extname(path).replace(/\./g, '');
+async function searchByHash(index, sourceHash, branch) {
+  const filters = `sourceHash:${sourceHash} AND branch:${branch}`;
+  const searchresult = await index.search({
+    attributesToRetrieve: ['path', 'name', 'objectID', 'sourceHash'],
+    filters,
+  });
+  return searchresult.nbHits !== 0 ? searchresult.hits[0] : null;
+}
 
+/**
+ * Fetch documents that will be added to our index.
+ */
+async function fetchDocuments(url, type, path, branch) {
   const docs = [];
   const doc = {
     objectID: `${branch}--${path}`,
@@ -110,12 +116,9 @@ async function doIndex(
     parents: makeparents(`/${path}`),
     dir: p.dirname(path),
     path,
-    sha,
     type,
     branch,
   };
-
-  const url = getRuntimeURL(namespace, package, type, owner, repo, ref, path);
 
   try {
     const response = await request({
@@ -142,47 +145,21 @@ async function doIndex(
       Object.assign(doc, meta);
       docs.push(doc);
     }
+    return docs;
   } catch (e) {
-    console.log(`Unable to load full metadata for ${url}`, e);
-    return {
-      statusCode: 500,
-      body: {
-        path,
-        reason: `Unable to load full metadata for ${url}`,
-      },
-    };
+    if (e instanceof StatusCodeError && e.statusCode === 404) {
+      // item not found
+      return null;
+    }
+    throw e;
   }
-
-  const customAttributes = Object.keys(indexconfig.properties)
-    .filter((name) => indexconfig.properties[name].faceted);
-  await index.setSettings({
-    attributesForFacetting: [
-      'filterOnly(sha)', 'filterOnly(path)', 'type', 'parents', 'branch',
-      ...customAttributes,
-    ],
-  });
-
-  const update = await index.saveObjects(docs);
-
-  return {
-    statusCode: 201,
-    body: {
-      path,
-      index: indexname,
-      update,
-    },
-  };
 }
 
-/**
- * This is the main function
- */
 async function main({
-  namespace, package, owner, repo, ref, branch, path, paths, sha, ALGOLIA_APP_ID, ALGOLIA_API_KEY,
+  namespace, package, owner, repo, ref, branch, path, paths, ALGOLIA_APP_ID, ALGOLIA_API_KEY,
 }) {
-  if (!(owner && repo && ref && branch && (path || paths) && sha
-    && ALGOLIA_API_KEY && ALGOLIA_APP_ID)) {
-    console.error('Missing parameters', owner, repo, ref, branch, path, paths, sha, !!ALGOLIA_APP_ID, !!ALGOLIA_API_KEY);
+  if (!(owner && repo && ref && branch && (path || paths) && ALGOLIA_API_KEY && ALGOLIA_APP_ID)) {
+    console.error('Missing parameters', owner, repo, ref, branch, path, paths, !!ALGOLIA_APP_ID, !!ALGOLIA_API_KEY);
     throw new Error('Missing required parameters');
   }
 
@@ -193,8 +170,6 @@ async function main({
 
   /* Use the first index definition to setup our index */
   const indexname = Object.keys(config.indices)[0];
-  const indexconfig = config.indices[indexname];
-
   const algolia = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
   const index = algolia.initIndex(`${owner}--${repo}--${indexname}`);
 
@@ -204,22 +179,61 @@ async function main({
   }
 
   // eslint-disable-next-line no-shadow
-  const searchresults = await Promise.all(paths.map((path) => search(index, path, sha, branch)));
+  const searchresults = await Promise.all(paths.map(async (path) => ({
+    path,
+    hit: await searchByPath(index, path, branch),
+  })));
 
-  const responses = await Promise.all(searchresults.map(async (searchresult) => {
-    if (searchresult.nbHits) {
-      // document already exists, do nothing
+  // eslint-disable-next-line no-shadow
+  const responses = await Promise.all(searchresults.map(async ({ path, hit }) => {
+    const type = p.extname(path).replace(/\./g, '');
+    const url = getRuntimeURL(namespace || owNamespace, package || owPackage,
+      type, owner, repo, ref, path);
+    let docs;
+
+    try {
+      docs = await fetchDocuments(url, type, path, branch);
+      if (!docs || docs.length === 0) {
+        // Indexed page no longer exists
+        if (hit) {
+          await index.deleteObject(hit.objectID);
+        }
+        return {
+          statusCode: 404,
+          body: {
+            path,
+            reason: `Item not found: ${url}`,
+          },
+        };
+      }
+      const { sourceHash } = docs[0];
+      if (sourceHash && !hit) {
+        // We did not find the item at the expected location, make sure
+        // it does not appear elsewhere (could be a move)
+        const result = await searchByHash(index, sourceHash, branch);
+        if (result && result.objectID) {
+          await index.deleteObject(hit.objectID);
+        }
+      }
+      const update = await index.saveObjects(docs);
       return {
-        statusCode: 304,
+        statusCode: 201,
         body: {
           path,
           index: indexname,
-          status: 'existing',
+          update,
+        },
+      };
+    } catch (e) {
+      console.log(`Unable to load full metadata for ${url}: ${e.toString()}`);
+      return {
+        statusCode: 500,
+        body: {
+          path,
+          reason: `Unable to load full metadata for ${url}`,
         },
       };
     }
-    return doIndex(index, indexname, indexconfig, searchresult.path,
-      sha, branch, namespace || owNamespace, package || owPackage, owner, repo, ref);
   }));
 
   const results = responses.map((response) => ({

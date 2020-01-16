@@ -32,35 +32,18 @@ describe('Index Tests', () => {
     }
   });
 
-  condit('index function updates index', condit.hasenvs(['ALGOLIA_API_KEY', 'ALGOLIA_APP_ID']), async () => {
+  condit('Add item to index', condit.hasenvs(['ALGOLIA_API_KEY', 'ALGOLIA_APP_ID', '__OW_ACTION_NAME']), async () => {
     const result = await index({
-      owner: 'adobe',
-      repo: 'helix-home',
-      ref: '954d95a1733f41d9214c18e7b6d650da9a0d47fc',
-      branch: 'master',
-      // eslint-disable-next-line prefer-template
-      sha: 'fake' + new Date().getTime(),
-      path: 'hackathons/6-sxb.md',
-      ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
-      ALGOLIA_API_KEY: process.env.ALGOLIA_API_KEY,
-    });
-    // eslint-disable-next-line no-console
-    console.log(JSON.stringify(result, null, 2));
-  }).timeout(10000);
-
-  condit('HTML update index', condit.hasenvs(['ALGOLIA_API_KEY', 'ALGOLIA_APP_ID']), async () => {
-    const result = await index({
-      owner: 'anfibiacreativa',
-      repo: 'helix-norddal',
+      namespace: 'dpfister',
+      package: 'index-pipelines',
+      owner: 'davidnuescheler',
+      repo: 'theblog',
       ref: 'master',
       branch: 'master',
-      // eslint-disable-next-line prefer-template
-      sha: 'fake' + new Date().getTime(),
-      path: 'posts/adobe-introduces-ai-powered-personalization-and-streamlined-activation.html',
+      path: 'ms/posts/Test.html',
       ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
       ALGOLIA_API_KEY: process.env.ALGOLIA_API_KEY,
     });
-
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(result, null, 2));
   }).timeout(20000);
