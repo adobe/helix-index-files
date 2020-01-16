@@ -1,3 +1,10 @@
+## [1.0.12](https://github.com/adobe/helix-index-files/compare/v1.0.11...v1.0.12) (2020-01-16)
+
+
+### Bug Fixes
+
+* Delete records in the index for items that are gone ([5e33f37](https://github.com/adobe/helix-index-files/commit/5e33f374c68eabbd34d2ffbc8b1eefde308b8031))
+
 ## [1.0.11](https://github.com/adobe/helix-index-files/compare/v1.0.10...v1.0.11) (2020-01-09)
 
 
