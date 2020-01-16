@@ -212,7 +212,7 @@ async function main({
         // it does not appear elsewhere (could be a move)
         const result = await searchByHash(index, sourceHash, branch);
         if (result && result.objectID) {
-          await index.deleteObject(hit.objectID);
+          await index.deleteObject(result.objectID);
         }
       }
       const update = await index.saveObjects(docs);
