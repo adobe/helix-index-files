@@ -1,3 +1,11 @@
+## [1.0.14](https://github.com/adobe/helix-index-files/compare/v1.0.13...v1.0.14) (2020-01-17)
+
+
+### Bug Fixes
+
+* remove uunsed methods ([291da1c](https://github.com/adobe/helix-index-files/commit/291da1c8dd5c9bda1182625d3d19943b92dbe4fa))
+* use openwhisk client instead of building runtime URL oneself ([420b954](https://github.com/adobe/helix-index-files/commit/420b954e9730aa05fb6246d2e14af0fb92d99270))
+
 ## [1.0.13](https://github.com/adobe/helix-index-files/compare/v1.0.12...v1.0.13) (2020-01-16)
 
 
