@@ -13,10 +13,13 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-console */
 
-const { wrap } = require('@adobe/helix-status');
+const { logger } = require('@adobe/openwhisk-action-logger');
+const { wrap } = require('@adobe/openwhisk-action-utils');
+const statusWrap = require('@adobe/helix-status').wrap;
 const algoliasearch = require('algoliasearch');
+const openwhisk = require('openwhisk');
+const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
 const request = require('request-promise-native');
-const { StatusCodeError } = require('request-promise-native/errors');
 const p = require('path');
 const YAML = require('yaml');
 
@@ -58,22 +61,6 @@ async function loadConfig(owner, repo, ref) {
 }
 
 /**
- * Return the Adobe I/O Runtime URL to invoke.
- *
- * @param {string} namespace
- * @param {string} package
- * @param {string} type
- * @param {string} owner
- * @param {string} repo
- * @param {string} ref
- * @param {string} path
- */
-function getRuntimeURL(namespace, package, type, owner, repo, ref, path) {
-  const nsp = package ? `${namespace}/${package}` : namespace;
-  return `https://adobeioruntime.net/api/v1/web/${nsp}/${type}_json@latest?owner=${owner}&repo=${repo}&ref=${ref}&path=${path}`;
-}
-
-/**
  * Find an existing entry, given its path and branch.
  *
  * @param {object} index Algolia index
@@ -107,8 +94,16 @@ async function searchByHash(index, sourceHash, branch) {
 
 /**
  * Fetch documents that will be added to our index.
+ *
+ * @param {Object} ow openwhisk client
+ * @param {Object} params parameters
  */
-async function fetchDocuments(url, type, path, branch) {
+async function fetchDocuments(ow, params) {
+  const {
+    package, owner, repo, ref, branch, path, log,
+  } = params;
+  const type = p.extname(path).replace(/\./g, '');
+
   const docs = [];
   const doc = {
     objectID: `${branch}--${path}`,
@@ -121,12 +116,19 @@ async function fetchDocuments(url, type, path, branch) {
   };
 
   try {
-    const response = await request({
-      url,
-      json: true,
+    log.debug(`Invoking ${package}/${type}_json@latest for path: ${path}`);
+    const {
+      response: {
+        result,
+      },
+    } = await ow.actions.invoke({
+      name: `${package}/${type}_json@latest`,
+      blocking: true,
+      params: {
+        owner, repo, ref, path,
+      },
     });
-
-    const fragments = response.docs
+    const fragments = result.body.docs
       .map((fragment) => ({ ...doc, ...fragment }))
       .map((fragment) => {
         // do not add an empty # if fragmentID is not defined
@@ -140,31 +142,60 @@ async function fetchDocuments(url, type, path, branch) {
     docs.push(...fragments);
 
     // index the base document, too
-    const { meta } = response;
+    const { meta } = result.body;
     if (meta) {
       Object.assign(doc, meta);
       docs.push(doc);
     }
-    return docs;
   } catch (e) {
-    if (e instanceof StatusCodeError && e.statusCode === 404) {
-      // item not found
-      return null;
+    if (!(e instanceof OpenWhiskError && e.statusCode === 404)) {
+      throw e;
     }
-    throw e;
+    log.debug(`Action ${package}/${type}_json@latest returned a 404 for path: ${path}`);
   }
+  return docs;
 }
 
-async function main({
-  namespace, package, owner, repo, ref, branch, path, paths, ALGOLIA_APP_ID, ALGOLIA_API_KEY,
-}) {
-  if (!(owner && repo && ref && branch && (path || paths) && ALGOLIA_API_KEY && ALGOLIA_APP_ID)) {
-    console.error('Missing parameters', owner, repo, ref, branch, path, paths, !!ALGOLIA_APP_ID, !!ALGOLIA_API_KEY);
-    throw new Error('Missing required parameters');
-  }
+/**
+ * Runtime action.
+ *
+ * @param {Object} params parameters
+ */
+async function run(params) {
+  const {
+    package = 'index-pipelines',
+    owner,
+    repo,
+    ref,
+    branch,
+    path: singlePath,
+    paths: multiplePaths,
+    ALGOLIA_APP_ID,
+    ALGOLIA_API_KEY,
+    __ow_logger: log,
+  } = params;
 
-  // eslint-disable-next-line no-underscore-dangle
-  const [, owNamespace, owPackage] = process.env.__OW_ACTION_NAME.split('/');
+  if (!owner) {
+    throw new Error('owner parameter missing.');
+  }
+  if (!repo) {
+    throw new Error('repo parameter missing.');
+  }
+  if (!ref) {
+    throw new Error('ref parameter missing.');
+  }
+  if (!branch) {
+    throw new Error('branch parameter missing.');
+  }
+  if (!(singlePath || multiplePaths)) {
+    throw new Error('path/paths parameter missing.');
+  }
+  if (!ALGOLIA_API_KEY) {
+    throw new Error('ALGOLIA_API_KEY parameter missing.');
+  }
+  if (!ALGOLIA_APP_ID) {
+    throw new Error('ALGOLIA_APP_ID parameter missing.');
+  }
 
   const config = await loadConfig(owner, repo, ref);
 
@@ -173,36 +204,29 @@ async function main({
   const algolia = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
   const index = algolia.initIndex(`${owner}--${repo}--${indexname}`);
 
-  if (!paths) {
-    // eslint-disable-next-line no-param-reassign
-    paths = [path];
-  }
+  const ow = openwhisk();
 
-  // eslint-disable-next-line no-shadow
+  const paths = multiplePaths || [singlePath];
   const searchresults = await Promise.all(paths.map(async (path) => ({
     path,
     hit: await searchByPath(index, path, branch),
   })));
 
-  // eslint-disable-next-line no-shadow
   const responses = await Promise.all(searchresults.map(async ({ path, hit }) => {
-    const type = p.extname(path).replace(/\./g, '');
-    const url = getRuntimeURL(namespace || owNamespace, package || owPackage,
-      type, owner, repo, ref, path);
-    let docs;
-
     try {
-      docs = await fetchDocuments(url, type, path, branch);
-      if (!docs || docs.length === 0) {
-        // Indexed page no longer exists
+      const docs = await fetchDocuments(ow, {
+        package, owner, repo, ref, branch, path, log,
+      });
+      if (docs.length === 0) {
         if (hit) {
+          log.debug(`Deleting index record for resource gone at: ${path}`);
           await index.deleteObject(hit.objectID);
         }
         return {
           statusCode: 404,
           body: {
             path,
-            reason: `Item not found: ${url}`,
+            reason: `Item not found: ${path}`,
           },
         };
       }
@@ -212,9 +236,11 @@ async function main({
         // it does not appear elsewhere (could be a move)
         const result = await searchByHash(index, sourceHash, branch);
         if (result && result.objectID) {
+          log.debug(`Deleting index record for resource moved from: ${result.path}`);
           await index.deleteObject(result.objectID);
         }
       }
+      log.debug(`Adding index record for resource at: ${path}`);
       const update = await index.saveObjects(docs);
       return {
         statusCode: 201,
@@ -225,12 +251,12 @@ async function main({
         },
       };
     } catch (e) {
-      console.log(`Unable to load full metadata for ${url}: ${e.toString()}`);
+      log.error(`Unable to load full metadata for ${path}: ${e.toString()}`);
       return {
         statusCode: 500,
         body: {
           path,
-          reason: `Unable to load full metadata for ${url}`,
+          reason: `Unable to load full metadata for ${path}`,
         },
       };
     }
@@ -249,4 +275,6 @@ async function main({
   };
 }
 
-module.exports = { main: wrap(main) };
+module.exports.main = wrap(run)
+  .with(logger)
+  .with(statusWrap);

@@ -17,12 +17,15 @@
 const assert = require('assert');
 const { AssertionError } = require('assert');
 const { condit } = require('@adobe/helix-testutils');
-const index = require('../src/index.js').main;
+const { rootLogger } = require('@adobe/helix-log');
+const action = require('../src/index.js');
 
 describe('Index Tests', () => {
+  rootLogger.loggers.get('default').level = process.env.LOG_LEVEL || 'info';
+
   it('index function bails if neccessary arguments are missing', async () => {
     try {
-      await index();
+      await action.main();
       assert.fail('this should not happen');
     } catch (e) {
       if (e instanceof AssertionError) {
@@ -32,19 +35,35 @@ describe('Index Tests', () => {
     }
   });
 
-  condit('Add item to index', condit.hasenvs(['ALGOLIA_API_KEY', 'ALGOLIA_APP_ID', '__OW_ACTION_NAME']), async () => {
-    const result = await index({
-      namespace: 'dpfister',
+  condit('Add item to index', condit.hasenvs(['ALGOLIA_API_KEY', 'ALGOLIA_APP_ID']), async () => {
+    const result = await action.main({
       package: 'index-pipelines',
       owner: 'davidnuescheler',
       repo: 'theblog',
       ref: 'master',
       branch: 'master',
-      path: 'ms/posts/Test.html',
+      path: 'ms/posts/adobe-named-a-leader-in-forresters-latest-enterprise-marketing-software-suites-report.html',
       ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
       ALGOLIA_API_KEY: process.env.ALGOLIA_API_KEY,
     });
-    // eslint-disable-next-line no-console
-    console.log(JSON.stringify(result, null, 2));
+    assert.equal(result.body.results.length, 1);
+    assert.equal(result.body.results[0].status, 201);
+
+    delete result.body.results[0].update.taskID;
+    assert.deepEqual(result, {
+      body: {
+        results: [{
+          index: 'blog-posts',
+          path: 'ms/posts/adobe-named-a-leader-in-forresters-latest-enterprise-marketing-software-suites-report.html',
+          status: 201,
+          update: {
+            objectIDs: [
+              'master--ms/posts/adobe-named-a-leader-in-forresters-latest-enterprise-marketing-software-suites-report.html',
+            ],
+          },
+        }],
+      },
+      statusCode: 207,
+    });
   }).timeout(20000);
 });
