@@ -128,24 +128,28 @@ async function fetchDocuments(ow, params) {
         owner, repo, ref, path,
       },
     });
-    const fragments = result.body.docs
-      .map((fragment) => ({ ...doc, ...fragment }))
-      .map((fragment) => {
-        // do not add an empty # if fragmentID is not defined
-        fragment.objectID = fragment.fragmentID
-          ? `${fragment.objectID}#${fragment.fragmentID}`
-          : fragment.objectID;
-        delete fragment.fragmentID;
-        return fragment;
-      });
-    // index all fragments
-    docs.push(...fragments);
+    if (!result.body.docs) {
+      log.error(`No documents received: ${JSON.stringify(result.body, null, 2)}`);
+    } else {
+      const fragments = result.body.docs
+        .map((fragment) => ({ ...doc, ...fragment }))
+        .map((fragment) => {
+          // do not add an empty # if fragmentID is not defined
+          fragment.objectID = fragment.fragmentID
+            ? `${fragment.objectID}#${fragment.fragmentID}`
+            : fragment.objectID;
+          delete fragment.fragmentID;
+          return fragment;
+        });
+      // index all fragments
+      docs.push(...fragments);
 
-    // index the base document, too
-    const { meta } = result.body;
-    if (meta) {
-      Object.assign(doc, meta);
-      docs.push(doc);
+      // index the base document, too
+      const { meta } = result.body;
+      if (meta) {
+        Object.assign(doc, meta);
+        docs.push(doc);
+      }
     }
   } catch (e) {
     if (!(e instanceof OpenWhiskError && e.statusCode === 404)) {
@@ -198,71 +202,73 @@ async function run(params) {
   }
 
   const config = await loadConfig(owner, repo, ref);
-
-  /* Use the first index definition to setup our index */
-  const indexname = Object.keys(config.indices)[0];
-  const algolia = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
-  const index = algolia.initIndex(`${owner}--${repo}--${indexname}`);
-
   const ow = openwhisk();
+  const algolia = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
 
   const paths = multiplePaths || [singlePath];
-  const searchresults = await Promise.all(paths.map(async (path) => ({
-    path,
-    hit: await searchByPath(index, path, branch),
-  })));
 
-  const responses = await Promise.all(searchresults.map(async ({ path, hit }) => {
-    try {
-      const docs = await fetchDocuments(ow, {
-        package, owner, repo, ref, branch, path, log,
-      });
-      if (docs.length === 0) {
-        if (hit) {
-          log.debug(`Deleting index record for resource gone at: ${path}`);
-          await index.deleteObject(hit.objectID);
+  const responses = await Promise.all(Object.keys(config.indices).map(async (name) => {
+    const index = algolia.initIndex(`${owner}--${repo}--${name}`);
+
+    const searchresults = await Promise.all(paths.map(async (path) => ({
+      path,
+      hit: await searchByPath(index, path, branch),
+    })));
+
+    return Promise.all(searchresults.map(async ({ path, hit }) => {
+      try {
+        const docs = await fetchDocuments(ow, {
+          package, owner, repo, ref, branch, path, log,
+        });
+        if (docs.length === 0) {
+          if (hit) {
+            log.debug(`Deleting index record for resource gone at: ${path}`);
+            await index.deleteObject(hit.objectID);
+          }
+          return {
+            statusCode: 404,
+            body: {
+              path,
+              reason: `Item not found: ${path}`,
+            },
+          };
         }
+        const { sourceHash } = docs[0];
+        if (sourceHash && !hit) {
+          // We did not find the item at the expected location, make sure
+          // it does not appear elsewhere (could be a move)
+          const result = await searchByHash(index, sourceHash, branch);
+          if (result && result.objectID) {
+            log.debug(`Deleting index record for resource moved from: ${result.path}`);
+            await index.deleteObject(result.objectID);
+          }
+        }
+        log.debug(`Adding index record for resource at: ${path}`);
         return {
-          statusCode: 404,
+          statusCode: 201,
           body: {
             path,
-            reason: `Item not found: ${path}`,
+            index: name,
+            update: await index.saveObjects(docs),
+          },
+        };
+      } catch (e) {
+        log.error(`Unable to load full metadata for ${path}`, e);
+        return {
+          statusCode: 500,
+          body: {
+            path,
+            reason: `Unable to load full metadata for ${path}`,
           },
         };
       }
-      const { sourceHash } = docs[0];
-      if (sourceHash && !hit) {
-        // We did not find the item at the expected location, make sure
-        // it does not appear elsewhere (could be a move)
-        const result = await searchByHash(index, sourceHash, branch);
-        if (result && result.objectID) {
-          log.debug(`Deleting index record for resource moved from: ${result.path}`);
-          await index.deleteObject(result.objectID);
-        }
-      }
-      log.debug(`Adding index record for resource at: ${path}`);
-      const update = await index.saveObjects(docs);
-      return {
-        statusCode: 201,
-        body: {
-          path,
-          index: indexname,
-          update,
-        },
-      };
-    } catch (e) {
-      log.error(`Unable to load full metadata for ${path}: ${e.toString()}`);
-      return {
-        statusCode: 500,
-        body: {
-          path,
-          reason: `Unable to load full metadata for ${path}`,
-        },
-      };
-    }
+    }));
   }));
 
-  const results = responses.map((response) => ({
+  const results = responses.reduce((acc, current) => {
+    acc.push(...current);
+    return acc;
+  }, []).map((response) => ({
     status: response.statusCode,
     ...response.body,
   }));

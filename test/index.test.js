@@ -25,8 +25,7 @@ describe('Index Tests', () => {
 
   it('index function bails if neccessary arguments are missing', async () => {
     try {
-      await action.main();
-      assert.fail('this should not happen');
+      assert.throws(await action.main());
     } catch (e) {
       if (e instanceof AssertionError) {
         throw e;
