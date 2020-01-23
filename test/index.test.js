@@ -18,7 +18,36 @@ const assert = require('assert');
 const { AssertionError } = require('assert');
 const { condit } = require('@adobe/helix-testutils');
 const { rootLogger } = require('@adobe/helix-log');
-const action = require('../src/index.js');
+const proxyquire = require('proxyquire');
+
+const action = proxyquire('../src/index.js', {
+  algoliasearch: () => ({
+    initIndex: (name) => ({
+      name,
+      search: (opts) => ({
+        opts,
+        nbHits: 0,
+      }),
+    }),
+  }),
+  openwhisk() {
+    return {
+      actions: {
+        invoke(...args) {
+          return () => Promise.resolve({
+            activationId: 'abcd-1234',
+            response: {
+              result: {
+                statusCode: 200,
+                body: 'Hello, world.',
+              },
+            },
+          });
+        },
+      },
+    };
+  },
+});
 
 describe('Index Tests', () => {
   rootLogger.loggers.get('default').level = process.env.LOG_LEVEL || 'info';
@@ -32,6 +61,19 @@ describe('Index Tests', () => {
       }
       assert.ok(e);
     }
+  });
+
+  it('Add item to index', async () => {
+    const result = await action.main({
+      package: 'index-pipelines',
+      owner: 'davidnuescheler',
+      repo: 'theblog',
+      ref: 'master',
+      branch: 'master',
+      path: 'ms/posts/adobe-named-a-leader-in-forresters-latest-enterprise-marketing-software-suites-report.html',
+      ALGOLIA_APP_ID: 'foo',
+      ALGOLIA_API_KEY: 'bar',
+    });
   });
 
   condit('Add item to index', condit.hasenvs(['ALGOLIA_API_KEY', 'ALGOLIA_APP_ID']), async () => {
