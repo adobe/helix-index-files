@@ -15,54 +15,125 @@
 'use strict';
 
 const assert = require('assert');
-const { AssertionError } = require('assert');
-const { condit } = require('@adobe/helix-testutils');
-const { rootLogger } = require('@adobe/helix-log');
+const fse = require('fs-extra');
+const nock = require('nock');
+const proxyquire = require('proxyquire');
 const action = require('../src/index.js');
+const AlgoliaIndex = require('./AlgoliaIndex');
+
+/**
+ * Replacement for fetch documents in our OW action. Will try to load
+ * a JSON file matching the HTML page requested.
+ *
+ * @param {Object} parameters passed to fetch action
+ */
+const fetchDocuments = async ({ params: { path } }) => {
+  const indexedJSON = `${path}.json`;
+  const docs = [];
+  let meta;
+
+  if (await fse.pathExists(indexedJSON)) {
+    docs.push(JSON.parse(await fse.readFile(indexedJSON, 'utf8')));
+    meta = {};
+  }
+  return {
+    response: {
+      result: {
+        body: {
+          meta,
+          docs,
+        },
+        statusCode: 200,
+      },
+    },
+  };
+};
+
+/**
+ * Proxy our real OW action and its requirements.
+ *
+ * @param {Function} invoke OW action to invoke
+ */
+const proxyaction = (invoke = fetchDocuments) => proxyquire('../src/index.js', {
+  algoliasearch: () => ({
+    initIndex: (name) => new AlgoliaIndex(name),
+  }),
+  openwhisk: () => ({
+    actions: {
+      invoke,
+    },
+  }),
+});
+
+/**
+ * Create params object for our OW action.
+ *
+ * @param {String} name name of HTML page to fetch
+ */
+const createParams = (name = 'added') => ({
+  pkg: 'index-pipelines',
+  owner: 'me',
+  repo: 'repo',
+  ref: 'master',
+  branch: 'master',
+  path: `test/specs/${name}.html`,
+  ALGOLIA_APP_ID: 'foo',
+  ALGOLIA_API_KEY: 'bar',
+});
 
 describe('Index Tests', () => {
-  rootLogger.loggers.get('default').level = process.env.LOG_LEVEL || 'info';
-
-  it('index function bails if neccessary arguments are missing', async () => {
-    try {
-      assert.throws(await action.main());
-    } catch (e) {
-      if (e instanceof AssertionError) {
-        throw e;
-      }
-      assert.ok(e);
-    }
+  beforeEach(() => {
+    nock('https://raw.githubusercontent.com')
+      .get('/me/repo/master/helix-index.yaml')
+      .replyWithFile(200, 'test/specs/helix-index.yaml');
   });
 
-  condit('Add item to index', condit.hasenvs(['ALGOLIA_API_KEY', 'ALGOLIA_APP_ID']), async () => {
-    const result = await action.main({
-      package: 'index-pipelines',
-      owner: 'davidnuescheler',
-      repo: 'theblog',
-      ref: 'master',
-      branch: 'master',
-      path: 'ms/posts/adobe-named-a-leader-in-forresters-latest-enterprise-marketing-software-suites-report.html',
-      ALGOLIA_APP_ID: process.env.ALGOLIA_APP_ID,
-      ALGOLIA_API_KEY: process.env.ALGOLIA_API_KEY,
+  // Invoke our action with missing combinations of parameters
+  const requiredParamNames = [
+    'owner', 'repo', 'ref', 'branch', 'path', 'ALGOLIA_API_KEY', 'ALGOLIA_APP_ID',
+  ];
+  for (let i = 0; i <= requiredParamNames.length - 1; i += 1) {
+    const params = requiredParamNames.slice(0, i).reduce((acc, name) => {
+      acc[`${name}`] = 'bogus';
+      return acc;
+    }, {});
+    it(`index function bails if argument ${requiredParamNames[i]} is missing`, async () => {
+      await assert.rejects(() => action.main(params), /\w+ parameter missing/);
     });
-    assert.equal(result.body.results.length, 1);
-    assert.equal(result.body.results[0].status, 201);
+  }
 
-    delete result.body.results[0].update.taskID;
-    assert.deepEqual(result, {
-      body: {
-        results: [{
-          index: 'blog-posts',
-          path: 'ms/posts/adobe-named-a-leader-in-forresters-latest-enterprise-marketing-software-suites-report.html',
-          status: 201,
-          update: {
-            objectIDs: [
-              'master--ms/posts/adobe-named-a-leader-in-forresters-latest-enterprise-marketing-software-suites-report.html',
-            ],
-          },
-        }],
+  // Simulate an OW failure
+  it('html_json throws', async () => {
+    const response = await proxyaction(() => {
+      throw new Error('html_json throws');
+    }).main(createParams());
+    assert.equal(response.body.results[0].status, 500);
+  });
+
+  // Simulate an error response from our html_json action
+  it('html_json returns no docs element', async () => {
+    const response = await proxyaction(() => ({
+      response: {
+        result: {
+          body: {},
+        },
       },
-      statusCode: 207,
-    });
-  }).timeout(20000);
+    })).main(createParams());
+    assert.equal(response.body.results[0].status, 404);
+  });
+
+  it('Indexing a new item', async () => {
+    const response = await proxyaction().main(createParams());
+    assert.equal(response.body.results[0].status, 201);
+  });
+
+  it('Indexing a moved item', async () => {
+    const response = await proxyaction().main(createParams('moved_to'));
+    assert.equal(response.body.results[0].status, 201);
+  });
+
+  it('Indexing a deleted item', async () => {
+    const response = await proxyaction().main(createParams('deleted'));
+    assert.equal(response.body.results[0].status, 404);
+  });
 });

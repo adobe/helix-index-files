@@ -1,0 +1,14 @@
+[
+  {
+    "path": "test/specs/moved_from.html",
+    "sourceHash": "2",
+    "objectID": "XXX",
+    "name": "moved_from"
+  },
+  {
+    "path": "test/specs/deleted.html",
+    "sourceHash": "3",
+    "objectID": "XXX",
+    "name": "deleted"
+  }
+]
