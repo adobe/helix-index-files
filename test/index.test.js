@@ -12,26 +12,16 @@
 
 /* eslint-env mocha */
 
-'use strict';
-
 const assert = require('assert');
-const { AssertionError } = require('assert');
-const { condit } = require('@adobe/helix-testutils');
 const { rootLogger } = require('@adobe/helix-log');
+const { condit } = require('@adobe/helix-testutils');
 const action = require('../src/index.js');
 
 describe('Index Tests', () => {
   rootLogger.loggers.get('default').level = process.env.LOG_LEVEL || 'info';
 
   it('index function bails if neccessary arguments are missing', async () => {
-    try {
-      assert.throws(await action.main());
-    } catch (e) {
-      if (e instanceof AssertionError) {
-        throw e;
-      }
-      assert.ok(e);
-    }
+    await assert.rejects(action.main({}));
   });
 
   condit('Add item to index', condit.hasenvs(['ALGOLIA_API_KEY', 'ALGOLIA_APP_ID']), async () => {
