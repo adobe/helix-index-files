@@ -13,6 +13,8 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable no-console */
 
+'use strict';
+
 const { logger } = require('@adobe/openwhisk-action-logger');
 const { wrap } = require('@adobe/openwhisk-action-utils');
 const statusWrap = require('@adobe/helix-status').wrap;
@@ -100,7 +102,7 @@ async function searchByHash(index, sourceHash, branch) {
  */
 async function fetchDocuments(ow, params) {
   const {
-    package, owner, repo, ref, branch, path, log,
+    pkg, owner, repo, ref, branch, path, log,
   } = params;
   const type = p.extname(path).replace(/\./g, '');
 
@@ -116,13 +118,13 @@ async function fetchDocuments(ow, params) {
   };
 
   try {
-    log.debug(`Invoking ${package}/${type}_json@latest for path: ${path}`);
+    log.debug(`Invoking ${pkg}/${type}_json@latest for path: ${path}`);
     const {
       response: {
         result,
       },
     } = await ow.actions.invoke({
-      name: `${package}/${type}_json@latest`,
+      name: `${pkg}/${type}_json@latest`,
       blocking: true,
       params: {
         owner, repo, ref, path,
@@ -155,7 +157,7 @@ async function fetchDocuments(ow, params) {
     if (!(e instanceof OpenWhiskError && e.statusCode === 404)) {
       throw e;
     }
-    log.debug(`Action ${package}/${type}_json@latest returned a 404 for path: ${path}`);
+    log.debug(`Action ${pkg}/${type}_json@latest returned a 404 for path: ${path}`);
   }
   return docs;
 }
@@ -167,15 +169,15 @@ async function fetchDocuments(ow, params) {
  */
 async function run(params) {
   const {
-    package = 'index-pipelines',
+    pkg = 'index-pipelines',
     owner,
     repo,
     ref,
     branch,
     path: singlePath,
     paths: multiplePaths,
-    ALGOLIA_APP_ID,
     ALGOLIA_API_KEY,
+    ALGOLIA_APP_ID,
     __ow_logger: log,
   } = params;
 
@@ -218,7 +220,7 @@ async function run(params) {
     return Promise.all(searchresults.map(async ({ path, hit }) => {
       try {
         const docs = await fetchDocuments(ow, {
-          package, owner, repo, ref, branch, path, log,
+          pkg, owner, repo, ref, branch, path, log,
         });
         if (docs.length === 0) {
           if (hit) {
