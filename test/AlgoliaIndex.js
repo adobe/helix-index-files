@@ -19,12 +19,13 @@ const fse = require('fs-extra');
  */
 class AlgoliaIndex {
   constructor(name) {
-    this.file = `test/specs/${name}.json`;
+    this._name = name;
+    this._file = `test/specs/${name}.json`;
   }
 
   async init() {
-    if (!this.contents) {
-      this.contents = JSON.parse(await fse.readFile(this.file, 'utf-8'));
+    if (!this._contents) {
+      this._contents = JSON.parse(await fse.readFile(this._file, 'utf-8'));
     }
   }
 
@@ -41,7 +42,7 @@ class AlgoliaIndex {
     if (m2 && m2[1]) {
       [, sourceHash] = m2;
     }
-    const hits = this.contents.filter(
+    const hits = this._contents.filter(
       (item) => (path ? item.path === path : item.sourceHash === sourceHash),
     );
     return {
@@ -51,15 +52,24 @@ class AlgoliaIndex {
   }
 
   async deleteObject(objectID) {
-    /* We're read-only so just return the object ID */
     await this.init();
+
+    const idx = this._contents.findIndex((item) => item.objectID);
+    if (idx !== -1) {
+      this._contents.splice(idx);
+    }
     return objectID;
   }
 
   async saveObjects(docs) {
-    /* We're read-only so just return the document length */
     await this.init();
+
+    this._contents.push(...docs);
     return docs.length;
+  }
+
+  get name() {
+    return this._name;
   }
 }
 

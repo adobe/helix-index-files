@@ -42,13 +42,13 @@ function makeparents(filename = '') {
  *
  * @returns configuration
  */
-async function loadConfig(owner, repo, ref) {
+async function loadConfig(owner, repo, ref, log) {
   const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/helix-index.yaml`;
   try {
     const response = await request(url);
     return YAML.parseDocument(response).toJSON() || {};
   } catch (e) {
-    // config not usable return default one
+    log.warn(`Unable to load index configuration from ${url} (${e.message}), using default properties.`);
     return {
       indices: {
         default: {
@@ -63,33 +63,19 @@ async function loadConfig(owner, repo, ref) {
 }
 
 /**
- * Find an existing entry, given its path and branch.
+ * Find an existing entry, given its path or sourceHash and branch.
  *
  * @param {object} index Algolia index
- * @param {string} path Associated path of HTML document
+ * @param {object} attributes Attributes to search for
  * @param {string} branch Branch
  */
-async function searchByPath(index, path, branch) {
-  const filters = `path:${path} AND branch:${branch}`;
+async function search(index, attributes) {
+  const filters = Object.getOwnPropertyNames(attributes).map(
+    (name) => `${name}:${attributes[name]}`,
+  );
   const searchresult = await index.search({
     attributesToRetrieve: ['path', 'name', 'objectID', 'sourceHash'],
-    filters,
-  });
-  return searchresult.nbHits !== 0 ? searchresult.hits[0] : null;
-}
-
-/**
- * Find an existing entry, given its source hash.
- *
- * @param {object} index Algolia index
- * @param {string} sourceHash source hash
- * @param {string} branch Branch
- */
-async function searchByHash(index, sourceHash, branch) {
-  const filters = `sourceHash:${sourceHash} AND branch:${branch}`;
-  const searchresult = await index.search({
-    attributesToRetrieve: ['path', 'name', 'objectID', 'sourceHash'],
-    filters,
+    filters: filters.join(' AND '),
   });
   return searchresult.nbHits !== 0 ? searchresult.hits[0] : null;
 }
@@ -120,6 +106,7 @@ async function fetchDocuments(ow, params) {
   try {
     log.debug(`Invoking ${pkg}/${type}_json@latest for path: ${path}`);
     const {
+      activationId,
       response: {
         result,
       },
@@ -131,27 +118,27 @@ async function fetchDocuments(ow, params) {
       },
     });
     if (!result.body.docs) {
-      log.error(`No documents received: ${JSON.stringify(result.body, null, 2)}`);
-    } else {
-      const fragments = result.body.docs
-        .map((fragment) => ({ ...doc, ...fragment }))
-        .map((fragment) => {
-          // do not add an empty # if fragmentID is not defined
-          fragment.objectID = fragment.fragmentID
-            ? `${fragment.objectID}#${fragment.fragmentID}`
-            : fragment.objectID;
-          delete fragment.fragmentID;
-          return fragment;
-        });
-      // index all fragments
-      docs.push(...fragments);
+      const message = `${pkg}/${type}_json@latest (activation id: ${activationId}) returned no documents`;
+      throw new OpenWhiskError(message, null, result.statusCode);
+    }
+    const fragments = result.body.docs
+      .map((fragment) => ({ ...doc, ...fragment }))
+      .map((fragment) => {
+        // do not add an empty # if fragmentID is not defined
+        fragment.objectID = fragment.fragmentID
+          ? `${fragment.objectID}#${fragment.fragmentID}`
+          : fragment.objectID;
+        delete fragment.fragmentID;
+        return fragment;
+      });
+    // index all fragments
+    docs.push(...fragments);
 
-      // index the base document, too
-      const { meta } = result.body;
-      if (meta) {
-        Object.assign(doc, meta);
-        docs.push(doc);
-      }
+    // index the base document, too
+    const { meta } = result.body;
+    if (meta) {
+      Object.assign(doc, meta);
+      docs.push(doc);
     }
   } catch (e) {
     if (!(e instanceof OpenWhiskError && e.statusCode === 404)) {
@@ -203,7 +190,7 @@ async function run(params) {
     throw new Error('ALGOLIA_APP_ID parameter missing.');
   }
 
-  const config = await loadConfig(owner, repo, ref);
+  const config = await loadConfig(owner, repo, ref, log);
   const ow = openwhisk();
   const algolia = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
 
@@ -214,7 +201,7 @@ async function run(params) {
 
     const searchresults = await Promise.all(paths.map(async (path) => ({
       path,
-      hit: await searchByPath(index, path, branch),
+      hit: await search(index, { path, branch }),
     })));
 
     return Promise.all(searchresults.map(async ({ path, hit }) => {
@@ -228,7 +215,7 @@ async function run(params) {
             await index.deleteObject(hit.objectID);
           }
           return {
-            statusCode: 404,
+            statusCode: hit ? 204 : 404,
             body: {
               path,
               reason: `Item not found: ${path}`,
@@ -236,31 +223,33 @@ async function run(params) {
           };
         }
         const { sourceHash } = docs[0];
+        let oldLocation;
         if (sourceHash && !hit) {
           // We did not find the item at the expected location, make sure
           // it does not appear elsewhere (could be a move)
-          const result = await searchByHash(index, sourceHash, branch);
+          const result = await search(index, { sourceHash, branch });
           if (result && result.objectID) {
             log.debug(`Deleting index record for resource moved from: ${result.path}`);
+            oldLocation = result.path;
             await index.deleteObject(result.objectID);
           }
         }
         log.debug(`Adding index record for resource at: ${path}`);
         return {
-          statusCode: 201,
+          statusCode: oldLocation ? 301 : 201,
           body: {
             path,
+            movedFrom: oldLocation,
             index: name,
             update: await index.saveObjects(docs),
           },
         };
       } catch (e) {
-        log.error(`Unable to load full metadata for ${path}`, e);
         return {
           statusCode: 500,
           body: {
             path,
-            reason: `Unable to load full metadata for ${path}`,
+            reason: `Unable to load full metadata for ${path}: ${e.message}`,
           },
         };
       }
