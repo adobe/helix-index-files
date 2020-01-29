@@ -1,3 +1,10 @@
+## [1.0.18](https://github.com/adobe/helix-index-files/compare/v1.0.17...v1.0.18) (2020-01-29)
+
+
+### Bug Fixes
+
+* **index:** failing to load index configuration should not silently continue ([#59](https://github.com/adobe/helix-index-files/issues/59)) ([307f08f](https://github.com/adobe/helix-index-files/commit/307f08f1a0cd797cc11b9960ec8ee5e6a50e64cf))
+
 ## [1.0.17](https://github.com/adobe/helix-index-files/compare/v1.0.16...v1.0.17) (2020-01-29)
 
 

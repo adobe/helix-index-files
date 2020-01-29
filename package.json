@@ -1,6 +1,6 @@
 {
   "name": "@adobe/helix-index-files",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "private": true,
   "description": "Helix File Indexing Service",
   "main": "src/index.js",
