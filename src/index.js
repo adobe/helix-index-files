@@ -95,7 +95,7 @@ async function fetchDocuments(ow, params) {
   const docs = [];
   const doc = {
     objectID: `${branch}--${path}`,
-    createDate: new Date().getTime(),
+    creationDate: new Date().getTime(),
     name: p.basename(path),
     parents: makeparents(`/${path}`),
     dir: p.dirname(path),
