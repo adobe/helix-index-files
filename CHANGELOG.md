@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/adobe/helix-index-files/compare/v1.0.19...v1.1.0) (2020-02-11)
+
+
+### Features
+
+* **index:** Add index entry creation date ([#70](https://github.com/adobe/helix-index-files/issues/70)) ([87be246](https://github.com/adobe/helix-index-files/commit/87be24676a8aff4be7e7aa267e21db1ae598777a))
+
 ## [1.0.19](https://github.com/adobe/helix-index-files/compare/v1.0.18...v1.0.19) (2020-01-31)
 
 
