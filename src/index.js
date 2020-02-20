@@ -43,7 +43,7 @@ function makeparents(filename = '') {
  * @returns configuration
  */
 async function loadConfig(owner, repo, ref, log) {
-  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/helix-index.yaml`;
+  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/helix-query.yaml`;
   try {
     const response = await request(url);
     return YAML.parseDocument(response).toJSON() || {};

@@ -99,8 +99,8 @@ describe('Index Tests', () => {
   describe('Missing index', () => {
     before(() => {
       nock('https://raw.githubusercontent.com')
-        .get('/me/repo/master/helix-index.yaml')
-        .reply(404, 'test/specs/helix-index.yaml');
+        .get('/me/repo/master/helix-query.yaml')
+        .reply(404);
     });
     it('standard properties are indexed', async () => {
       const response = await proxyaction().main(createParams());
@@ -111,8 +111,8 @@ describe('Index Tests', () => {
   describe('Setup in test/specs', () => {
     beforeEach(() => {
       nock('https://raw.githubusercontent.com')
-        .get('/me/repo/master/helix-index.yaml')
-        .replyWithFile(200, 'test/specs/helix-index.yaml');
+        .get('/me/repo/master/helix-query.yaml')
+        .replyWithFile(200, 'test/specs/helix-query.yaml');
     });
 
     // Simulate an OW failure
