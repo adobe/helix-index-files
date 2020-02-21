@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/adobe/helix-index-files/compare/v1.1.1...v1.1.2) (2020-02-21)
+
+
+### Bug Fixes
+
+* **index:** rename helix-index.yaml to helix-query.yaml ([#75](https://github.com/adobe/helix-index-files/issues/75)) ([95c937b](https://github.com/adobe/helix-index-files/commit/95c937b62bb582706430a83407729f41656c8d79))
+
 ## [1.1.1](https://github.com/adobe/helix-index-files/compare/v1.1.0...v1.1.1) (2020-02-18)
 
 
