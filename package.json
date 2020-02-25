@@ -32,9 +32,9 @@
   },
   "homepage": "https://github.com/adobe/helix-index-files#readme",
   "dependencies": {
-    "@adobe/helix-status": "7.1.1",
+    "@adobe/helix-status": "7.1.2",
     "@adobe/helix-testutils": "0.3.0",
-    "@adobe/openwhisk-action-logger": "2.1.0",
+    "@adobe/openwhisk-action-logger": "2.1.1",
     "@adobe/openwhisk-action-utils": "4.1.0",
     "algoliasearch": "4.0.3",
     "openwhisk": "3.21.1",
