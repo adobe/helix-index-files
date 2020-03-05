@@ -4,6 +4,7 @@ indices:
   blog-posts:
     source: html
     fetch: https://{repo}-{owner}.project-helix.page/{path}
+    domain: ms/(en|de|fr)/(posts|archive)\/(.*)\.(md|docx)/
     properties:
       author:
         select: main > div:nth-of-type(3) > p:nth-of-type(1)
