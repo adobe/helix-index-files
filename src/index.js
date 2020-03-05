@@ -77,7 +77,7 @@ async function run(params) {
 
   const algolia = getAlgoliaSearch(params);
   const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
-  const paths = getAffectedPaths(params, config);
+  const paths = getAffectedPaths(params); /* TODO: pass config */
 
   const responses = await Promise.all(config.indices
     .map(async (index) => {
