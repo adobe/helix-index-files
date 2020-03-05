@@ -23,15 +23,10 @@ const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
  * Create a logger.
  */
 function createLogger() {
-  const simple = new SimpleInterface({
+  return new SimpleInterface({
     logger: new ConsoleLogger(),
     level: 'info',
   });
-  // bind log methods to logger itself, so it's easier to pass them as functions.
-  ['log', 'silly', 'trace', 'debug', 'verbose', 'info', 'warn', 'error', 'fatal'].forEach((n) => {
-    simple[n] = simple[n].bind(simple);
-  });
-  return simple;
 }
 
 /**
