@@ -36,11 +36,11 @@
     "@adobe/helix-testutils": "0.3.0",
     "@adobe/openwhisk-action-logger": "2.2.0",
     "@adobe/openwhisk-action-utils": "4.2.2",
-    "algoliasearch": "4.0.3",
+    "algoliasearch": "4.1.0",
     "openwhisk": "3.21.1",
     "request": "2.88.2",
     "request-promise-native": "1.0.8",
-    "yaml": "1.7.2"
+    "yaml": "1.8.0"
   },
   "devDependencies": {
     "@adobe/eslint-config-helix": "1.1.0",
