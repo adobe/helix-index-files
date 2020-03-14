@@ -1,0 +1,22 @@
+params:
+  owner: me
+  repo: repo
+  ref: master
+  branch: master
+  provider:
+    driveId: baz
+  mountpoint:
+    path: /items/
+    root: /share
+  changes:
+  - id: 4
+    path: /share/moved_to.docx
+    time: "2020-03-03T17:01:12Z"
+    type": modified
+
+results:
+  - status: 301
+    path: items/moved_to.html
+    movedFrom: items/moved_from.html
+    index: blog-posts
+    update: 2

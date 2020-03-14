@@ -1,0 +1,15 @@
+params:
+  owner: me
+  repo: repo
+  ref: master
+  branch: master
+  provider:
+    driveId: baz
+  mountpoint:
+    path: /items/
+    root: /share
+  changes:
+  - id: 1000
+    type": deleted
+
+results: []

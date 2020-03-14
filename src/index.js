@@ -15,6 +15,7 @@
 
 'use strict';
 
+const crypto = require('crypto');
 const { logger } = require('@adobe/openwhisk-action-logger');
 const { wrap } = require('@adobe/openwhisk-action-utils');
 const statusWrap = require('@adobe/helix-status').wrap;
@@ -37,19 +38,35 @@ function getAlgoliaSearch(params) {
   return algoliasearch(apiKey, appID);
 }
 
-function getAffectedPaths(params /* , config */) {
-  if (params.mountpoint) {
-    // TODO: translate external paths and check domain in config
-  }
-  const {
-    path: singlePath,
-    paths: multiplePaths,
-  } = params;
+/**
+ * Return source hash for an item.
+ */
+function getSourceHash(driveId, itemId) {
+  const sourceLocation = `/drives/${driveId}/items/${itemId}`;
+  return crypto.createHash('sha1').update(sourceLocation).digest('base64').substring(0, 16);
+}
 
-  if (!(singlePath || multiplePaths)) {
-    throw new Error('path/paths parameter missing.');
+/**
+ * Return items to be indexed in a common format for paths given as
+ * a string or string array or payloads in common format sent by
+ * external listeners.
+ *
+ * @param {object} params parameters to action
+ */
+function getItemsCollection(params) {
+  if (params.changes) {
+    const { driveId } = params.provider;
+    return {
+      mountpoint: params.mountpoint,
+      items: params.changes.map((c) => (
+        c.path ? { path: c.path } : { sourceHash: getSourceHash(driveId, c.id) }
+      )),
+    };
   }
-  return multiplePaths || [singlePath];
+  const paths = params.paths || params.path ? [params.path] : [];
+  return {
+    items: paths.map((p) => ({ path: p })),
+  };
 }
 
 /**
@@ -77,12 +94,12 @@ async function run(params) {
 
   const algolia = getAlgoliaSearch(params);
   const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
-  const paths = getAffectedPaths(params); /* TODO: pass config */
+  const coll = getItemsCollection(params);
 
   const responses = await Promise.all(config.indices
     .map(async (index) => {
       const algoliaIndex = algolia.initIndex(`${owner}--${repo}--${index.name}`);
-      return updateIndex(params, index.name, algoliaIndex, paths);
+      return updateIndex(params, index, algoliaIndex, coll);
     }));
 
   const results = responses.reduce((acc, current) => {

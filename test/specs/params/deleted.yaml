@@ -1,0 +1,11 @@
+params:
+  owner: me
+  repo: repo
+  ref: master
+  branch: master
+  path: items/deleted.html
+
+results:
+- status: 204
+  reason: "Item not found: items/deleted.html"
+  path: items/deleted.html

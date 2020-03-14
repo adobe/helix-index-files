@@ -16,8 +16,12 @@
 
 const assert = require('assert');
 const fse = require('fs-extra');
+const p = require('path');
+const YAML = require('yaml');
 const proxyquire = require('proxyquire');
 const AlgoliaIndex = require('./AlgoliaIndex');
+
+const SPEC_ROOT = p.resolve(__dirname, 'specs/params');
 
 /**
  * Replacement for @adobe/helix-fetch in our test.
@@ -82,22 +86,6 @@ const { main } = proxyquire('../src/index.js', {
   }),
 });
 
-/**
- * Create params object for our OW action.
- *
- * @param {String} name name of HTML page to fetch
- */
-const createParams = (name = 'existing') => ({
-  pkg: 'index-pipelines',
-  owner: 'me',
-  repo: 'repo',
-  ref: 'master',
-  branch: 'master',
-  path: `items/${name}.html`,
-  ALGOLIA_APP_ID: 'foo',
-  ALGOLIA_API_KEY: 'bar',
-});
-
 describe('Index Tests', () => {
   describe('Argument checking', () => {
     // Invoke our action with missing combinations of parameters
@@ -115,30 +103,18 @@ describe('Index Tests', () => {
     }
   });
 
-  describe('Setup in test/specs', () => {
-    it('indexing a new item succeeds', async () => {
-      const response = await main(createParams('added'));
-      assert.equal(response.body.results[0].status, 201);
-    });
-
-    it('reindexing an existing item succeeds', async () => {
-      const response = await main(createParams());
-      assert.equal(response.body.results[0].status, 201);
-    });
-
-    it('indexing a moved item succeeds', async () => {
-      const response = await main(createParams('moved_to'));
-      assert.equal(response.body.results[0].status, 301);
-    });
-
-    it('indexing a deleted item succeeds', async () => {
-      const response = await main(createParams('deleted'));
-      assert.equal(response.body.results[0].status, 204);
-    });
-
-    it('indexing a missing item returns not found', async () => {
-      const response = await main(createParams('inexistent'));
-      assert.equal(response.body.results[0].status, 404);
+  describe('Setup in test/specs/params', () => {
+    fse.readdirSync(SPEC_ROOT).forEach((filename) => {
+      const source = fse.readFileSync(p.resolve(SPEC_ROOT, filename), 'utf8');
+      const json = YAML.parseDocument(source, {
+        merge: true,
+        schema: 'core',
+      }).toJSON();
+      it(`Testing ${filename}`, async () => {
+        const params = { ALGOLIA_APP_ID: 'foo', ALGOLIA_API_KEY: 'bar', ...json.params };
+        const response = await main(params);
+        assert.deepEqual(response.body.results, json.results);
+      });
     });
   });
 });

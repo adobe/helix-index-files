@@ -12,6 +12,7 @@
 
 'use strict';
 
+const includes = require('./includes.js');
 const indexFile = require('./index-file.js');
 
 const notFound = (path, gone) => ({
@@ -22,8 +23,17 @@ const notFound = (path, gone) => ({
   },
 });
 
-const created = (path, oldLocation, name, update) => ({
-  statusCode: oldLocation ? 301 : 201,
+const created = (path, name, update) => ({
+  statusCode: 201,
+  body: {
+    path,
+    index: name,
+    update,
+  },
+});
+
+const moved = (path, oldLocation, name, update) => ({
+  statusCode: 301,
   body: {
     path,
     movedFrom: oldLocation,
@@ -43,14 +53,17 @@ const error = (path, e) => ({
 /**
  * Find an existing entry, given its path or sourceHash and branch.
  *
- * @param {object} index Algolia index
+ * @param {SearchIndex} index Algolia index
  * @param {object} attributes Attributes to search for
- * @param {string} branch Branch
  */
 async function search(index, attributes) {
-  const filters = Object.getOwnPropertyNames(attributes).map(
-    (name) => `${name}:${attributes[name]}`,
-  );
+  const filters = Object.getOwnPropertyNames(attributes)
+    .filter(
+      (name) => attributes[name],
+    )
+    .map(
+      (name) => `${name}:${attributes[name]}`,
+    );
   const searchresult = await index.search({
     attributesToRetrieve: ['path', 'name', 'objectID', 'sourceHash'],
     filters: filters.join(' AND '),
@@ -59,21 +72,62 @@ async function search(index, attributes) {
 }
 
 /**
+ * Prepare items to be re-indexed.
+ *
+ * @param {object} cfg index configuration
+ * @param {SearchIndex} index algolia index
+ * @param {object} coll collection of items
+ * @param {string} branch GitHub branch
+ *
+ * @return {Array} of { path, hit } items
+ */
+async function prepareItems(cfg, index, coll, branch) {
+  let searchresults = (await Promise.all(coll.items.map(
+    // try to lookup path for items that only have a source hash
+    async (item) => {
+      const { path, sourceHash } = item;
+      const hit = await search(index, { path, sourceHash, branch });
+      return { path: path || (hit ? hit.path : null), hit };
+    },
+  ))).filter(
+    // drop tems that still haven't a valid path
+    ({ path }) => !!path,
+  );
+  const { mountpoint } = coll;
+  if (mountpoint) {
+    // if mountpoint is given, translate paths and remove leading slash
+    const re = new RegExp(`^${mountpoint.root}/`);
+    const repl = mountpoint.path.replace(/^\/+(.*)/, '$1');
+
+    searchresults = searchresults.map(
+      (item) => ({ path: item.path.replace(re, repl), hit: item.hit }),
+    );
+  }
+  return searchresults.filter(
+    // keep only items that are included in the index definition
+    ({ path }) => includes(index, path),
+  ).map(({ path, hit }) => {
+    // replace requested extension with the one in source
+    const noext = path.replace(/([^.]+)\.[^./]+/, '$1');
+    return { path: `${noext}.${cfg.source}`, hit };
+  });
+}
+
+/**
  * Update all records in a index with the paths given.
  *
  * @param {object} params parameters
- * @param {object} name index name
+ * @param {object} cfg index configuration
  * @param {SearchIndex} index algolia index
+ * @param {object} coll collection of items to index
  * @returns HTTP multi response
  */
-module.exports = async (params, name, index, paths) => {
+module.exports = async (params, cfg, index, coll) => {
   const {
     branch, __ow_logger: log,
   } = params;
-  const searchresults = await Promise.all(paths.map(async (path) => ({
-    path,
-    hit: await search(index, { path, branch }),
-  })));
+
+  const searchresults = await prepareItems(cfg, index, coll, branch);
 
   return Promise.all(searchresults.map(async ({ path, hit }) => {
     try {
@@ -98,7 +152,10 @@ module.exports = async (params, name, index, paths) => {
         }
       }
       log.debug(`Adding index record for resource at: ${path}`);
-      return created(path, oldLocation, name, await index.saveObjects(docs));
+      const result = await index.saveObjects(docs);
+      return oldLocation
+        ? moved(path, oldLocation, cfg.name, result)
+        : created(path, cfg.name, result);
     } catch (e) {
       return error(path, e);
     }

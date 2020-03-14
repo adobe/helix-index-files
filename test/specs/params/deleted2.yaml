@@ -1,0 +1,18 @@
+params:
+  owner: me
+  repo: repo
+  ref: master
+  branch: master
+  provider:
+    driveId: baz
+  mountpoint:
+    path: /items/
+    root: /share
+  changes:
+  - id: 3
+    type": deleted
+
+results:
+- status: 204
+  reason: "Item not found: items/deleted.html"
+  path: items/deleted.html

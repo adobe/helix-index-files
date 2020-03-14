@@ -1,0 +1,12 @@
+params:
+  owner: me
+  repo: repo
+  ref: master
+  branch: master
+  path: items/added.html
+
+results:
+  - status: 201
+    path: items/added.html
+    index: blog-posts
+    update: 2
