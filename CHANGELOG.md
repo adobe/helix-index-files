@@ -1,3 +1,31 @@
+## [1.1.8](https://github.com/adobe/helix-index-files/compare/v1.1.7...v1.1.8) (2020-03-10)
+
+
+### Bug Fixes
+
+* **deps:** update external ([#87](https://github.com/adobe/helix-index-files/issues/87)) ([a155924](https://github.com/adobe/helix-index-files/commit/a1559247f6d0cf520243c4b39b3a23c84c5903bb))
+
+## [1.1.7](https://github.com/adobe/helix-index-files/compare/v1.1.6...v1.1.7) (2020-03-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/openwhisk-action-utils to v4.2.2 ([0d0b89c](https://github.com/adobe/helix-index-files/commit/0d0b89ce50eaf872708ed592c69eefb14d1ee98b))
+
+## [1.1.6](https://github.com/adobe/helix-index-files/compare/v1.1.5...v1.1.6) (2020-03-06)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/openwhisk-action-utils to v4.2.1 ([442b284](https://github.com/adobe/helix-index-files/commit/442b284212a263fb0e467c791cbccd969c9a9cb4))
+
+## [1.1.5](https://github.com/adobe/helix-index-files/compare/v1.1.4...v1.1.5) (2020-03-06)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/openwhisk-action-utils to v4.2.0 ([9805758](https://github.com/adobe/helix-index-files/commit/9805758aa4a6971c7031637dae63fbfc4970e73e))
+
 ## [1.1.4](https://github.com/adobe/helix-index-files/compare/v1.1.3...v1.1.4) (2020-03-04)
 
 
