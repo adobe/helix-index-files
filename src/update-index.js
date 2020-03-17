@@ -108,7 +108,7 @@ async function prepareItems(cfg, index, coll, branch) {
     ({ path }) => includes(index, path),
   ).map(({ path, hit }) => {
     // replace requested extension with the one in source
-    const noext = path.replace(/([^.]+)\.[^./]+/, '$1');
+    const noext = path.replace(/([^.]+)\.[^./]+$/, '$1');
     return { path: `${noext}.${cfg.source}`, hit };
   });
 }

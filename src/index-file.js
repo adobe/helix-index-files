@@ -33,7 +33,7 @@ function makeparents(filename = '') {
  * @param {string} path path to fetch documents for
  * @returns document array
  */
-module.exports = async (params, path) => {
+async function indexFile(params, path) {
   const {
     pkg, owner, repo, ref, branch, __ow_logger: log,
   } = params;
@@ -94,4 +94,6 @@ module.exports = async (params, path) => {
     log.debug(`Action ${pkg}/${type}_json@latest returned a 404 for path: ${path}`);
   }
   return docs;
-};
+}
+
+module.exports = indexFile;

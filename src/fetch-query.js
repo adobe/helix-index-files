@@ -22,7 +22,7 @@ const { IndexConfig } = require('@adobe/helix-shared');
  * @param {object} opts options
  * @return {object} the index configuration
  */
-module.exports = async ({ owner, repo, ref }, opts) => {
+async function fetchQuery({ owner, repo, ref }, opts) {
   const rootUrl = 'https://raw.githubusercontent.com/';
   const url = `${rootUrl}${owner}/${repo}/${ref}/helix-query.yaml`;
 
@@ -40,4 +40,6 @@ module.exports = async ({ owner, repo, ref }, opts) => {
   } catch (e) {
     throw new Error(`Unable to load index definition: ${e.message}`);
   }
-};
+}
+
+module.exports = fetchQuery;

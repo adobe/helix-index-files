@@ -25,7 +25,7 @@ const mm = require('micromatch');
  *
  * @returns {Boolean} whether path is included in configuration
  */
-module.exports = ({ include }, path) => {
+function includes({ include }, path) {
   if (!include) {
     // no clause includes everything
     return true;
@@ -42,4 +42,6 @@ module.exports = ({ include }, path) => {
       a.push(...i);
       return a;
     }, []));
-};
+}
+
+module.exports = includes;
