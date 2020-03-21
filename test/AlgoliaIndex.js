@@ -13,6 +13,9 @@
 'use strict';
 
 const fse = require('fs-extra');
+const p = require('path');
+
+const specsDir = p.resolve(__dirname, 'specs');
 
 /**
  * Algolia compatible read-only index loaded from file for testing.
@@ -20,7 +23,7 @@ const fse = require('fs-extra');
 class AlgoliaIndex {
   constructor(name) {
     this._name = name;
-    this._file = `test/specs/${name}.json`;
+    this._file = p.resolve(specsDir, 'algolia', `${name}.json`);
   }
 
   async init() {

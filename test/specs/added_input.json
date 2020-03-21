@@ -1,0 +1,9 @@
+{
+  "name": "added_with_path",
+  "description": "change containing an addition with a path",
+  "owner": "foo",
+  "repo": "bar",
+  "ref": "master",
+  "branch": "master",
+  "path": "ms/added.html"
+}

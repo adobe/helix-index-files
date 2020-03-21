@@ -1,0 +1,9 @@
+{
+  "name": "deleted_with_path",
+  "description": "change containing a deletion with a path",
+  "owner": "foo",
+  "repo": "bar",
+  "ref": "master",
+  "branch": "master",
+  "path": "ms/deleted.html"
+}

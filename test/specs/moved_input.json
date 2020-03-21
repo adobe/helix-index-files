@@ -1,0 +1,9 @@
+{
+  "name": "moved_with_path",
+  "description": "move an existing item with a path",
+  "owner": "foo",
+  "repo": "bar",
+  "ref": "master",
+  "branch": "master",
+  "path": "ms/moved_to.html"
+}

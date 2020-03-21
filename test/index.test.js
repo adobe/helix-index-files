@@ -17,17 +17,16 @@
 const assert = require('assert');
 const fse = require('fs-extra');
 const p = require('path');
-const YAML = require('yaml');
 const proxyquire = require('proxyquire');
 const AlgoliaIndex = require('./AlgoliaIndex');
 
-const SPEC_ROOT = p.resolve(__dirname, 'specs/params');
+const SPEC_ROOT = p.resolve(__dirname, 'specs');
 
 /**
  * Replacement for @adobe/helix-fetch in our test.
  */
 const fsFetch = async (url) => {
-  const path = `test/specs/${url.split('/').slice(-4).join('/')}`;
+  const path = `test/specs/${url.split('/').slice(-1).join('/')}`;
   if (await fse.pathExists(path)) {
     return {
       ok: true,
@@ -46,9 +45,9 @@ const fsFetch = async (url) => {
  */
 const fsIndexPipeline = async ({ params }) => {
   const {
-    owner, repo, ref, path,
+    path,
   } = params;
-  const indexedJSON = `test/specs/${owner}/${repo}/${ref}/${path}.json`;
+  const indexedJSON = `test/specs/index-pipelines/${path}.json`;
   const docs = [];
   let meta;
 
@@ -90,7 +89,7 @@ describe('Index Tests', () => {
   describe('Argument checking', () => {
     // Invoke our action with missing combinations of parameters
     const requiredParamNames = [
-      'owner', 'repo', 'ref', 'branch', 'ALGOLIA_API_KEY', 'ALGOLIA_APP_ID',
+      'owner', 'repo', 'ref', 'ALGOLIA_API_KEY', 'ALGOLIA_APP_ID',
     ];
     for (let i = 0; i < requiredParamNames.length; i += 1) {
       const params = requiredParamNames.slice(0, i).reduce((acc, name) => {
@@ -103,18 +102,28 @@ describe('Index Tests', () => {
     }
   });
 
-  describe('Setup in test/specs/params', () => {
+  describe('Setup in test/specs', () => {
     fse.readdirSync(SPEC_ROOT).forEach((filename) => {
-      const source = fse.readFileSync(p.resolve(SPEC_ROOT, filename), 'utf8');
-      const json = YAML.parseDocument(source, {
-        merge: true,
-        schema: 'core',
-      }).toJSON();
-      it(`Testing ${filename}`, async () => {
-        const params = { ALGOLIA_APP_ID: 'foo', ALGOLIA_API_KEY: 'bar', ...json.params };
-        const response = await main(params);
-        assert.deepEqual(response.body.results, json.results);
-      });
+      if (filename.endsWith('_input.json')) {
+        const name = filename.substring(0, filename.length - 11);
+        const input = fse.readJSONSync(p.resolve(SPEC_ROOT, filename), 'utf8');
+        const output = fse.readJSONSync(p.resolve(SPEC_ROOT, `${name}_output.json`), 'utf8');
+        it(`Testing ${input.name}`, async () => {
+          const params = { ALGOLIA_APP_ID: 'foo', ALGOLIA_API_KEY: 'bar', ...input };
+          const response = await main(params);
+          assert.deepEqual(response.body.results, output);
+        });
+      }
+      // const source = fse.readFileSync(p.resolve(SPEC_ROOT, filename), 'utf8');
+      // const json = YAML.parseDocument(source, {
+      //   merge: true,
+      //   schema: 'core',
+      // }).toJSON();
+      // it(`Testing ${filename}`, async () => {
+      //   const params = { ALGOLIA_APP_ID: 'foo', ALGOLIA_API_KEY: 'bar', ...json.params };
+      //   const response = await main(params);
+      //   assert.deepEqual(response.body.results, json.results);
+      // });
     });
   });
 });

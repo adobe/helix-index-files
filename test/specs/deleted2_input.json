@@ -1,0 +1,21 @@
+{
+  "name": "deleted_with_uid",
+  "description": "change containing a deletion within a mountpoint",
+  "type": "onedrive",
+  "owner": "foo",
+  "repo": "bar",
+  "ref": "master",
+  "changes": [
+    {
+      "uid": "hlNXFkdVwFlqlpof",
+      "type": "deleted"
+    }
+  ],
+  "mountpoint": {
+    "path": "/ms/",
+    "root": "/theblog"
+  },
+  "provider": {
+    "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
+  }
+}

@@ -35,7 +35,7 @@ function makeparents(filename = '') {
  */
 async function indexFile(params, path) {
   const {
-    pkg, owner, repo, ref, branch, __ow_logger: log,
+    pkg = 'index-pipelines', owner, repo, ref, branch, __ow_logger: log,
   } = params;
   const type = p.extname(path).replace(/\./g, '');
 

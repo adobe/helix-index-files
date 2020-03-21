@@ -10,12 +10,8 @@
  * governing permissions and limitations under the License.
  */
 
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-console */
-
 'use strict';
 
-const crypto = require('crypto');
 const { logger } = require('@adobe/openwhisk-action-logger');
 const { wrap } = require('@adobe/openwhisk-action-utils');
 const statusWrap = require('@adobe/helix-status').wrap;
@@ -39,14 +35,6 @@ function getAlgoliaSearch(params) {
 }
 
 /**
- * Return source hash for an item.
- */
-function getSourceHash(driveId, itemId) {
-  const sourceLocation = `/drives/${driveId}/items/${itemId}`;
-  return crypto.createHash('sha1').update(sourceLocation).digest('base64').substring(0, 16);
-}
-
-/**
  * Return items to be indexed in a common format for paths given as
  * a string or string array or payloads in common format sent by
  * external listeners.
@@ -55,11 +43,10 @@ function getSourceHash(driveId, itemId) {
  */
 function getItemsCollection(params) {
   if (params.changes) {
-    const { driveId } = params.provider;
     return {
       mountpoint: params.mountpoint,
       items: params.changes.map((c) => (
-        c.path ? { path: c.path } : { sourceHash: getSourceHash(driveId, c.id) }
+        { path: c.path, sourceHash: c.uid }
       )),
     };
   }
@@ -113,6 +100,17 @@ async function run(params) {
   return { statusCode: 207, body: { results } };
 }
 
+function addBranch(func) {
+  return (params) => {
+    if (params && params.ref && !params.branch) {
+      // eslint-disable-next-line no-param-reassign
+      params.branch = params.ref;
+    }
+    return func(params);
+  };
+}
+
 module.exports.main = wrap(run)
   .with(logger)
-  .with(statusWrap);
+  .with(statusWrap)
+  .with(addBranch);
