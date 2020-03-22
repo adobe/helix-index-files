@@ -122,7 +122,7 @@ async function prepareItems(cfg, index, coll, branch) {
  * @param {object} coll collection of items to index
  * @returns HTTP multi response
  */
-module.exports = async (params, cfg, index, coll) => {
+async function updateIndex(params, cfg, index, coll) {
   const {
     branch, __ow_logger: log,
   } = params;
@@ -160,4 +160,6 @@ module.exports = async (params, cfg, index, coll) => {
       return error(path, e);
     }
   }));
-};
+}
+
+module.exports = updateIndex;
