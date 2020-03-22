@@ -114,16 +114,6 @@ describe('Index Tests', () => {
           assert.deepEqual(response.body.results, output);
         });
       }
-      // const source = fse.readFileSync(p.resolve(SPEC_ROOT, filename), 'utf8');
-      // const json = YAML.parseDocument(source, {
-      //   merge: true,
-      //   schema: 'core',
-      // }).toJSON();
-      // it(`Testing ${filename}`, async () => {
-      //   const params = { ALGOLIA_APP_ID: 'foo', ALGOLIA_API_KEY: 'bar', ...json.params };
-      //   const response = await main(params);
-      //   assert.deepEqual(response.body.results, json.results);
-      // });
     });
   });
 });
