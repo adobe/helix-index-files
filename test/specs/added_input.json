@@ -5,5 +5,5 @@
   "repo": "bar",
   "ref": "master",
   "branch": "master",
-  "path": "ms/added.html"
+  "paths": [ "ms/added.html" ]
 }

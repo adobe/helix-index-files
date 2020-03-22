@@ -1,0 +1,8 @@
+{
+  "name": "empty_path",
+  "description": "change not containing any path or paths",
+  "owner": "foo",
+  "repo": "bar",
+  "ref": "master",
+  "branch": "master"
+}

@@ -88,18 +88,26 @@ const { main } = proxyquire('../src/index.js', {
 describe('Index Tests', () => {
   describe('Argument checking', () => {
     // Invoke our action with missing combinations of parameters
-    const requiredParamNames = [
-      'owner', 'repo', 'ref', 'ALGOLIA_API_KEY', 'ALGOLIA_APP_ID',
+    const paramsKV = [
+      ['owner', 'foo'],
+      ['repo', 'bar'],
+      ['ref', 'master'],
+      ['ALGOLIA_API_KEY', 'foo'],
+      ['ALGOLIA_APP_ID', 'bar'],
     ];
-    for (let i = 0; i < requiredParamNames.length; i += 1) {
-      const params = requiredParamNames.slice(0, i).reduce((acc, name) => {
-        acc[`${name}`] = 'bogus';
+    for (let i = 0; i < paramsKV.length; i += 1) {
+      const params = paramsKV.slice(0, i).reduce((acc, [k, v]) => {
+        acc[`${k}`] = v;
         return acc;
       }, {});
-      it(`index function bails if argument ${requiredParamNames[i]} is missing`, async () => {
-        await assert.rejects(() => main(params), /\w+ parameter missing/);
+      it(`index function bails if argument ${paramsKV[i][0]} is missing`, async () => {
+        await assert.rejects(async () => main(params), /\w+ parameter missing/);
       });
     }
+    it('index function bails if branch is missing and ref is not usable', async () => {
+      await assert.rejects(async () => main({ ref: 'dd25127aa92f65fda6a0927ed3fb00bf5dcea069' }),
+        /branch parameter missing and ref not usable/);
+    });
   });
 
   describe('Setup in test/specs', () => {

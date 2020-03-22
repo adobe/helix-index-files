@@ -50,7 +50,7 @@ function getItemsCollection(params) {
       )),
     };
   }
-  const paths = params.paths || params.path ? [params.path] : [];
+  const paths = params.paths || (params.path ? [params.path] : []);
   return {
     items: paths.map((p) => ({ path: p })),
   };
@@ -63,7 +63,7 @@ function getItemsCollection(params) {
  */
 async function run(params) {
   const {
-    owner, repo, ref, branch,
+    owner, repo, ref,
   } = params;
 
   if (!owner) {
@@ -74,9 +74,6 @@ async function run(params) {
   }
   if (!ref) {
     throw new Error('ref parameter missing.');
-  }
-  if (!branch) {
-    throw new Error('branch parameter missing.');
   }
 
   const algolia = getAlgoliaSearch(params);
@@ -100,11 +97,20 @@ async function run(params) {
   return { statusCode: 207, body: { results } };
 }
 
-function addBranch(func) {
+/**
+ * Fill a missing branch in the parameters.
+ *
+ * @param {function} func function to wrap
+ */
+function fillBranch(func) {
   return (params) => {
     if (params && params.ref && !params.branch) {
-      // eslint-disable-next-line no-param-reassign
-      params.branch = params.ref;
+      if (params.ref === 'master' || params.ref === 'preview') {
+        // eslint-disable-next-line no-param-reassign
+        params.branch = params.ref;
+      } else {
+        throw new Error(`branch parameter missing and ref not usable: ${params.ref}`);
+      }
     }
     return func(params);
   };
@@ -113,4 +119,4 @@ function addBranch(func) {
 module.exports.main = wrap(run)
   .with(logger)
   .with(statusWrap)
-  .with(addBranch);
+  .with(fillBranch);
