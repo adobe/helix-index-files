@@ -35,9 +35,11 @@ function makeparents(filename = '') {
  */
 async function indexFile(params, path) {
   const {
-    pkg = 'index-pipelines', owner, repo, ref, branch, __ow_logger: log,
+    pkg = 'index-pipelines', version = 'latest',
+    owner, repo, ref, branch, __ow_logger: log,
   } = params;
   const type = p.extname(path).replace(/\./g, '');
+  const action = `${pkg}/${type}_json${version ? `@${version}` : ''}`;
 
   const docs = [];
   const doc = {
@@ -52,21 +54,21 @@ async function indexFile(params, path) {
   };
 
   try {
-    log.debug(`Invoking ${pkg}/${type}_json@latest for path: ${path}`);
+    log.debug(`Invoking ${action} for path: ${path}`);
     const {
       activationId,
       response: {
         result,
       },
     } = await openwhisk().actions.invoke({
-      name: `${pkg}/${type}_json@latest`,
+      name: `${action}`,
       blocking: true,
       params: {
         owner, repo, ref, path,
       },
     });
     if (!result.body.docs) {
-      const message = `${pkg}/${type}_json@latest (activation id: ${activationId}) returned no documents`;
+      const message = `${action} (activation id: ${activationId}) returned no documents`;
       throw new OpenWhiskError(message, null, result.statusCode);
     }
     const fragments = result.body.docs
@@ -91,7 +93,7 @@ async function indexFile(params, path) {
     if (!(e instanceof OpenWhiskError && e.statusCode === 404)) {
       throw e;
     }
-    log.debug(`Action ${pkg}/${type}_json@latest returned a 404 for path: ${path}`);
+    log.debug(`Action ${action} returned a 404 for path: ${path}`);
   }
   return docs;
 }

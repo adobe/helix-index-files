@@ -22,16 +22,16 @@ const updateIndex = require('./update-index.js');
 
 function getAlgoliaSearch(params) {
   const {
-    ALGOLIA_API_KEY: apiKey,
     ALGOLIA_APP_ID: appID,
+    ALGOLIA_API_KEY: apiKey,
   } = params;
-  if (!apiKey) {
-    throw new Error('ALGOLIA_API_KEY parameter missing.');
-  }
   if (!appID) {
     throw new Error('ALGOLIA_APP_ID parameter missing.');
   }
-  return algoliasearch(apiKey, appID);
+  if (!apiKey) {
+    throw new Error('ALGOLIA_API_KEY parameter missing.');
+  }
+  return algoliasearch(appID, apiKey);
 }
 
 /**
