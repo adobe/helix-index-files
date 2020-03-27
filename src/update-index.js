@@ -71,15 +71,30 @@ async function search(index, attributes) {
 }
 
 /**
+ * Replace an extension in a path. If the path has no extension,
+ * nothing is replaced.
+ *
+ * @param {string} path path
+ * @param {string} ext extension
+ */
+function replaceExt(path, ext) {
+  const dot = path.lastIndexOf('.');
+  if (dot > path.lastIndexOf('/')) {
+    return `${path.substr(0, dot)}.${ext}`;
+  }
+  return path;
+}
+
+/**
  * Transform an item.
  *
  * @param {object} item item to transform
  * @param {object} mountpoint mountpoint definition
- * @param {SearchIndex} index search index
+ * @param {object} cfg index definition
+ * @param {SearchIndex} index algolia index
  * @param {string} branch branch name
- * @param {string} ext extension to use
  */
-async function transformItem(item, mountpoint, index, branch, ext) {
+async function prepareItem(item, mountpoint, cfg, index, branch) {
   const { path, sourceHash } = item;
 
   // try to lookup path for items that only have a source hash
@@ -90,7 +105,7 @@ async function transformItem(item, mountpoint, index, branch, ext) {
   }
   let itempath = path || hit.path;
 
-  // if mountpoint is given, translate path and remove leading slash
+  // if mountpoint is given, translate path and remove leading slash(es)
   if (mountpoint) {
     const re = new RegExp(`^${mountpoint.root}/`);
     const repl = mountpoint.path.replace(/^\/+/, '');
@@ -98,28 +113,27 @@ async function transformItem(item, mountpoint, index, branch, ext) {
   }
 
   // keep only items that are included in the index definition
-  if (!includes(index, itempath)) {
+  if (!includes(cfg, itempath)) {
     return null;
   }
 
   // replace requested extension with the one in source
-  const noext = itempath.replace(/([^.]+)\.[^./]+$/, '$1');
-  return { path: `${noext}.${ext}`, hit };
+  return { path: `${replaceExt(itempath, cfg.source)}`, hit };
 }
 
 /**
  * Prepare items to be re-indexed.
  *
- * @param {object} coll collection of items
- * @param {SearchIndex} index algolia index
  * @param {string} branch GitHub branch
- * @param {string} ext extension
+ * @param {string} cfg index configuration
+ * @param {SearchIndex} index algolia index
+ * @param {object} coll collection of items
  *
  * @return {Array} of { path, hit, error } items
  */
-async function prepareItems(coll, index, branch, ext) {
+async function prepareItems(branch, cfg, index, coll) {
   return (await Promise.all(coll.items.map(
-    async (item) => transformItem(item, coll.mountpoint, index, branch, ext),
+    async (item) => prepareItem(item, coll.mountpoint, cfg, index, branch),
   )))
     // forget items that are filtered out by include section
     .filter((item) => item !== null);
@@ -139,7 +153,7 @@ async function updateIndex(params, cfg, index, coll) {
     branch, __ow_logger: log,
   } = params;
 
-  const searchresults = await prepareItems(coll, index, branch, cfg.source);
+  const searchresults = await prepareItems(branch, cfg, index, coll);
 
   return Promise.all(searchresults.map(async ({ path, hit, notFound }) => {
     if (notFound) {

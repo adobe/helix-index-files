@@ -18,8 +18,8 @@ const p = require('path');
 const openwhisk = require('openwhisk');
 const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
 
-function makeparents(filename = '') {
-  const parent = p.dirname(filename[0] === '/' ? filename : `/${filename}`);
+function makeparents(filename) {
+  const parent = p.dirname(filename);
   if (parent === '/' || parent === '.' || !parent) {
     return ['/'];
   }

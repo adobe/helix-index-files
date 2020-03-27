@@ -92,8 +92,8 @@ describe('Index Tests', () => {
       ['owner', 'foo'],
       ['repo', 'bar'],
       ['ref', 'master'],
-      ['ALGOLIA_API_KEY', 'foo'],
-      ['ALGOLIA_APP_ID', 'bar'],
+      ['ALGOLIA_APP_ID', 'foo'],
+      ['ALGOLIA_API_KEY', 'bar'],
     ];
     for (let i = 0; i < paramsKV.length; i += 1) {
       const params = paramsKV.slice(0, i).reduce((acc, [k, v]) => {
