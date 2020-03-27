@@ -15,40 +15,39 @@
 const includes = require('./includes.js');
 const indexFile = require('./index-file.js');
 
-const notFound = (path, gone) => ({
-  statusCode: gone ? 204 : 404,
-  body: {
-    path,
-    reason: `Item not found: ${path}`,
-  },
-});
-
-const created = (path, name, update) => ({
-  statusCode: 201,
-  body: {
-    path,
-    index: name,
-    update,
-  },
-});
-
-const moved = (path, oldLocation, name, update) => ({
-  statusCode: 301,
-  body: {
-    path,
-    movedFrom: oldLocation,
-    index: name,
-    update,
-  },
-});
-
-const error = (path, e) => ({
-  statusCode: 500,
-  body: {
-    path,
-    reason: `Unable to load full metadata for ${path}: ${e.message}`,
-  },
-});
+const mapResult = {
+  notFound: (id, gone, idName = 'path') => ({
+    statusCode: gone ? 204 : 404,
+    body: {
+      [`${idName}`]: id,
+      reason: `Item not found with ${idName}: ${id}`,
+    },
+  }),
+  created: (path, name, update) => ({
+    statusCode: 201,
+    body: {
+      path,
+      index: name,
+      update,
+    },
+  }),
+  moved: (path, oldLocation, name, update) => ({
+    statusCode: 301,
+    body: {
+      path,
+      movedFrom: oldLocation,
+      index: name,
+      update,
+    },
+  }),
+  error: (path, e) => ({
+    statusCode: 500,
+    body: {
+      path,
+      reason: `Unable to load full metadata for ${path}: ${e.message}`,
+    },
+  }),
+};
 
 /**
  * Find an existing entry, given its path or sourceHash and branch.
@@ -72,45 +71,58 @@ async function search(index, attributes) {
 }
 
 /**
+ * Transform an item.
+ *
+ * @param {object} item item to transform
+ * @param {object} mountpoint mountpoint definition
+ * @param {SearchIndex} index search index
+ * @param {string} branch branch name
+ * @param {string} ext extension to use
+ */
+async function transformItem(item, mountpoint, index, branch, ext) {
+  const { path, sourceHash } = item;
+
+  // try to lookup path for items that only have a source hash
+  const hit = await search(index, { path, sourceHash, branch });
+  if (!hit && !path) {
+    // stop processing this item
+    return { notFound: sourceHash };
+  }
+  let itempath = path || hit.path;
+
+  // if mountpoint is given, translate path and remove leading slash
+  if (mountpoint) {
+    const re = new RegExp(`^${mountpoint.root}/`);
+    const repl = mountpoint.path.replace(/^\/+/, '');
+    itempath = itempath.replace(re, repl);
+  }
+
+  // keep only items that are included in the index definition
+  if (!includes(index, itempath)) {
+    return null;
+  }
+
+  // replace requested extension with the one in source
+  const noext = itempath.replace(/([^.]+)\.[^./]+$/, '$1');
+  return { path: `${noext}.${ext}`, hit };
+}
+
+/**
  * Prepare items to be re-indexed.
  *
- * @param {object} cfg index configuration
- * @param {SearchIndex} index algolia index
  * @param {object} coll collection of items
+ * @param {SearchIndex} index algolia index
  * @param {string} branch GitHub branch
+ * @param {string} ext extension
  *
- * @return {Array} of { path, hit } items
+ * @return {Array} of { path, hit, error } items
  */
-async function prepareItems(cfg, index, coll, branch) {
-  let searchresults = (await Promise.all(coll.items.map(
-    // try to lookup path for items that only have a source hash
-    async (item) => {
-      const { path, sourceHash } = item;
-      const hit = await search(index, { path, sourceHash, branch });
-      return { path: path || (hit ? hit.path : null), hit };
-    },
-  ))).filter(
-    // drop tems that still haven't a valid path
-    ({ path }) => !!path,
-  );
-  const { mountpoint } = coll;
-  if (mountpoint) {
-    // if mountpoint is given, translate paths and remove leading slash
-    const re = new RegExp(`^${mountpoint.root}/`);
-    const repl = mountpoint.path.replace(/^\/+(.*)/, '$1');
-
-    searchresults = searchresults.map(
-      (item) => ({ path: item.path.replace(re, repl), hit: item.hit }),
-    );
-  }
-  return searchresults.filter(
-    // keep only items that are included in the index definition
-    ({ path }) => includes(index, path),
-  ).map(({ path, hit }) => {
-    // replace requested extension with the one in source
-    const noext = path.replace(/([^.]+)\.[^./]+$/, '$1');
-    return { path: `${noext}.${cfg.source}`, hit };
-  });
+async function prepareItems(coll, index, branch, ext) {
+  return (await Promise.all(coll.items.map(
+    async (item) => transformItem(item, coll.mountpoint, index, branch, ext),
+  )))
+    // forget items that are filtered out by include section
+    .filter((item) => item !== null);
 }
 
 /**
@@ -127,9 +139,12 @@ async function updateIndex(params, cfg, index, coll) {
     branch, __ow_logger: log,
   } = params;
 
-  const searchresults = await prepareItems(cfg, index, coll, branch);
+  const searchresults = await prepareItems(coll, index, branch, cfg.source);
 
-  return Promise.all(searchresults.map(async ({ path, hit }) => {
+  return Promise.all(searchresults.map(async ({ path, hit, notFound }) => {
+    if (notFound) {
+      return mapResult.notFound(notFound, false, 'sourceHash');
+    }
     try {
       const docs = await indexFile(params, path);
       if (docs.length === 0) {
@@ -137,7 +152,7 @@ async function updateIndex(params, cfg, index, coll) {
           log.debug(`Deleting index record for resource gone at: ${path}`);
           await index.deleteObject(hit.objectID);
         }
-        return notFound(path, !!hit);
+        return mapResult.notFound(path, !!hit);
       }
       const { sourceHash } = docs[0];
       let oldLocation;
@@ -154,10 +169,10 @@ async function updateIndex(params, cfg, index, coll) {
       log.debug(`Adding index record for resource at: ${path}`);
       const result = await index.saveObjects(docs);
       return oldLocation
-        ? moved(path, oldLocation, cfg.name, result)
-        : created(path, cfg.name, result);
+        ? mapResult.moved(path, oldLocation, cfg.name, result)
+        : mapResult.created(path, cfg.name, result);
     } catch (e) {
-      return error(path, e);
+      return mapResult.error(path, e);
     }
   }));
 }

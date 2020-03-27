@@ -1,5 +1,5 @@
 [{
   "status": 404,
   "path": "ms/inexistent.html",
-  "reason": "Item not found: ms/inexistent.html"
+  "reason": "Item not found with path: ms/inexistent.html"
 }]
