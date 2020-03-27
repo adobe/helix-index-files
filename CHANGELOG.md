@@ -1,3 +1,10 @@
+## [1.1.9](https://github.com/adobe/helix-index-files/compare/v1.1.8...v1.1.9) (2020-03-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency yaml to v1.8.2 ([#90](https://github.com/adobe/helix-index-files/issues/90)) ([844f68d](https://github.com/adobe/helix-index-files/commit/844f68da0c28bd6f4997af9832e5275442de32bd))
+
 ## [1.1.8](https://github.com/adobe/helix-index-files/compare/v1.1.7...v1.1.8) (2020-03-10)
 
 
