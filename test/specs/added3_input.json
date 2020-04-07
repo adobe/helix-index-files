@@ -1,0 +1,9 @@
+{
+  "name": "added_without_ext",
+  "description": "change containing an addition without an extension",
+  "owner": "foo",
+  "repo": "bar",
+  "ref": "master",
+  "branch": "master",
+  "paths": [ "g/added" ]
+}

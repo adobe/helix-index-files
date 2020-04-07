@@ -10,144 +10,50 @@
  * governing permissions and limitations under the License.
  */
 
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-console */
-
 'use strict';
 
 const { logger } = require('@adobe/openwhisk-action-logger');
 const { wrap } = require('@adobe/openwhisk-action-utils');
 const statusWrap = require('@adobe/helix-status').wrap;
 const algoliasearch = require('algoliasearch');
-const openwhisk = require('openwhisk');
-const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
-const request = require('request-promise-native');
-const p = require('path');
-const YAML = require('yaml');
 
-function makeparents(filename = '') {
-  const parent = p.dirname(filename[0] === '/' ? filename : `/${filename}`);
-  if (parent === '/' || parent === '.' || !parent) {
-    return ['/'];
+const fetchQuery = require('./fetch-query.js');
+const updateIndex = require('./update-index.js');
+
+function getAlgoliaSearch(params) {
+  const {
+    ALGOLIA_APP_ID: appID,
+    ALGOLIA_API_KEY: apiKey,
+  } = params;
+  if (!appID) {
+    throw new Error('ALGOLIA_APP_ID parameter missing.');
   }
-  return [...makeparents(parent), parent];
+  if (!apiKey) {
+    throw new Error('ALGOLIA_API_KEY parameter missing.');
+  }
+  return algoliasearch(appID, apiKey);
 }
 
 /**
- * Load an index configuration from a git repo.
+ * Return items to be indexed in a common format for paths given as
+ * a string or string array or payloads in common format sent by
+ * external listeners.
  *
- * @param {string} owner
- * @param {string} repo
- * @param {string} ref
- *
- * @returns configuration
+ * @param {object} params parameters to action
  */
-async function loadConfig(owner, repo, ref, log) {
-  const url = `https://raw.githubusercontent.com/${owner}/${repo}/${ref}/helix-query.yaml`;
-  try {
-    const response = await request(url);
-    return YAML.parseDocument(response).toJSON() || {};
-  } catch (e) {
-    log.warn(`Unable to load index configuration from ${url} (${e.message}), using default properties.`);
+function getItemsCollection(params) {
+  if (params.changes) {
     return {
-      indices: {
-        default: {
-          properties: {},
-          attributesForFaceting: [
-            'filterOnly(sha)', 'filterOnly(path)', 'type', 'parents', 'branch',
-          ],
-        },
-      },
+      mountpoint: params.mountpoint,
+      items: params.changes.map((c) => (
+        { path: c.path, sourceHash: c.uid }
+      )),
     };
   }
-}
-
-/**
- * Find an existing entry, given its path or sourceHash and branch.
- *
- * @param {object} index Algolia index
- * @param {object} attributes Attributes to search for
- * @param {string} branch Branch
- */
-async function search(index, attributes) {
-  const filters = Object.getOwnPropertyNames(attributes).map(
-    (name) => `${name}:${attributes[name]}`,
-  );
-  const searchresult = await index.search({
-    attributesToRetrieve: ['path', 'name', 'objectID', 'sourceHash'],
-    filters: filters.join(' AND '),
-  });
-  return searchresult.nbHits !== 0 ? searchresult.hits[0] : null;
-}
-
-/**
- * Fetch documents that will be added to our index.
- *
- * @param {Object} ow openwhisk client
- * @param {Object} params parameters
- */
-async function fetchDocuments(ow, params) {
-  const {
-    pkg, owner, repo, ref, branch, path, log,
-  } = params;
-  const type = p.extname(path).replace(/\./g, '');
-
-  const docs = [];
-  const doc = {
-    objectID: `${branch}--${path}`,
-    creationDate: new Date().getTime(),
-    name: p.basename(path),
-    parents: makeparents(`/${path}`),
-    dir: p.dirname(path),
-    path,
-    type,
-    branch,
+  const paths = params.paths || (params.path ? [params.path] : []);
+  return {
+    items: paths.map((p) => ({ path: p })),
   };
-
-  try {
-    log.debug(`Invoking ${pkg}/${type}_json@latest for path: ${path}`);
-    const {
-      activationId,
-      response: {
-        result,
-      },
-    } = await ow.actions.invoke({
-      name: `${pkg}/${type}_json@latest`,
-      blocking: true,
-      params: {
-        owner, repo, ref, path,
-      },
-    });
-    if (!result.body.docs) {
-      const message = `${pkg}/${type}_json@latest (activation id: ${activationId}) returned no documents`;
-      throw new OpenWhiskError(message, null, result.statusCode);
-    }
-    const fragments = result.body.docs
-      .map((fragment) => ({ ...doc, ...fragment }))
-      .map((fragment) => {
-        // do not add an empty # if fragmentID is not defined
-        fragment.objectID = fragment.fragmentID
-          ? `${fragment.objectID}#${fragment.fragmentID}`
-          : fragment.objectID;
-        delete fragment.fragmentID;
-        return fragment;
-      });
-    // index all fragments
-    docs.push(...fragments);
-
-    // index the base document, too
-    const { meta } = result.body;
-    if (meta) {
-      Object.assign(doc, meta);
-      docs.push(doc);
-    }
-  } catch (e) {
-    if (!(e instanceof OpenWhiskError && e.statusCode === 404)) {
-      throw e;
-    }
-    log.debug(`Action ${pkg}/${type}_json@latest returned a 404 for path: ${path}`);
-  }
-  return docs;
 }
 
 /**
@@ -157,16 +63,7 @@ async function fetchDocuments(ow, params) {
  */
 async function run(params) {
   const {
-    pkg = 'index-pipelines',
-    owner,
-    repo,
-    ref,
-    branch,
-    path: singlePath,
-    paths: multiplePaths,
-    ALGOLIA_API_KEY,
-    ALGOLIA_APP_ID,
-    __ow_logger: log,
+    owner, repo, ref,
   } = params;
 
   if (!owner) {
@@ -178,101 +75,48 @@ async function run(params) {
   if (!ref) {
     throw new Error('ref parameter missing.');
   }
-  if (!branch) {
-    throw new Error('branch parameter missing.');
-  }
-  if (!(singlePath || multiplePaths)) {
-    throw new Error('path/paths parameter missing.');
-  }
-  if (!ALGOLIA_API_KEY) {
-    throw new Error('ALGOLIA_API_KEY parameter missing.');
-  }
-  if (!ALGOLIA_APP_ID) {
-    throw new Error('ALGOLIA_APP_ID parameter missing.');
-  }
 
-  const config = await loadConfig(owner, repo, ref, log);
-  const ow = openwhisk();
-  const algolia = algoliasearch(ALGOLIA_APP_ID, ALGOLIA_API_KEY);
+  const algolia = getAlgoliaSearch(params);
+  const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
+  const coll = getItemsCollection(params);
 
-  const paths = multiplePaths || [singlePath];
-
-  const responses = await Promise.all(Object.keys(config.indices).map(async (name) => {
-    const index = algolia.initIndex(`${owner}--${repo}--${name}`);
-
-    const searchresults = await Promise.all(paths.map(async (path) => ({
-      path,
-      hit: await search(index, { path, branch }),
-    })));
-
-    return Promise.all(searchresults.map(async ({ path, hit }) => {
-      try {
-        const docs = await fetchDocuments(ow, {
-          pkg, owner, repo, ref, branch, path, log,
-        });
-        if (docs.length === 0) {
-          if (hit) {
-            log.debug(`Deleting index record for resource gone at: ${path}`);
-            await index.deleteObject(hit.objectID);
-          }
-          return {
-            statusCode: hit ? 204 : 404,
-            body: {
-              path,
-              reason: `Item not found: ${path}`,
-            },
-          };
-        }
-        const { sourceHash } = docs[0];
-        let oldLocation;
-        if (sourceHash && !hit) {
-          // We did not find the item at the expected location, make sure
-          // it does not appear elsewhere (could be a move)
-          const result = await search(index, { sourceHash, branch });
-          if (result && result.objectID) {
-            log.debug(`Deleting index record for resource moved from: ${result.path}`);
-            oldLocation = result.path;
-            await index.deleteObject(result.objectID);
-          }
-        }
-        log.debug(`Adding index record for resource at: ${path}`);
-        return {
-          statusCode: oldLocation ? 301 : 201,
-          body: {
-            path,
-            movedFrom: oldLocation,
-            index: name,
-            update: await index.saveObjects(docs),
-          },
-        };
-      } catch (e) {
-        return {
-          statusCode: 500,
-          body: {
-            path,
-            reason: `Unable to load full metadata for ${path}: ${e.message}`,
-          },
-        };
-      }
+  const responses = await Promise.all(config.indices
+    .map(async (index) => {
+      const algoliaIndex = algolia.initIndex(`${owner}--${repo}--${index.name}`);
+      return updateIndex(params, index, algoliaIndex, coll);
     }));
-  }));
 
   const results = responses.reduce((acc, current) => {
+    // flatten array of arrays to simple array
     acc.push(...current);
     return acc;
   }, []).map((response) => ({
     status: response.statusCode,
     ...response.body,
   }));
+  return { statusCode: 207, body: { results } };
+}
 
-  return {
-    statusCode: 207,
-    body: {
-      results,
-    },
+/**
+ * Fill a missing branch in the parameters.
+ *
+ * @param {function} func function to wrap
+ */
+function fillBranch(func) {
+  return (params) => {
+    if (params && params.ref && !params.branch) {
+      if (params.ref === 'master' || params.ref === 'preview') {
+        // eslint-disable-next-line no-param-reassign
+        params.branch = params.ref;
+      } else {
+        throw new Error(`branch parameter missing and ref not usable: ${params.ref}`);
+      }
+    }
+    return func(params);
   };
 }
 
 module.exports.main = wrap(run)
   .with(logger)
-  .with(statusWrap);
+  .with(statusWrap)
+  .with(fillBranch);
