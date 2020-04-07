@@ -1,3 +1,10 @@
+## [1.1.12](https://github.com/adobe/helix-index-files/compare/v1.1.11...v1.1.12) (2020-04-07)
+
+
+### Bug Fixes
+
+* **index:** add empty query string to index.search ([#109](https://github.com/adobe/helix-index-files/issues/109)) ([28d1a9c](https://github.com/adobe/helix-index-files/commit/28d1a9c72a58b2c7ce806d6fdbd7a82afd34e24a))
+
 ## [1.1.11](https://github.com/adobe/helix-index-files/compare/v1.1.10...v1.1.11) (2020-04-07)
 
 
