@@ -1,3 +1,10 @@
+## [1.1.10](https://github.com/adobe/helix-index-files/compare/v1.1.9...v1.1.10) (2020-04-07)
+
+
+### Bug Fixes
+
+* **mount:** refactor OW action into smaller parts ([#82](https://github.com/adobe/helix-index-files/issues/82)) ([79bf72f](https://github.com/adobe/helix-index-files/commit/79bf72f9098928882210d7a5b06c8a217582ad61))
+
 ## [1.1.9](https://github.com/adobe/helix-index-files/compare/v1.1.8...v1.1.9) (2020-03-17)
 
 
