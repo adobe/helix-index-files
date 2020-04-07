@@ -63,7 +63,7 @@ async function search(index, attributes) {
     .map(
       (name) => `${name}:${attributes[name]}`,
     );
-  const searchresult = await index.search({
+  const searchresult = await index.search('', {
     attributesToRetrieve: ['path', 'name', 'objectID', 'sourceHash'],
     filters: filters.join(' AND '),
   });
