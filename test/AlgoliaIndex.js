@@ -32,7 +32,7 @@ class AlgoliaIndex {
     }
   }
 
-  async search({ filters }) {
+  async search(_, { filters }) {
     await this.init();
     let path;
     let sourceHash;
