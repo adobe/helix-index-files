@@ -1,3 +1,10 @@
+## [1.1.18](https://github.com/adobe/helix-index-files/compare/v1.1.17...v1.1.18) (2020-04-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-testutils to v0.3.1 ([b16a00f](https://github.com/adobe/helix-index-files/commit/b16a00f5b0245aea2ea3ade6f7940d28f48e5de9))
+
 ## [1.1.17](https://github.com/adobe/helix-index-files/compare/v1.1.16...v1.1.17) (2020-04-15)
 
 
