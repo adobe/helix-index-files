@@ -93,8 +93,9 @@ function replaceExt(path, ext) {
  * @param {object} cfg index definition
  * @param {SearchIndex} index algolia index
  * @param {string} branch branch name
+ * @param {object} log logger
  */
-async function prepareItem(item, mountpoint, cfg, index, branch) {
+async function prepareItem(item, mountpoint, cfg, index, branch, log) {
   const { path, sourceHash } = item;
 
   // try to lookup path for items that only have a source hash
@@ -114,6 +115,7 @@ async function prepareItem(item, mountpoint, cfg, index, branch) {
 
   // keep only items that are included in the index definition
   if (!includes(cfg, itempath)) {
+    log.debug(`Item path not in index definition: ${itempath}`);
     return null;
   }
 
@@ -128,12 +130,13 @@ async function prepareItem(item, mountpoint, cfg, index, branch) {
  * @param {string} cfg index configuration
  * @param {SearchIndex} index algolia index
  * @param {object} coll collection of items
+ * @param {object} log logger
  *
  * @return {Array} of { path, hit, error } items
  */
-async function prepareItems(branch, cfg, index, coll) {
+async function prepareItems(branch, cfg, index, coll, log) {
   return (await Promise.all(coll.items.map(
-    async (item) => prepareItem(item, coll.mountpoint, cfg, index, branch),
+    async (item) => prepareItem(item, coll.mountpoint, cfg, index, branch, log),
   )))
     // forget items that are filtered out by include section
     .filter((item) => item !== null);
@@ -153,7 +156,7 @@ async function updateIndex(params, cfg, index, coll) {
     branch, __ow_logger: log,
   } = params;
 
-  const searchresults = await prepareItems(branch, cfg, index, coll);
+  const searchresults = await prepareItems(branch, cfg, index, coll, log);
 
   return Promise.all(searchresults.map(async ({ path, hit, notFound }) => {
     if (notFound) {
