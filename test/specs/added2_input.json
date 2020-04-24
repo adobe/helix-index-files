@@ -1,23 +1,25 @@
 {
   "name": "added_with_uid",
   "description": "change containing an addition within a mountpoint",
-  "type": "onedrive",
   "owner": "foo",
   "repo": "bar",
   "ref": "master",
-  "changes": [
-    {
-      "uid": "Pi/8f6rBgLRF6aM3",
-      "path": "/theblog/added.docx",
-      "time": "2020-03-03T17:01:12Z",
-      "type": "modified"
+  "observation": {
+    "type": "onedrive",
+    "changes": [
+      {
+        "uid": "Pi/8f6rBgLRF6aM3",
+        "path": "/theblog/added.docx",
+        "time": "2020-03-03T17:01:12Z",
+        "type": "modified"
+      }
+    ],
+    "mountpoint": {
+      "path": "/ms/",
+      "root": "/theblog"
+    },
+    "provider": {
+      "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
     }
-  ],
-  "mountpoint": {
-    "path": "/ms/",
-    "root": "/theblog"
-  },
-  "provider": {
-    "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
   }
 }

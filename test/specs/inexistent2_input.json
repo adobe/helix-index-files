@@ -1,21 +1,23 @@
 {
   "name": "inexistent_with_uid",
   "description": "change containing a modification of an unknown item within a mountpoint",
-  "type": "onedrive",
   "owner": "foo",
   "repo": "bar",
   "ref": "master",
-  "changes": [
-    {
-      "uid": "+4tpPzJl45rr6aJA",
-      "type": "deleted"
+  "observation": {
+    "type": "onedrive",
+    "changes": [
+      {
+        "uid": "+4tpPzJl45rr6aJA",
+        "type": "deleted"
+      }
+    ],
+    "mountpoint": {
+      "path": "/ms/",
+      "root": "/theblog"
+    },
+    "provider": {
+      "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
     }
-  ],
-  "mountpoint": {
-    "path": "/ms/",
-    "root": "/theblog"
-  },
-  "provider": {
-    "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
   }
 }
