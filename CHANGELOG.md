@@ -1,3 +1,10 @@
+## [1.1.21](https://github.com/adobe/helix-index-files/compare/v1.1.20...v1.1.21) (2020-04-24)
+
+
+### Bug Fixes
+
+* **index:** log message when item not in include definition ([e92716f](https://github.com/adobe/helix-index-files/commit/e92716f8953071e6fefd30f16cbbbda18a71e85d))
+
 ## [1.1.20](https://github.com/adobe/helix-index-files/compare/v1.1.19...v1.1.20) (2020-04-24)
 
 
