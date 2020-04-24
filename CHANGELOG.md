@@ -1,3 +1,10 @@
+## [1.1.20](https://github.com/adobe/helix-index-files/compare/v1.1.19...v1.1.20) (2020-04-24)
+
+
+### Bug Fixes
+
+* **events:** add observation property ([#123](https://github.com/adobe/helix-index-files/issues/123)) ([673e428](https://github.com/adobe/helix-index-files/commit/673e428af71f3eb815030ea9b7e4f3828f2ff0f2))
+
 ## [1.1.19](https://github.com/adobe/helix-index-files/compare/v1.1.18...v1.1.19) (2020-04-22)
 
 

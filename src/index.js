@@ -42,10 +42,11 @@ function getAlgoliaSearch(params) {
  * @param {object} params parameters to action
  */
 function getItemsCollection(params) {
-  if (params.changes) {
+  const { observation } = params;
+  if (observation) {
     return {
-      mountpoint: params.mountpoint,
-      items: params.changes.map((c) => (
+      mountpoint: observation.mountpoint,
+      items: observation.changes.map((c) => (
         { path: c.path, sourceHash: c.uid }
       )),
     };

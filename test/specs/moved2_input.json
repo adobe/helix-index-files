@@ -1,23 +1,25 @@
 {
   "name": "moved_with_uid",
   "description": "move an existing item within a mountpoint",
-  "type": "onedrive",
   "owner": "foo",
   "repo": "bar",
   "ref": "master",
-  "changes": [
-    {
-      "uid": "Ho7yHAYJPjonC6Do",
-      "path": "/theblog/moved_to.docx",
-      "time": "2020-03-03T17:01:12Z",
-      "type": "modified"
+  "observation": {
+    "type": "onedrive",
+    "changes": [
+      {
+        "uid": "Ho7yHAYJPjonC6Do",
+        "path": "/theblog/moved_to.docx",
+        "time": "2020-03-03T17:01:12Z",
+        "type": "modified"
+      }
+    ],
+    "mountpoint": {
+      "path": "/ms/",
+      "root": "/theblog"
+    },
+    "provider": {
+      "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
     }
-  ],
-  "mountpoint": {
-    "path": "/ms/",
-    "root": "/theblog"
-  },
-  "provider": {
-    "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
   }
 }
