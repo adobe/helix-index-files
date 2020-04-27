@@ -1,3 +1,10 @@
+## [1.1.23](https://github.com/adobe/helix-index-files/compare/v1.1.22...v1.1.23) (2020-04-27)
+
+
+### Bug Fixes
+
+* **deps:** update external ([6d08d43](https://github.com/adobe/helix-index-files/commit/6d08d43c969e68499c27e2d94c635056ecda800b))
+
 ## [1.1.22](https://github.com/adobe/helix-index-files/compare/v1.1.21...v1.1.22) (2020-04-24)
 
 
