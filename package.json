@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/adobe/helix-index-files"
+    "url": "https://github.com/adobe/helix-index-files.git"
   },
   "author": "",
   "license": "Apache-2.0",
