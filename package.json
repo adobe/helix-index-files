@@ -42,7 +42,7 @@
     "openwhisk": "3.21.2",
     "request": "2.88.2",
     "request-promise-native": "1.0.8",
-    "yaml": "1.9.2"
+    "yaml": "1.10.0"
   },
   "devDependencies": {
     "@adobe/eslint-config-helix": "1.1.0",
@@ -52,7 +52,7 @@
     "@semantic-release/changelog": "5.0.1",
     "@semantic-release/exec": "5.0.0",
     "@semantic-release/git": "9.0.0",
-    "@semantic-release/github": "7.0.5",
+    "@semantic-release/github": "7.0.6",
     "ajv": "6.12.2",
     "codecov": "3.6.5",
     "commitizen": "4.1.2",
