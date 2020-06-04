@@ -1,0 +1,17 @@
+{
+  "input": {
+    "description": "move an existing item with a path",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "branch": "master",
+    "path": "ms/moved_to.html"
+  },
+  "output": [{
+    "status": 301,
+    "path": "ms/moved_to.html",
+    "movedFrom": "ms/existing.html",
+    "index": "blog-posts",
+    "update": 2
+  }]
+}

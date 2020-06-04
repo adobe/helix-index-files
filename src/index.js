@@ -17,6 +17,7 @@ const { wrap } = require('@adobe/openwhisk-action-utils');
 const statusWrap = require('@adobe/helix-status').wrap;
 const algoliasearch = require('algoliasearch');
 
+const Change = require('./Change.js');
 const fetchQuery = require('./fetch-query.js');
 const updateIndex = require('./update-index.js');
 
@@ -35,26 +36,27 @@ function getAlgoliaSearch(params) {
 }
 
 /**
- * Return items to be indexed in a common format for paths given as
- * a string or string array or payloads in common format sent by
- * external listeners.
+ * Return a change object with path, uid and type
  *
- * @param {object} params parameters to action
+ * @param {object} params Runtime parameters
+ * @returns change object
  */
-function getItemsCollection(params) {
+function getChange(params) {
   const { observation } = params;
   if (observation) {
-    return {
-      mountpoint: observation.mountpoint,
-      items: observation.changes.map((c) => (
-        { path: c.path, sourceHash: c.uid }
-      )),
-    };
+    const { change, mountpoint } = observation;
+    const opts = { uid: change.uid, path: change.path, type: change.type };
+    if (mountpoint && opts.path) {
+      const re = new RegExp(`^${mountpoint.root}/`);
+      const repl = mountpoint.path.replace(/^\/+/, '');
+      opts.path = opts.path.replace(re, repl);
+    }
+    return new Change(opts);
   }
-  const paths = params.paths || (params.path ? [params.path] : []);
-  return {
-    items: paths.map((p) => ({ path: p })),
-  };
+  if (!params.path) {
+    throw new Error('path parameter missing.');
+  }
+  return new Change({ path: params.path });
 }
 
 /**
@@ -79,19 +81,15 @@ async function run(params) {
 
   const algolia = getAlgoliaSearch(params);
   const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
-  const coll = getItemsCollection(params);
+  const change = getChange(params);
 
   const responses = await Promise.all(config.indices
     .map(async (index) => {
       const algoliaIndex = algolia.initIndex(`${owner}--${repo}--${index.name}`);
-      return updateIndex(params, index, algoliaIndex, coll);
+      return updateIndex(params, index, algoliaIndex, change);
     }));
 
-  const results = responses.reduce((acc, current) => {
-    // flatten array of arrays to simple array
-    acc.push(...current);
-    return acc;
-  }, []).map((response) => ({
+  const results = responses.map((response) => ({
     status: response.statusCode,
     ...response.body,
   }));

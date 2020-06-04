@@ -1,0 +1,16 @@
+{
+  "input": {
+    "description": "change containing an addition with a path",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "branch": "master",
+    "path": "ms/added.html"
+  },
+  "output": [{
+    "status": 201,
+    "path": "ms/added.html",
+    "index": "blog-posts",
+    "update": 2
+  }]
+}

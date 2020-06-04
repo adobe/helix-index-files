@@ -16,18 +16,13 @@
 
 const assert = require('assert');
 const proxyquire = require('proxyquire');
-const { ConsoleLogger, SimpleInterface } = require('@adobe/helix-log');
 const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
+const { createBunyanLogger } = require('@adobe/openwhisk-action-utils');
 
 /**
- * Create a logger.
+ * Logger.
  */
-function createLogger() {
-  return new SimpleInterface({
-    logger: new ConsoleLogger(),
-    level: 'info',
-  });
-}
+const log = createBunyanLogger();
 
 /**
  * Add a replacement for openwhisk in our test
@@ -49,7 +44,7 @@ describe('Index File Tests', () => {
     repo: 'foo',
     ref: 'master',
     branch: 'master',
-    __ow_logger: createLogger(),
+    __ow_logger: log,
   };
   it('returning no docs element throws', async () => {
     await assert.rejects(

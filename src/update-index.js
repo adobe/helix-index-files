@@ -16,13 +16,6 @@ const includes = require('./includes.js');
 const indexFile = require('./index-file.js');
 
 const mapResult = {
-  notFound: (id, gone, idName = 'path') => ({
-    statusCode: gone ? 204 : 404,
-    body: {
-      [`${idName}`]: id,
-      reason: `Item not found with ${idName}: ${id}`,
-    },
-  }),
   created: (path, name, update) => ({
     statusCode: 201,
     body: {
@@ -38,6 +31,13 @@ const mapResult = {
       movedFrom: oldLocation,
       index: name,
       update,
+    },
+  }),
+  notFound: (id, gone, name = 'path') => ({
+    statusCode: gone ? 204 : 404,
+    body: {
+      [`${name}`]: id,
+      reason: `Item ${gone ? 'gone' : 'not found'} with ${name}: ${id}`,
     },
   }),
   error: (path, e) => ({
@@ -86,112 +86,74 @@ function replaceExt(path, ext) {
 }
 
 /**
- * Transform an item.
- *
- * @param {object} item item to transform
- * @param {object} mountpoint mountpoint definition
- * @param {object} cfg index definition
- * @param {SearchIndex} index algolia index
- * @param {string} branch branch name
- * @param {object} log logger
- */
-async function prepareItem(item, mountpoint, cfg, index, branch, log) {
-  const { path, sourceHash } = item;
-
-  // try to lookup path for items that only have a source hash
-  const hit = await search(index, { path, sourceHash, branch });
-  if (!hit && !path) {
-    // stop processing this item
-    return { notFound: sourceHash };
-  }
-  let itempath = path || hit.path;
-
-  // if mountpoint is given, translate path and remove leading slash(es)
-  if (mountpoint) {
-    const re = new RegExp(`^${mountpoint.root}/`);
-    const repl = mountpoint.path.replace(/^\/+/, '');
-    itempath = itempath.replace(re, repl);
-  }
-
-  // keep only items that are included in the index definition
-  if (!includes(cfg, itempath)) {
-    log.debug(`Item path not in index definition: ${itempath}`);
-    return null;
-  }
-
-  // replace requested extension with the one in source
-  return { path: `${replaceExt(itempath, cfg.source)}`, hit };
-}
-
-/**
- * Prepare items to be re-indexed.
- *
- * @param {string} branch GitHub branch
- * @param {string} cfg index configuration
- * @param {SearchIndex} index algolia index
- * @param {object} coll collection of items
- * @param {object} log logger
- *
- * @return {Array} of { path, hit, error } items
- */
-async function prepareItems(branch, cfg, index, coll, log) {
-  return (await Promise.all(coll.items.map(
-    async (item) => prepareItem(item, coll.mountpoint, cfg, index, branch, log),
-  )))
-    // forget items that are filtered out by include section
-    .filter((item) => item !== null);
-}
-
-/**
- * Update all records in a index with the paths given.
+ * Update the Algolia index with the change given.
  *
  * @param {object} params parameters
  * @param {object} cfg index configuration
  * @param {SearchIndex} index algolia index
- * @param {object} coll collection of items to index
- * @returns HTTP multi response
+ * @param {Change} change change to process
+ * @returns HTTP response
  */
-async function updateIndex(params, cfg, index, coll) {
+async function updateIndex(params, cfg, index, change) {
   const {
     branch, __ow_logger: log,
   } = params;
 
-  const searchresults = await prepareItems(branch, cfg, index, coll, log);
+  let { uid: sourceHash } = change;
 
-  return Promise.all(searchresults.map(async ({ path, hit, notFound }) => {
-    if (notFound) {
-      return mapResult.notFound(notFound, false, 'sourceHash');
+  // Preprocess change, applying include and extension replacement
+  let { path } = change;
+  if (path) {
+    if (!includes(cfg, path)) {
+      return {
+        statusCode: 204,
+        body: { reason: `Item path not in index definition: ${path}` },
+      };
     }
-    try {
-      const docs = await indexFile(params, path);
-      if (docs.length === 0) {
-        if (hit) {
-          log.debug(`Deleting index record for resource gone at: ${path}`);
-          await index.deleteObject(hit.objectID);
-        }
-        return mapResult.notFound(path, !!hit);
-      }
-      const { sourceHash } = docs[0];
-      let oldLocation;
-      if (sourceHash && !hit) {
-        // We did not find the item at the expected location, make sure
-        // it does not appear elsewhere (could be a move)
-        const result = await search(index, { sourceHash, branch });
-        if (result && result.objectID) {
-          log.debug(`Deleting index record for resource moved from: ${result.path}`);
-          oldLocation = result.path;
-          await index.deleteObject(result.objectID);
-        }
-      }
-      log.debug(`Adding index record for resource at: ${path}`);
-      const result = await index.saveObjects(docs);
-      return oldLocation
-        ? mapResult.moved(path, oldLocation, cfg.name, result)
-        : mapResult.created(path, cfg.name, result);
-    } catch (e) {
-      return mapResult.error(path, e);
+    path = replaceExt(path, cfg.source);
+  }
+
+  // Process a delete observation
+  const hit = await search(index, { branch, path, sourceHash });
+  if (change.deleted) {
+    if (hit) {
+      await index.deleteObject(hit.objectID);
     }
-  }));
+    return hit && hit.path
+      ? mapResult.notFound(hit.path, true)
+      : mapResult.notFound(sourceHash, !!hit, 'sourceHash');
+  }
+
+  try {
+    let oldLocation;
+
+    // Invoke our Runtime Action to get the index record for that path
+    const docs = await indexFile(params, path);
+    if (docs.length === 0) {
+      return mapResult.notFound(path, !!hit);
+    }
+
+    // Delete a stale copy at another location
+    sourceHash = docs[0].sourceHash;
+    if (!hit && sourceHash) {
+      const result = await search(index, { sourceHash, branch });
+      if (result && result.objectID) {
+        log.debug(`Deleting index record for resource moved from: ${result.path}`);
+        oldLocation = result.path;
+        await index.deleteObject(result.objectID);
+      }
+    }
+
+    // Add record to index
+    log.debug(`Adding index record for resource at: ${path}`);
+    const result = await index.saveObjects(docs);
+
+    return oldLocation
+      ? mapResult.moved(path, oldLocation, cfg.name, result)
+      : mapResult.created(path, cfg.name, result);
+  } catch (e) {
+    return mapResult.error(path, e);
+  }
 }
 
 module.exports = updateIndex;

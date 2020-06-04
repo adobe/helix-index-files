@@ -1,9 +1,0 @@
-{
-  "name": "excluded",
-  "description": "change containing a path that is not included",
-  "owner": "foo",
-  "repo": "bar",
-  "ref": "master",
-  "branch": "master",
-  "paths": [ "foo/added.html" ]
-}

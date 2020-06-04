@@ -112,15 +112,14 @@ describe('Index Tests', () => {
 
   describe('Setup in test/specs', () => {
     fse.readdirSync(SPEC_ROOT).forEach((filename) => {
-      if (filename.endsWith('_input.json')) {
-        const name = filename.substring(0, filename.length - 11);
-        const input = fse.readJSONSync(p.resolve(SPEC_ROOT, filename), 'utf8');
-        const output = fse.readJSONSync(p.resolve(SPEC_ROOT, `${name}_output.json`), 'utf8');
-        it(`Testing ${input.name}`, async () => {
+      if (filename.endsWith('.json')) {
+        const name = filename.substring(0, filename.length - 5);
+        const { input, output } = fse.readJSONSync(p.resolve(SPEC_ROOT, filename), 'utf8');
+        it(`Testing ${name}`, async () => {
           const params = { ALGOLIA_APP_ID: 'foo', ALGOLIA_API_KEY: 'bar', ...input };
           const response = await main(params);
           assert.deepEqual(response.body.results, output);
-        });
+        }).timeout(60000);
       }
     });
   });
