@@ -20,8 +20,10 @@
     }
   },
   "output": [{
-    "status": 404,
-    "sourceHash": "+4tpPzJl45rr6aJA",
-    "reason": "Item not found with sourceHash: +4tpPzJl45rr6aJA"
+    "blog-posts": {
+      "status": 404,
+      "sourceHash": "+4tpPzJl45rr6aJA",
+      "reason": "Item not found with sourceHash: +4tpPzJl45rr6aJA"
+    }
   }]
 }

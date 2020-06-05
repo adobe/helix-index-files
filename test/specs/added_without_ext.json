@@ -8,9 +8,11 @@
     "path": "g/added"
   },
   "output": [{
+    "blog-posts": {
       "status": 201,
       "path": "g/added",
       "index": "blog-posts",
-      "update": 2
+      "update": 3
+    }
   }]
 }

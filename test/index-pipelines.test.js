@@ -29,7 +29,7 @@ const log = createBunyanLogger();
  *
  * @param {Function} fn function to invoke instead
  */
-const indexFile = (fn) => proxyquire('../src/index-file.js', {
+const run = (fn) => proxyquire('../src/index-pipelines.js', {
   openwhisk: () => ({
     actions: {
       invoke: fn,
@@ -37,7 +37,7 @@ const indexFile = (fn) => proxyquire('../src/index-file.js', {
   }),
 });
 
-describe('Index File Tests', () => {
+describe('Index Pipeline Tests', () => {
   const params = {
     pkg: 'index',
     owner: 'me',
@@ -46,28 +46,28 @@ describe('Index File Tests', () => {
     branch: 'master',
     __ow_logger: log,
   };
-  it('returning no docs element throws', async () => {
-    await assert.rejects(
-      indexFile(
+  it('returning no docs element returns an empty array', async () => {
+    assert.deepEqual(
+      await run(
         () => ({ response: { result: { body: {} } } }),
       )(params, ''),
-      /returned no documents/,
+      [],
     );
   });
-  it('throwing an OpenWhiskError 404 returns no documents', async () => {
+  it('throwing an OpenWhiskError 404 returns an empty array', async () => {
     assert.deepEqual(
-      await indexFile(
+      await run(
         () => { throw new OpenWhiskError('', '', 404); },
       )(params, ''),
       [],
     );
   });
-  it('throwing any other OpenWhiskError throws', async () => {
-    await assert.rejects(
-      indexFile(
+  it('throwing any other OpenWhiskError an empty array', async () => {
+    assert.deepEqual(
+      await run(
         () => { throw new OpenWhiskError('boohoo'); },
       )(params, ''),
-      /boohoo/,
+      [],
     );
   });
 });

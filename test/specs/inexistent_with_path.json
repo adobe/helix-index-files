@@ -8,8 +8,10 @@
     "path": "ms/inexistent.html"
   },
   "output": [{
-    "status": 404,
-    "path": "ms/inexistent.html",
-    "reason": "Item not found with path: ms/inexistent.html"
+    "blog-posts": {
+      "status": 404,
+      "path": "ms/inexistent.html",
+      "reason": "Item not found with path: ms/inexistent.html"
+    }
   }]
 }

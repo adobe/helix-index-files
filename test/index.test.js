@@ -49,14 +49,13 @@ const fsIndexPipeline = async ({ params }) => {
   } = params;
   const indexedJSON = `test/specs/index-pipelines/${path}.json`;
   const docs = [];
-  let meta;
 
   if (await fse.pathExists(indexedJSON)) {
-    docs.push(JSON.parse(await fse.readFile(indexedJSON, 'utf8')));
-    meta = {};
+    const doc = JSON.parse(await fse.readFile(indexedJSON, 'utf8'));
+    docs.push({ 'blog-posts': doc }, { 'blog-posts-flat': doc });
   }
   return {
-    response: { result: { body: { meta, docs }, statusCode: 200 } },
+    response: { result: { body: { docs }, statusCode: 200 } },
   };
 };
 
@@ -66,21 +65,21 @@ const fsIndexPipeline = async ({ params }) => {
  * @param {Function} invoke OW action to invoke
  */
 const { main } = proxyquire('../src/index.js', {
-  algoliasearch: () => ({
-    initIndex: (name) => new AlgoliaIndex(name),
-  }),
   './fetch-query.js': proxyquire('../src/fetch-query.js', {
     '@adobe/helix-fetch': {
       fetch: fsFetch,
     },
   }),
-  './update-index.js': proxyquire('../src/update-index.js', {
-    './index-file.js': proxyquire('../src/index-file.js', {
-      openwhisk: () => ({
-        actions: {
-          invoke: fsIndexPipeline,
-        },
-      }),
+  './index-pipelines.js': proxyquire('../src/index-pipelines.js', {
+    openwhisk: () => ({
+      actions: {
+        invoke: fsIndexPipeline,
+      },
+    }),
+  }),
+  './providers/algolia.js': proxyquire('../src/providers/algolia.js', {
+    algoliasearch: () => ({
+      initIndex: (name) => new AlgoliaIndex(name),
     }),
   }),
 });
@@ -118,7 +117,7 @@ describe('Index Tests', () => {
         it(`Testing ${name}`, async () => {
           const params = { ALGOLIA_APP_ID: 'foo', ALGOLIA_API_KEY: 'bar', ...input };
           const response = await main(params);
-          assert.deepEqual(response.body.results, output);
+          assert.deepEqual(response.body.results[0], output[0]);
         }).timeout(60000);
       }
     });

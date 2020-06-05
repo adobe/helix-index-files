@@ -59,16 +59,16 @@ class AlgoliaIndex {
 
     const idx = this._contents.findIndex((item) => item.objectID);
     if (idx !== -1) {
-      this._contents.splice(idx);
+      this._contents.splice(idx, 1);
     }
     return objectID;
   }
 
-  async saveObjects(docs) {
+  async saveObject(doc) {
     await this.init();
 
-    this._contents.push(...docs);
-    return docs.length;
+    this._contents.push(doc);
+    return this._contents.length;
   }
 
   get name() {

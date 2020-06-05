@@ -8,9 +8,11 @@
     "path": "ms/added.html"
   },
   "output": [{
-    "status": 201,
-    "path": "ms/added.html",
-    "index": "blog-posts",
-    "update": 2
+    "blog-posts": {
+      "status": 201,
+      "path": "ms/added.html",
+      "index": "blog-posts",
+      "update": 3
+    }
   }]
 }
