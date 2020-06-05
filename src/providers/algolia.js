@@ -36,14 +36,12 @@ const mapResult = {
   created: (path, name, update) => ({
     status: 201,
     path,
-    index: name,
     update,
   }),
   moved: (path, oldLocation, name, update) => ({
     status: 301,
     path,
     movedFrom: oldLocation,
-    index: name,
     update,
   }),
   notFound: (attributes, gone) => {
