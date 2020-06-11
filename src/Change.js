@@ -27,10 +27,6 @@ class Change {
     return this._uid;
   }
 
-  get type() {
-    return this._modified;
-  }
-
   get deleted() {
     return this._type === 'deleted';
   }

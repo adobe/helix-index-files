@@ -33,12 +33,12 @@ function makeparents(path) {
 }
 
 const mapResult = {
-  created: (path, name, update) => ({
+  created: (path, update) => ({
     status: 201,
     path,
     update,
   }),
-  moved: (path, oldLocation, name, update) => ({
+  moved: (path, oldLocation, update) => ({
     status: 301,
     path,
     movedFrom: oldLocation,
@@ -120,7 +120,6 @@ class Algolia {
       dir: p.dirname(path),
       path,
     };
-    const config = this._config;
     const object = { ...base, ...record };
 
     // Delete a stale copy at another location
@@ -137,8 +136,8 @@ class Algolia {
     const result = await this._index.saveObject(object);
 
     return oldLocation
-      ? mapResult.moved(path, oldLocation, config.name, result)
-      : mapResult.created(path, config.name, result);
+      ? mapResult.moved(path, oldLocation, result)
+      : mapResult.created(path, result);
   }
 
   async delete(attributes) {
@@ -147,7 +146,6 @@ class Algolia {
       await this._index.deleteObject(hit.objectID);
       return mapResult.notFound({ path: hit.path }, true);
     }
-    // TODO: depending on type of attributes an record
     return mapResult.notFound(attributes, false);
   }
 
@@ -157,6 +155,7 @@ class Algolia {
 }
 
 module.exports = {
+  name: 'Algolia',
   required: ['ALGOLIA_APP_ID', 'ALGOLIA_API_KEY'],
   match: (url) => !url,
   create: (params, config, log) => new Algolia(params, config, log),

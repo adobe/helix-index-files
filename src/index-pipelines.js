@@ -31,31 +31,22 @@ async function run(params, path) {
   const type = p.extname(path).replace(/\./g, '');
   const action = `${pkg}/${type}_json${version ? `@${version}` : ''}`;
 
-  try {
-    log.info(`Invoking ${action} for path: ${path}`);
-    const { activationId, response: { result } } = await openwhisk().actions.invoke({
-      name: `${action}`,
-      blocking: true,
-      params: {
-        owner, repo, ref, path,
-      },
-    });
+  log.info(`Invoking ${action} for path: ${path}`);
+  const { activationId, response: { result } } = await openwhisk().actions.invoke({
+    name: `${action}`,
+    blocking: true,
+    params: {
+      owner, repo, ref, path,
+    },
+  });
 
-    if (!result.body.docs) {
-      const message = `${action} (activation id: ${activationId}) returned no documents`;
-      throw new OpenWhiskError(message, null, result.statusCode);
-    }
-
-    const { body: { docs } } = result;
-    return docs;
-  } catch (e) {
-    if (e instanceof OpenWhiskError && e.statusCode === 404) {
-      log.debug(`Action ${action} returned a 404 for path: ${path}`);
-    } else {
-      log.error(`Unexpected error fetching path: ${path}`, e);
-    }
-    return [];
+  if (!result.body.docs) {
+    const message = `${action} (activation id: ${activationId}) returned no documents`;
+    throw new OpenWhiskError(message, null, 500);
   }
+
+  const { body: { docs } } = result;
+  return docs;
 }
 
 module.exports = run;

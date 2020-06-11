@@ -23,7 +23,7 @@ const specsDir = p.resolve(__dirname, 'specs');
 class AlgoliaIndex {
   constructor(name) {
     this._name = name;
-    this._file = p.resolve(specsDir, 'algolia', `${name}.json`);
+    this._file = p.resolve(specsDir, 'algolia', name, 'index.json');
   }
 
   async init() {

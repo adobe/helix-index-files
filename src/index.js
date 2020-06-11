@@ -144,7 +144,7 @@ async function handleUpdate({
       ? await provider.update({ path, ...doc })
       : await provider.delete({ path });
   } catch (e) {
-    log.error(`An error occurred updating record ${doc.path} in ${config.name}`, e);
+    log.error(`An error occurred updating record ${path} in ${config.name}`, e);
     return {
       status: 500,
       reason: e.message,
@@ -237,8 +237,8 @@ async function run(params) {
     throw new Error('ref parameter missing.');
   }
 
-  const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
   const change = getChange(params);
+  const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
   const indices = createProviders(config.indices, params, log);
 
   let responses;
