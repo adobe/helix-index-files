@@ -1,3 +1,13 @@
+# [2.0.0](https://github.com/adobe/helix-index-files/compare/v1.1.30...v2.0.0) (2020-06-11)
+
+
+* New pipelines output (#150) ([ece59fc](https://github.com/adobe/helix-index-files/commit/ece59fc10964e6b333102ff1b2d3074a2c274b9e)), closes [#150](https://github.com/adobe/helix-index-files/issues/150)
+
+
+### BREAKING CHANGES
+
+* expects pipeline to returned keyed output
+
 ## [1.1.30](https://github.com/adobe/helix-index-files/compare/v1.1.29...v1.1.30) (2020-06-08)
 
 
