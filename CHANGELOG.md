@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/adobe/helix-index-files/compare/v2.0.0...v2.0.1) (2020-06-11)
+
+
+### Bug Fixes
+
+* **deps:** pin dependencies ([#154](https://github.com/adobe/helix-index-files/issues/154)) ([739a1e1](https://github.com/adobe/helix-index-files/commit/739a1e1a3705a2ed6f3172236a6e0163941e471b))
+
 # [2.0.0](https://github.com/adobe/helix-index-files/compare/v1.1.30...v2.0.0) (2020-06-11)
 
 
