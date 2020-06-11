@@ -1,0 +1,17 @@
+{
+  "input": {
+    "description": "change containing a modification of an unknown item",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "branch": "master",
+    "path": "ms/inexistent.html"
+  },
+  "output": [{
+    "blog-posts": {
+      "status": 404,
+      "path": "ms/inexistent.html",
+      "reason": "Item not found with path: ms/inexistent.html"
+    }
+  }]
+}

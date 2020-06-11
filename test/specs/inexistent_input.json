@@ -1,9 +1,0 @@
-{
-  "name": "inexistent_with_path",
-  "description": "change containing a modification of an unknown item",
-  "owner": "foo",
-  "repo": "bar",
-  "ref": "master",
-  "branch": "master",
-  "path": "ms/inexistent.html"
-}

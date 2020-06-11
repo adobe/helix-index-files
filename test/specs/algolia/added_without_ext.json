@@ -1,0 +1,17 @@
+{
+  "input": {
+    "description": "change containing an addition without an extension",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "branch": "master",
+    "path": "g/added"
+  },
+  "output": [{
+    "blog-posts": {
+      "status": 201,
+      "path": "g/added",
+      "update": 3
+    }
+  }]
+}

@@ -1,0 +1,29 @@
+{
+  "input": {
+    "description": "change containing a deletion within a mountpoint",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "observation": {
+      "type": "onedrive",
+      "change": {
+        "uid": "hlNXFkdVwFlqlpof",
+        "type": "deleted"
+      },
+      "mountpoint": {
+        "path": "/ms/",
+        "root": "/theblog"
+      },
+      "provider": {
+        "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
+      }
+    }
+  },
+  "output": [{
+    "blog-posts": {
+      "status": 204,
+      "path": "ms/deleted.html",
+      "reason": "Item gone with path: ms/deleted.html"
+    }
+  }]
+}

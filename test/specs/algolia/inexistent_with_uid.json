@@ -1,0 +1,29 @@
+{
+  "input": {
+    "description": "change containing a modification of an unknown item within a mountpoint",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "observation": {
+      "type": "onedrive",
+      "change": {
+        "uid": "+4tpPzJl45rr6aJA",
+        "type": "deleted"
+      },
+      "mountpoint": {
+        "path": "/ms/",
+        "root": "/theblog"
+      },
+      "provider": {
+        "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
+      }
+    }
+  },
+  "output": [{
+    "blog-posts": {
+      "status": 404,
+      "sourceHash": "+4tpPzJl45rr6aJA",
+      "reason": "Item not found with sourceHash: +4tpPzJl45rr6aJA"
+    }
+  }]
+}

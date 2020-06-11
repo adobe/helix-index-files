@@ -1,0 +1,16 @@
+{
+  "input": {
+    "description": "change containing a path that is not included",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "branch": "master",
+    "path": "foo/added.html"
+  },
+  "output": [{
+    "blog-posts": {
+      "status": 404,
+      "reason": "Item path not in index definition: foo/added.html"
+    }
+  }]
+}

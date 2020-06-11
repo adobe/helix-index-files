@@ -18,7 +18,9 @@ const assert = require('assert');
 const fse = require('fs-extra');
 const p = require('path');
 const proxyquire = require('proxyquire');
-const AlgoliaIndex = require('./AlgoliaIndex');
+const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
+
+const AlgoliaIndex = require('./AlgoliaIndex.js');
 
 const SPEC_ROOT = p.resolve(__dirname, 'specs');
 
@@ -49,16 +51,20 @@ const fsIndexPipeline = async ({ params }) => {
   } = params;
   const indexedJSON = `test/specs/index-pipelines/${path}.json`;
   const docs = [];
-  let meta;
 
   if (await fse.pathExists(indexedJSON)) {
-    docs.push(JSON.parse(await fse.readFile(indexedJSON, 'utf8')));
-    meta = {};
+    const doc = JSON.parse(await fse.readFile(indexedJSON, 'utf8'));
+    docs.push({ 'blog-posts': doc }, { 'blog-posts-flat': doc });
   }
   return {
-    response: { result: { body: { meta, docs }, statusCode: 200 } },
+    response: { result: { body: { docs }, statusCode: 200 } },
   };
 };
+
+/**
+ * Index pipeline stub.
+ */
+let indexPipelineStub = fsIndexPipeline;
 
 /**
  * Proxy our real OW action and its requirements.
@@ -66,21 +72,21 @@ const fsIndexPipeline = async ({ params }) => {
  * @param {Function} invoke OW action to invoke
  */
 const { main } = proxyquire('../src/index.js', {
-  algoliasearch: () => ({
-    initIndex: (name) => new AlgoliaIndex(name),
-  }),
   './fetch-query.js': proxyquire('../src/fetch-query.js', {
     '@adobe/helix-fetch': {
       fetch: fsFetch,
     },
   }),
-  './update-index.js': proxyquire('../src/update-index.js', {
-    './index-file.js': proxyquire('../src/index-file.js', {
-      openwhisk: () => ({
-        actions: {
-          invoke: fsIndexPipeline,
-        },
-      }),
+  './index-pipelines.js': proxyquire('../src/index-pipelines.js', {
+    openwhisk: () => ({
+      actions: {
+        invoke: indexPipelineStub,
+      },
+    }),
+  }),
+  './providers/algolia.js': proxyquire('../src/providers/algolia.js', {
+    algoliasearch: () => ({
+      initIndex: (name) => new AlgoliaIndex(name),
     }),
   }),
 });
@@ -92,8 +98,7 @@ describe('Index Tests', () => {
       ['owner', 'foo'],
       ['repo', 'bar'],
       ['ref', 'master'],
-      ['ALGOLIA_APP_ID', 'foo'],
-      ['ALGOLIA_API_KEY', 'bar'],
+      ['path', 'test.html'],
     ];
     for (let i = 0; i < paramsKV.length; i += 1) {
       const params = paramsKV.slice(0, i).reduce((acc, [k, v]) => {
@@ -110,18 +115,75 @@ describe('Index Tests', () => {
     });
   });
 
-  describe('Setup in test/specs', () => {
-    fse.readdirSync(SPEC_ROOT).forEach((filename) => {
-      if (filename.endsWith('_input.json')) {
-        const name = filename.substring(0, filename.length - 11);
-        const input = fse.readJSONSync(p.resolve(SPEC_ROOT, filename), 'utf8');
-        const output = fse.readJSONSync(p.resolve(SPEC_ROOT, `${name}_output.json`), 'utf8');
-        it(`Testing ${input.name}`, async () => {
-          const params = { ALGOLIA_APP_ID: 'foo', ALGOLIA_API_KEY: 'bar', ...input };
+  describe('Run Algolia related tests', () => {
+    const dir = p.resolve(SPEC_ROOT, 'algolia');
+    fse.readdirSync(dir).forEach((filename) => {
+      if (filename.endsWith('.json')) {
+        const name = filename.substring(0, filename.length - 5);
+        const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
+        it(`Testing ${name}`, async () => {
+          const params = {
+            ALGOLIA_APP_ID: 'foo',
+            ALGOLIA_API_KEY: 'bar',
+            ...input,
+          };
           const response = await main(params);
-          assert.deepEqual(response.body.results, output);
-        });
+          assert.deepEqual(response.body.results[0], output[0]);
+        }).timeout(60000);
       }
+    });
+  });
+
+  describe('Tests returning bogus results from index-pipelines', () => {
+    afterEach(() => {
+      indexPipelineStub = fsIndexPipeline;
+    });
+    it('Throwing 502 in index pipeline propagates the error through our action', async () => {
+      indexPipelineStub = () => {
+        throw new OpenWhiskError(
+          'The action did not produce a valid response and exited unexpectedly.', null, 502,
+        );
+      };
+      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'algolia', 'added_with_path.json'), 'utf8');
+      const params = {
+        ALGOLIA_APP_ID: 'foo',
+        ALGOLIA_API_KEY: 'bar',
+        ...input,
+      };
+      await assert.rejects(
+        () => main(params),
+        /The action did not produce a valid response and exited unexpectedly./,
+      );
+    });
+    it('Throwing 504 in index pipeline propagates the error through our action', async () => {
+      indexPipelineStub = () => {
+        throw new OpenWhiskError(
+          'Response Missing Error Message.', null, 504,
+        );
+      };
+      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'algolia', 'added_with_path.json'), 'utf8');
+      const params = {
+        ALGOLIA_APP_ID: 'foo',
+        ALGOLIA_API_KEY: 'bar',
+        ...input,
+      };
+      await assert.rejects(
+        () => main(params),
+        /Response Missing Error Message./,
+      );
+    });
+    it('Returning an incomplete response', async () => {
+      indexPipelineStub = () => ({ activationId: '148f00fd3d0d47388f00fd3d0d17385f' });
+      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'algolia', 'added_with_path.json'), 'utf8');
+      const params = {
+        ALGOLIA_APP_ID: 'foo',
+        ALGOLIA_API_KEY: 'bar',
+        ...input,
+      };
+      await assert.rejects(
+        () => main(params),
+        /TypeError: Cannot destructure property `result` of 'undefined' or 'null'/,
+      );
     });
   });
 });
