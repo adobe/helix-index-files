@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/adobe/helix-index-files/compare/v2.0.3...v2.0.4) (2020-06-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-fetch to v1.6.2 ([69bfdf1](https://github.com/adobe/helix-index-files/commit/69bfdf1d184f35c8e813fc95f37c2520bf1a51ea))
+
 ## [2.0.3](https://github.com/adobe/helix-index-files/compare/v2.0.2...v2.0.3) (2020-06-15)
 
 
