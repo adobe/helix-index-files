@@ -176,12 +176,13 @@ class Excel {
   async delete(attributes) {
     await this._init();
 
-    const data = await this._search(attributes);
-    if (!data) {
-      return mapResult.notFound(attributes, false);
+    const hit = await this._search(attributes);
+    if (hit) {
+      this.log.info(`Deleting index record for resource at: ${hit.path}`);
+      await this._table.replaceRow(hit['.metadata'].rowIndex, this._headerNames.map(() => ''));
+      return mapResult.notFound({ path: hit.path }, true);
     }
-    await this._table.replaceRow(data['.metadata'].rowIndex, this._headerNames.map(() => ''));
-    return mapResult.notFound({ path: data.path }, true);
+    return mapResult.notFound(attributes, false);
   }
 
   get log() {
@@ -192,6 +193,6 @@ class Excel {
 module.exports = {
   name: 'Excel',
   required: ['AZURE_WORD2MD_CLIENT_ID', 'AZURE_HELIX_USER', 'AZURE_HELIX_PASSWORD'],
-  match: (url) => url && /^https:\/\/.*\.sharepoint\.com\//.test(url),
+  match: (url) => url && /^https:\/\/[^/]+\.sharepoint\.com\//.test(url),
   create: (params, config, log) => new Excel(params, config, log),
 };

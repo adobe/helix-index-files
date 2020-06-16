@@ -80,7 +80,7 @@ class Azure {
     }
 
     // Add record to index
-    this.log.debug(`Adding index record for resource at: ${path}`);
+    this.log.info(`Adding index record for resource at: ${path}`);
     const result = await this._updateObject(object);
 
     return oldLocation
@@ -91,6 +91,7 @@ class Azure {
   async delete(attributes) {
     const hit = await this._search({ branch: this._branch, ...attributes });
     if (hit) {
+      this.log.info(`Deleting index record for resource at: ${hit.path}`);
       await this._deleteObject(hit.objectID);
       return mapResult.notFound({ path: hit.path }, true);
     }
