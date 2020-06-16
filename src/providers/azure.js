@@ -33,7 +33,7 @@ const mapResult = {
     const [name] = Object.keys(pick(attributes, ['path', 'sourceHash']));
     return {
       status: gone ? 204 : 404,
-      [`${name}`]: attributes[name],
+      [name]: attributes[name],
       reason: `Item ${gone ? 'gone' : 'not found'} with ${name}: ${attributes[name]}`,
     };
   },
