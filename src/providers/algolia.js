@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Adobe. All rights reserved.
+ * Copyright 2020 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -15,8 +15,9 @@
 'use strict';
 
 const p = require('path');
-const pick = require('lodash.pick');
 const algoliasearch = require('algoliasearch');
+
+const mapResult = require('./mapResult.js');
 
 /**
  * Return an array consisting of all parents of a path.
@@ -31,33 +32,6 @@ function makeparents(path) {
   }
   return [...makeparents(parent), parent];
 }
-
-const mapResult = {
-  created: (path, update) => ({
-    status: 201,
-    path,
-    update,
-  }),
-  moved: (path, oldLocation, update) => ({
-    status: 301,
-    path,
-    movedFrom: oldLocation,
-    update,
-  }),
-  notFound: (attributes, gone) => {
-    const [name] = Object.keys(pick(attributes, ['path', 'sourceHash']));
-    return {
-      status: gone ? 204 : 404,
-      [`${name}`]: attributes[name],
-      reason: `Item ${gone ? 'gone' : 'not found'} with ${name}: ${attributes[name]}`,
-    };
-  },
-  error: (path, e) => ({
-    status: 500,
-    path,
-    reason: `Unable to load full metadata for ${path}: ${e.message}`,
-  }),
-};
 
 /**
  * Algolia index provider.
