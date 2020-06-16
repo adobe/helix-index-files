@@ -7,12 +7,10 @@
     "branch": "master",
     "path": "ms/moved_to.html"
   },
-  "output": [{
-    "blog-posts": {
-      "status": 301,
-      "path": "ms/moved_to.html",
-      "movedFrom": "ms/existing.html",
-      "update": 2
-    }
-  }]
+  "output": {
+    "status": 301,
+    "path": "ms/moved_to.html",
+    "movedFrom": "ms/existing.html",
+    "update": 2
+  }
 }

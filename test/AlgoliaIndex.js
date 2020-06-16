@@ -15,7 +15,7 @@
 const fse = require('fs-extra');
 const p = require('path');
 
-const specsDir = p.resolve(__dirname, 'specs');
+const SPEC_ROOT = p.resolve(__dirname, 'specs');
 
 /**
  * Algolia compatible read-only index loaded from file for testing.
@@ -23,17 +23,17 @@ const specsDir = p.resolve(__dirname, 'specs');
 class AlgoliaIndex {
   constructor(name) {
     this._name = name;
-    this._file = p.resolve(specsDir, 'algolia', name, 'index.json');
+    this._file = p.resolve(SPEC_ROOT, 'algolia', 'index.json');
   }
 
-  async init() {
+  async _init() {
     if (!this._contents) {
       this._contents = JSON.parse(await fse.readFile(this._file, 'utf-8'));
     }
   }
 
   async search(_, { filters }) {
-    await this.init();
+    await this._init();
     let path;
     let sourceHash;
 
@@ -55,9 +55,9 @@ class AlgoliaIndex {
   }
 
   async deleteObject(objectID) {
-    await this.init();
+    await this._init();
 
-    const idx = this._contents.findIndex((item) => item.objectID);
+    const idx = this._contents.findIndex((item) => objectID === item.objectID);
     if (idx !== -1) {
       this._contents.splice(idx, 1);
     }
@@ -65,7 +65,7 @@ class AlgoliaIndex {
   }
 
   async saveObject(doc) {
-    await this.init();
+    await this._init();
 
     this._contents.push(doc);
     return this._contents.length;

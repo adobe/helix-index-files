@@ -21,11 +21,9 @@
       }
     }
   },
-  "output": [{
-    "blog-posts": {
-      "status": 201,
-      "path": "ms/added.html",
-      "update": 3
-    }
-  }]
+  "output": {
+    "status": 201,
+    "path": "ms/added.html",
+    "update": 3
+  }
 }

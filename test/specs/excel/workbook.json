@@ -1,0 +1,14 @@
+{
+  "sheets": [{
+    "name": "excel",
+    "namedItems": []
+  }],
+  "tables": [{
+    "name": "Table1",
+    "headerNames": ["path","sourceHash"],
+    "values": [
+      [ "ms/existing.html", "Ho7yHAYJPjonC6Do"],
+      [ "ms/deleted.html",  "hlNXFkdVwFlqlpof"]
+    ]
+  }]
+}

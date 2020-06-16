@@ -83,12 +83,12 @@ describe('Index Pipeline Tests', () => {
     )({ version: '', ...params }, 'test.html');
     assert.equal(actionName, 'index-pipelines/html_json');
   });
-  it('returning no docs element throws', async () => {
+  it('returning no body element throws', async () => {
     await assert.rejects(
       () => run(
-        () => ({ response: { result: { body: {} } } }),
+        () => ({ response: { result: {} } }),
       )(params, ''),
-      /returned no documents/,
+      /returned no body/,
     );
   });
   it('throwing any Error throws', async () => {

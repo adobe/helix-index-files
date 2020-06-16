@@ -14,23 +14,8 @@
 
 'use strict';
 
-const p = require('path');
 const pick = require('lodash.pick');
-const algoliasearch = require('algoliasearch');
-
-/**
- * Return an array consisting of all parents of a path.
- *
- * @param {string} filename filename
- * @returns array of parents
- */
-function makeparents(path) {
-  const parent = p.dirname(path);
-  if (parent === '/' || parent === '.' || !parent) {
-    return ['/'];
-  }
-  return [...makeparents(parent), parent];
-}
+const rp = require('request-promise-native');
 
 const mapResult = {
   created: (path, update) => ({
@@ -60,67 +45,53 @@ const mapResult = {
 };
 
 /**
- * Algolia index provider.
+ * Azure search index provider.
  */
-class Algolia {
+class Azure {
   constructor(params, config, log) {
     const {
-      ALGOLIA_APP_ID: appID,
-      ALGOLIA_API_KEY: apiKey,
+      AZURE_SEARCH_API_KEY: apiKey,
+      AZURE_SEARCH_SERVICE_NAME: serviceName,
     } = params;
 
-    if (!appID) {
-      throw new Error('ALGOLIA_APP_ID parameter missing.');
-    }
     if (!apiKey) {
-      throw new Error('ALGOLIA_API_KEY parameter missing.');
+      throw new Error('AZURE_SEARCH_API_KEY parameter missing.');
     }
-    const algolia = algoliasearch(appID, apiKey);
+    if (!serviceName) {
+      throw new Error('AZURE_SEARCH_SERVICE_NAME parameter missing.');
+    }
+
+    this._apiKey = apiKey;
+    this._serviceName = serviceName;
 
     const {
-      owner, repo, branch,
+      owner, repo,
     } = params;
 
-    this._index = algolia.initIndex(`${owner}--${repo}--${config.name}`);
-    this._branch = branch;
+    this._index = `${owner}--${repo}--${config.name}`;
     this._config = config;
     this._log = log;
   }
 
-  async _search(attributes) {
-    const filters = Object.getOwnPropertyNames(attributes)
-      .filter(
-        (name) => attributes[name],
-      )
-      .map(
-        (name) => `${name}:${attributes[name]}`,
-      );
-    const searchresult = await this._index.search('', {
-      attributesToRetrieve: ['path', 'name', 'objectID', 'sourceHash'],
-      filters: filters.join(' AND '),
-    });
-    if (searchresult.nbHits !== 0) {
-      const record = searchresult.hits[0];
-      return {
-        id: record.objectID,
-        ...record,
-      };
-    }
-    return null;
+  async _getClient() {
+    const opts = {
+      baseUrl: `https://${this._serviceName}.search.windows.net/indexes/${this._index}`,
+      json: true,
+      qs: { 'api-version': '2019-05-06' },
+      headers: { 'api-key': this._apiKey },
+    };
+    return rp.defaults(opts);
   }
 
   async update(record) {
     if ('sourceHash' in record && !record.sourceHash) {
       return mapResult.error(record.path, `Unable to update ${record.path}: sourceHash is empty`);
     }
+
     const { path, sourceHash } = record;
     const base = {
-      objectID: `${this._branch}--${path}`,
-      branch: this._branch,
-      creationDate: new Date().getTime(),
-      name: p.basename(path),
-      parents: makeparents(`/${path}`),
-      dir: p.dirname(path),
+      objectID: Buffer.from(`${path}`).toString('base64'),
+      modificationDate: new Date().getTime(),
       path,
     };
     const object = { ...base, ...record };
@@ -131,12 +102,12 @@ class Algolia {
     if (hit && hit.path !== path) {
       this.log.info(`Deleting index record for resource moved from: ${hit.path}`);
       oldLocation = hit.path;
-      await this._index.deleteObject(hit.objectID);
+      await this._deleteObject(hit.objectID);
     }
 
     // Add record to index
     this.log.debug(`Adding index record for resource at: ${path}`);
-    const result = await this._index.saveObject(object);
+    const result = await this._updateObject(object);
 
     return oldLocation
       ? mapResult.moved(path, oldLocation, result)
@@ -146,10 +117,66 @@ class Algolia {
   async delete(attributes) {
     const hit = await this._search({ branch: this._branch, ...attributes });
     if (hit) {
-      await this._index.deleteObject(hit.objectID);
+      await this._deleteObject(hit.objectID);
       return mapResult.notFound({ path: hit.path }, true);
     }
     return mapResult.notFound(attributes, false);
+  }
+
+  async _search(attributes) {
+    const $filter = Object.getOwnPropertyNames(attributes)
+      .filter(
+        (name) => attributes[name],
+      )
+      .map(
+        (name) => `${name} eq '${attributes[name]}'`,
+      )
+      .join(' and ');
+    const $select = ['path', 'objectID', 'sourceHash'].join(',');
+    const client = await this._getClient();
+    const result = await client.get('/docs', { qs: { search: '', $filter, $select } });
+    if (result.value.length > 0) {
+      return result.value[0];
+    }
+    return null;
+  }
+
+  async _updateObject(object) {
+    const body = {
+      value: [
+        {
+          '@search.action': 'mergeOrUpload',
+          ...object,
+        },
+      ],
+    };
+    const client = await this._getClient();
+    const result = await client.post('/docs/index', {
+      body,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return result;
+  }
+
+  async _deleteObject(objectID) {
+    const body = {
+      value: [
+        {
+          '@search.action': 'delete',
+          objectID,
+        },
+      ],
+    };
+    const client = await this._getClient();
+    const result = await client.post('/docs/index', {
+      body,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return result;
   }
 
   get log() {
@@ -158,8 +185,8 @@ class Algolia {
 }
 
 module.exports = {
-  name: 'Algolia',
-  required: ['ALGOLIA_APP_ID', 'ALGOLIA_API_KEY'],
-  match: (url) => !url,
-  create: (params, config, log) => new Algolia(params, config, log),
+  name: 'Azure',
+  required: ['AZURE_SEARCH_API_KEY', 'AZURE_SEARCH_SERVICE_NAME'],
+  match: (url) => url === 'azure',
+  create: (params, config, log) => new Azure(params, config, log),
 };

@@ -23,12 +23,14 @@ const includes = require('./includes.js');
 const indexPipelines = require('./index-pipelines.js');
 
 const algolia = require('./providers/algolia.js');
+const azure = require('./providers/azure.js');
+const excel = require('./providers/excel.js');
 
 /**
  * List of known index providers.
  */
 const providers = [
-  algolia,
+  algolia, azure, excel,
 ];
 
 /**
@@ -45,7 +47,7 @@ function hasParams(required, actual) {
 
 /**
  * Create providers along index definitions and return an array of objects
- * consisting of an index definition and its provider
+ * consisting of an index definition and its providers
  *
  * @param {Array} indices array of index definitions
  * @returns array of index definitions and their providers
@@ -125,7 +127,7 @@ async function handleDelete({ config, provider }, change, log) {
  * @param {object} log logger
  */
 async function handleUpdate({
-  config, provider, path, doc,
+  config, provider, path, body,
 }, change, log) {
   if (!provider) {
     return {
@@ -139,7 +141,12 @@ async function handleUpdate({
       reason: `Item path not in index definition: ${change.path}`,
     };
   }
+  const { error } = body;
+  if (error && error.status !== 404) {
+    return error;
+  }
   try {
+    const doc = body.docs ? body.docs[0] : null;
     return doc
       ? await provider.update({ path, ...doc })
       : await provider.delete({ path });
@@ -172,11 +179,12 @@ function replaceExt(path, ext) {
  *
  * @param {object} params parameters
  * @param {object} indices index configurations
+ *
  * @returns object containing index definition and index record, keyed by name
  */
 async function runPipeline(indices, change, params, log) {
   // Create our result where we'll store the HTML responses
-  const result = indices
+  const records = indices
     .reduce((prev, { config, provider }) => {
       // eslint-disable-next-line no-param-reassign
       prev[config.name] = {
@@ -190,7 +198,7 @@ async function runPipeline(indices, change, params, log) {
     }, {});
 
   // Create a unique set of the paths found
-  const paths = Array.from(Object.values(result)
+  const paths = Array.from(Object.values(records)
     .filter(({ path }) => path)
     .reduce((prev, { path }) => {
       prev.add(path);
@@ -199,22 +207,22 @@ async function runPipeline(indices, change, params, log) {
 
   // Invoke the pipelines action
   const responses = new Map(await Promise.all(paths.map(async (path) => {
-    const docs = await indexPipelines(params, path);
-    return [path, docs];
+    const body = await indexPipelines(params, path);
+    return [path, body];
   })));
 
   // Finish by filling in all responses acquired
-  Object.values(result).filter(({ path }) => path).forEach((entry) => {
-    const docs = responses.get(entry.path);
-    const item = docs.find((doc) => entry.config.name in doc);
-    if (!item) {
-      log.info(`Pipeline did not return entry for index: ${entry.config.name}, path: ${entry.path}`);
+  Object.values(records).filter(({ path }) => path).forEach((record) => {
+    const response = responses.get(record.path);
+    const body = response[record.config.name];
+    if (!body) {
+      log.info(`Pipeline did not return entry for index: ${record.config.name}, path: ${record.path}`);
     } else {
       // eslint-disable-next-line no-param-reassign
-      entry.doc = item[entry.config.name];
+      record.body = body;
     }
   });
-  return Object.values(result);
+  return Object.values(records);
 }
 
 /**
@@ -264,11 +272,12 @@ async function run(params) {
 function fillBranch(func) {
   return (params) => {
     if (params && params.ref && !params.branch) {
-      if (params.ref === 'master' || params.ref === 'preview') {
+      const { ref } = params;
+      if (ref.length === 40 && /^[a-f0-9]+$/.test(ref)) {
+        throw new Error(`branch parameter missing and ref looks like a commit id: ${ref}`);
+      } else {
         // eslint-disable-next-line no-param-reassign
         params.branch = params.ref;
-      } else {
-        throw new Error(`branch parameter missing and ref not usable: ${params.ref}`);
       }
     }
     return func(params);
