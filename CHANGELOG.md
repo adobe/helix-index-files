@@ -1,3 +1,31 @@
+## [2.0.5](https://github.com/adobe/helix-index-files/compare/v2.0.4...v2.0.5) (2020-06-16)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-testutils to v0.3.2 ([54e7893](https://github.com/adobe/helix-index-files/commit/54e789305b592d9e324008809647626b942c4f34))
+
+## [2.0.4](https://github.com/adobe/helix-index-files/compare/v2.0.3...v2.0.4) (2020-06-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-fetch to v1.6.2 ([69bfdf1](https://github.com/adobe/helix-index-files/commit/69bfdf1d184f35c8e813fc95f37c2520bf1a51ea))
+
+## [2.0.3](https://github.com/adobe/helix-index-files/compare/v2.0.2...v2.0.3) (2020-06-15)
+
+
+### Bug Fixes
+
+* **deps:** update external ([34143c2](https://github.com/adobe/helix-index-files/commit/34143c2890705ed0f9e1e7efcd75a08719b9c55a))
+
+## [2.0.2](https://github.com/adobe/helix-index-files/compare/v2.0.1...v2.0.2) (2020-06-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-shared to v7.6.0 ([a2b80d3](https://github.com/adobe/helix-index-files/commit/a2b80d303b5eae58f09084f8aa67aa95cd2054bf))
+
 ## [2.0.1](https://github.com/adobe/helix-index-files/compare/v2.0.0...v2.0.1) (2020-06-11)
 
 
