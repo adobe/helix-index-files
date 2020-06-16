@@ -85,7 +85,9 @@ class Algolia {
 
   async update(record) {
     if ('sourceHash' in record && !record.sourceHash) {
-      return mapResult.error(record.path, `Unable to update ${record.path}: sourceHash is empty`);
+      const message = `Unable to update ${record.path}: sourceHash is empty.`;
+      this.log.warn(message);
+      return mapResult.error(record.path, message);
     }
     const { path, sourceHash } = record;
     const base = {

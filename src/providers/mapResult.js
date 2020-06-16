@@ -34,10 +34,10 @@ const mapResult = {
       reason: `Item ${gone ? 'gone' : 'not found'} with ${name}: ${attributes[name]}`,
     };
   },
-  error: (path, e) => ({
+  error: (path, reason) => ({
     status: 500,
     path,
-    reason: `Unable to load full metadata for ${path}: ${e.message}`,
+    reason,
   }),
 };
 
