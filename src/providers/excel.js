@@ -106,7 +106,11 @@ class Excel {
   }
 
   async _search(query) {
-    const names = Object.getOwnPropertyNames(query);
+const entries = Object.entries(query);
+if (entries.length !== 1) {
+  throw new Error(`Expected one field in query, got: ${entries.length}`);
+}
+const [name, value] = entries[0];
     if (names.length !== 1) {
       throw new Error(`Expected one field in query, got: ${names.length}`);
     }
