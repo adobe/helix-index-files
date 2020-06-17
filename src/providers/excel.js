@@ -135,7 +135,7 @@ class Excel {
   async update(record) {
     const { path, sourceHash } = record;
     if (!sourceHash) {
-      const message = `Unable to update ${record.path}: sourceHash is empty.`;
+      const message = `Unable to update ${path}: sourceHash is empty.`;
       this.log.warn(message);
       return mapResult.error(record.path, message);
     }
