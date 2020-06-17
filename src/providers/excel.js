@@ -137,7 +137,7 @@ class Excel {
     if (!sourceHash) {
       const message = `Unable to update ${path}: sourceHash is empty.`;
       this.log.warn(message);
-      return mapResult.error(record.path, message);
+      return mapResult.error(path, message);
     }
 
     await this._init();
