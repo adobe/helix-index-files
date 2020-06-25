@@ -28,8 +28,13 @@ class Worksheet {
     return this._contents.namedItems.find((item) => item.name === name);
   }
 
-  addNamedItem(name, value) {
-    return this._contents.namedItems.push({ name, value });
+  addNamedItem(name, value, comment) {
+    if (this.getNamedItem(name)) {
+      const e = new Error(`Name already exists: ${name}`);
+      e.statusCode = 409;
+      throw e;
+    }
+    return this._contents.namedItems.push({ name, value, comment });
   }
 
   deleteNamedItem(name) {

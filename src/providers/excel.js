@@ -17,6 +17,7 @@
 const { OneDrive } = require('@adobe/helix-onedrive-support');
 
 const mapResult = require('./mapResult.js');
+const acquireLock = require('./acquirelock.js');
 
 /**
  * Encodes values to be transferred to Excel.
@@ -71,61 +72,6 @@ class Excel {
     this._headerNames = await this._table.getHeaderNames();
   }
 
-  async _acquireLock(id) {
-    const name = `N_${id.replace(/[+/=]/g, '_')}`;
-    const lock = {
-      acquire: async () => {
-        const success = await lock.tryLock();
-        if (success) {
-          return lock;
-        }
-        const namedItem = await this._worksheet.getNamedItem(name);
-        if (namedItem === null) {
-          return await lock.tryLock() ? lock : null;
-        }
-        const { comment } = namedItem;
-        if (!comment || Date.now() - new Date(comment).getTime() > 60000) {
-          return await lock.breakLock() ? lock : null;
-        }
-        return null;
-      },
-      tryLock: async () => {
-        try {
-          await this._worksheet.addNamedItem(name, '$A1', new Date().toISOString());
-          return true;
-        } catch (e) {
-          if (e.statusCode !== 409 && e.statusCode !== 429) {
-            throw e;
-          }
-          return false;
-        }
-      },
-      breakLock: async () => {
-        try {
-          await this._worksheet.deleteNamedItem(name);
-        } catch (e) {
-          if (e.statusCode === 429) {
-            return null;
-          }
-          if (e.statusCode !== 404) {
-            throw e;
-          }
-        }
-        return lock.tryLock();
-      },
-      release: async () => {
-        try {
-          await this._worksheet.deleteNamedItem(name);
-        } catch (e) {
-          if (e.statusCode !== 404 && e.statusCode !== 429) {
-            throw e;
-          }
-        }
-      },
-    };
-    return lock.acquire();
-  }
-
   async _search(query) {
     const entries = Object.entries(query);
     if (entries.length !== 1) {
@@ -162,7 +108,7 @@ class Excel {
 
     await this._init();
 
-    const lock = await this._acquireLock(sourceHash);
+    const lock = await acquireLock(this._worksheet, sourceHash);
     if (lock === null) {
       return mapResult.error(path, `Unable to update record with sourceHash '${sourceHash}': it is currently locked.`);
     }
