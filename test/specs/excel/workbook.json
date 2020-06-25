@@ -5,10 +5,10 @@
   }],
   "tables": [{
     "name": "Table1",
-    "headerNames": ["path","sourceHash"],
+    "headerNames": ["path","sourceHash","topics"],
     "values": [
-      [ "ms/existing.html", "Ho7yHAYJPjonC6Do"],
-      [ "ms/deleted.html",  "hlNXFkdVwFlqlpof"]
+      [ "ms/existing.html", "Ho7yHAYJPjonC6Do", "[\"Test1\"]" ],
+      [ "ms/deleted.html",  "hlNXFkdVwFlqlpof", "[\"Test2\"]"]
     ]
   }]
 }

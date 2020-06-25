@@ -58,22 +58,16 @@ class Azure {
   }
 
   async update(record) {
-const { path, sourceHash } = record;
-if (!sourceHash) {
+    const { path, sourceHash } = record;
+    if (!sourceHash) {
       const message = `Unable to update ${path}: sourceHash is empty.`;
       this.log.warn(message);
       return mapResult.error(path, message);
-}
-      const message = `Unable to update ${record.path}: sourceHash is empty.`;
-      this.log.warn(message);
-      return mapResult.error(record.path, message);
     }
 
-    const { path, sourceHash } = record;
     const base = {
       objectID: Buffer.from(`${path}`).toString('base64'),
-      modificationDate: new Date().getTime(),
-      path,
+      modificationDate: Date.now(),
     };
     const object = { ...base, ...record };
 
@@ -87,8 +81,8 @@ if (!sourceHash) {
     }
 
     // Add record to index
-    this.log.info(`Adding index record for resource at: ${path}`);
     const result = await this._updateObject(object);
+    this.log.info(`Merged record in '${this._index}' for resource at: ${path}`);
 
     return oldLocation
       ? mapResult.moved(path, oldLocation, result)

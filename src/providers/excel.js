@@ -19,6 +19,24 @@ const { OneDrive } = require('@adobe/helix-onedrive-support');
 const mapResult = require('./mapResult.js');
 
 /**
+ * Encodes values to be transferred to Excel.
+ *
+ * @param {any} value value to encode
+ * @returns encoded value
+ */
+function encode(value) {
+  if (Array.isArray(value)) {
+    return JSON.stringify(value);
+  }
+  if (typeof value === 'string') {
+    if (/^[+=]/.test(value)) {
+      return `'${value}`;
+    }
+  }
+  return value;
+}
+
+/**
  * Excel index provider.
  */
 class Excel {
@@ -66,7 +84,7 @@ class Excel {
           return await lock.tryLock() ? lock : null;
         }
         const { comment } = namedItem;
-        if (!comment || Date.now() - new Date(comment).getTime() < 60000) {
+        if (!comment || Date.now() - new Date(comment).getTime() > 60000) {
           return await lock.breakLock() ? lock : null;
         }
         return null;
@@ -76,7 +94,7 @@ class Excel {
           await this._worksheet.addNamedItem(name, '$A1', new Date().toISOString());
           return true;
         } catch (e) {
-          if (e.statusCode !== 409) {
+          if (e.statusCode !== 409 && e.statusCode !== 429) {
             throw e;
           }
           return false;
@@ -86,6 +104,9 @@ class Excel {
         try {
           await this._worksheet.deleteNamedItem(name);
         } catch (e) {
+          if (e.statusCode === 429) {
+            return null;
+          }
           if (e.statusCode !== 404) {
             throw e;
           }
@@ -96,7 +117,7 @@ class Excel {
         try {
           await this._worksheet.deleteNamedItem(name);
         } catch (e) {
-          if (e.statusCode !== 404) {
+          if (e.statusCode !== 404 && e.statusCode !== 429) {
             throw e;
           }
         }
@@ -106,16 +127,11 @@ class Excel {
   }
 
   async _search(query) {
-const entries = Object.entries(query);
-if (entries.length !== 1) {
-  throw new Error(`Expected one field in query, got: ${entries.length}`);
-}
-const [name, value] = entries[0];
-    if (names.length !== 1) {
-      throw new Error(`Expected one field in query, got: ${names.length}`);
+    const entries = Object.entries(query);
+    if (entries.length !== 1) {
+      throw new Error(`Expected one field in query, got: ${entries.length}`);
     }
-    const [name] = names;
-    const value = query[name];
+    const [name, value] = entries[0];
     if (!value) {
       throw new Error(`No value specified for field: ${name}`);
     }
@@ -161,15 +177,18 @@ const [name, value] = entries[0];
         oldLocation = hit.path !== path ? hit.path : null;
       }
 
-      this.log.info(`${rowIndex === -1 ? 'Adding' : 'Updating'} index record for resource at: ${path}`);
       const values = this._headerNames.reduce((arr, name) => {
-        arr.push(record[name]);
+        const value = record[name];
+        arr.push(encode(value));
         return arr;
       }, []);
 
       const result = rowIndex !== -1
         ? await this._table.replaceRow(rowIndex, values)
-        : await this._table.addRow(rowIndex, values);
+        : await this._table.addRow(values);
+
+      const change = rowIndex === -1 ? 'Added new row' : `Updated row ${rowIndex}`;
+      this.log.info(`${change} in '${this._sheetName}' for resource at: ${path}`);
 
       return oldLocation
         ? mapResult.moved(path, oldLocation, result)

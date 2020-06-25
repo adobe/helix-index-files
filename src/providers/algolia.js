@@ -55,7 +55,8 @@ class Algolia {
       owner, repo, branch,
     } = params;
 
-    this._index = algolia.initIndex(`${owner}--${repo}--${config.name}`);
+    this._indexName = `${owner}--${repo}--${config.name}`;
+    this._index = algolia.initIndex(this._indexName);
     this._branch = branch;
     this._config = config;
     this._log = log;
@@ -84,12 +85,13 @@ class Algolia {
   }
 
   async update(record) {
-    if (!record.sourceHash) {
-      const message = `Unable to update ${record.path}: sourceHash is empty.`;
-      this.log.warn(message);
-      return mapResult.error(record.path, message);
-    }
     const { path, sourceHash } = record;
+    if (!sourceHash) {
+      const message = `Unable to update ${path}: sourceHash is empty.`;
+      this.log.warn(message);
+      return mapResult.error(path, message);
+    }
+
     const base = {
       objectID: `${this._branch}--${path}`,
       branch: this._branch,
@@ -97,7 +99,6 @@ class Algolia {
       name: p.basename(path),
       parents: makeparents(`/${path}`),
       dir: p.dirname(path),
-      path,
     };
     const object = { ...base, ...record };
 
@@ -105,14 +106,14 @@ class Algolia {
     let oldLocation;
     const hit = await this._search({ branch: this._branch, sourceHash });
     if (hit && hit.path !== path) {
-      this.log.info(`Deleting index record for resource moved from: ${hit.path}`);
       oldLocation = hit.path;
       await this._index.deleteObject(hit.objectID);
+      this.log.info(`Deleted record in '${this._indexName}' for resource moved from: ${hit.path}`);
     }
 
     // Add record to index
-    this.log.info(`Adding index record for resource at: ${path}`);
     const result = await this._index.saveObject(object);
+    this.log.info(`Saved record in '${this._indexName}' for resource at: ${path}`);
 
     return oldLocation
       ? mapResult.moved(path, oldLocation, result)
