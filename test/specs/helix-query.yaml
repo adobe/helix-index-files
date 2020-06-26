@@ -1,7 +1,7 @@
 version: 1
 ​
 indices:
-  blog-posts:
+  algolia:
     source: html
     fetch: https://{repo}-{owner}.project-helix.page/{path}
     include:
@@ -44,3 +44,86 @@ indices:
         value: |
           attribute(el, 'content')
         faceted: true
+
+  excel:
+    source: html
+    fetch: https://{repo}-{owner}.project-helix.page/{path}
+    include:
+      - ms/*
+      - g/*
+    target: https://adobe.sharepoint.com/excel
+    properties:
+      author:
+        select: main > div:nth-of-type(3) > p:nth-of-type(1)
+        value: |
+          match(el, 'by (.*)')
+      title:
+        select: h1:first-of-type
+        value: |
+          textContent(el)
+      date:
+        select: main > div:nth-of-type(3)
+        value: |
+          parseTimestamp(el, '[POSTED ON] MM-DD-YYYY')
+      topics:
+        select: main > div:last-of-type > p:first-of-type
+        values: |
+          match(el, '(Topics: )? ([^,]+)')
+      products:
+        select: main > div:last-of-type > p:nth-of-type(2)
+        values: |
+          match(el, '(Products: )? ([^,]+)')
+      hero:
+        select: main > div:nth-of-type(2) img:first-of-type
+        value: |
+          attribute(el, 'src')
+      teaser:
+        select: main > div:nth-child(n+4) p
+        value: |
+          words(textContent(el), 0, 20)
+      sourceHash:
+        select: head > meta[name=x-source-hash
+        value: |
+          attribute(el, 'content')
+
+  azure:
+    source: html
+    fetch: https://{repo}-{owner}.project-helix.page/{path}
+    include:
+      - ms/*
+      - g/*
+    target: azure
+    properties:
+      author:
+        select: main > div:nth-of-type(3) > p:nth-of-type(1)
+        value: |
+          match(el, 'by (.*)')
+      title:
+        select: h1:first-of-type
+        value: |
+          textContent(el)
+      date:
+        select: main > div:nth-of-type(3)
+        value: |
+          parseTimestamp(el, '[POSTED ON] MM-DD-YYYY')
+      topics:
+        select: main > div:last-of-type > p:first-of-type
+        values: |
+          match(el, '(Topics: )? ([^,]+)')
+      products:
+        select: main > div:last-of-type > p:nth-of-type(2)
+        values: |
+          match(el, '(Products: )? ([^,]+)')
+      hero:
+        select: main > div:nth-of-type(2) img:first-of-type
+        value: |
+          attribute(el, 'src')
+      teaser:
+        select: main > div:nth-child(n+4) p
+        value: |
+          words(textContent(el), 0, 20)
+      sourceHash:
+        select: head > meta[name=x-source-hash
+        value: |
+          attribute(el, 'content')
+

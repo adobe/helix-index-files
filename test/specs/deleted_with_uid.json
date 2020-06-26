@@ -1,13 +1,13 @@
 {
   "input": {
-    "description": "change containing a modification of an unknown item within a mountpoint",
+    "description": "change containing a deletion within a mountpoint",
     "owner": "foo",
     "repo": "bar",
     "ref": "master",
     "observation": {
       "type": "onedrive",
       "change": {
-        "uid": "+4tpPzJl45rr6aJA",
+        "uid": "hlNXFkdVwFlqlpof",
         "type": "deleted"
       },
       "mountpoint": {
@@ -19,11 +19,9 @@
       }
     }
   },
-  "output": [{
-    "blog-posts": {
-      "status": 404,
-      "sourceHash": "+4tpPzJl45rr6aJA",
-      "reason": "Item not found with sourceHash: +4tpPzJl45rr6aJA"
-    }
-  }]
+  "output": {
+    "status": 204,
+    "path": "ms/deleted.html",
+    "reason": "Item gone with path: ms/deleted.html"
+  }
 }

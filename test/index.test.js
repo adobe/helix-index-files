@@ -21,6 +21,8 @@ const proxyquire = require('proxyquire');
 const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
 
 const AlgoliaIndex = require('./AlgoliaIndex.js');
+const OneDrive = require('./OneDrive.js');
+const AzureIndex = require('./AzureIndex.js');
 
 const SPEC_ROOT = p.resolve(__dirname, 'specs');
 
@@ -50,14 +52,25 @@ const fsIndexPipeline = async ({ params }) => {
     path,
   } = params;
   const indexedJSON = `test/specs/index-pipelines/${path}.json`;
-  const docs = [];
 
+  let entry;
   if (await fse.pathExists(indexedJSON)) {
     const doc = JSON.parse(await fse.readFile(indexedJSON, 'utf8'));
-    docs.push({ 'blog-posts': doc }, { 'blog-posts-flat': doc });
+    entry = { docs: [doc] };
+  } else {
+    entry = { error: { status: 404, reason: `File not found: ${indexedJSON}` } };
   }
   return {
-    response: { result: { body: { docs }, statusCode: 200 } },
+    response: {
+      result: {
+        body: {
+          algolia: entry,
+          excel: entry,
+          azure: entry,
+        },
+        statusCode: 200,
+      },
+    },
   };
 };
 
@@ -65,6 +78,11 @@ const fsIndexPipeline = async ({ params }) => {
  * Index pipeline stub.
  */
 let indexPipelineStub = fsIndexPipeline;
+
+/**
+ * Azure index
+ */
+let azureIndex;
 
 /**
  * Proxy our real OW action and its requirements.
@@ -89,6 +107,18 @@ const { main } = proxyquire('../src/index.js', {
       initIndex: (name) => new AlgoliaIndex(name),
     }),
   }),
+  './providers/excel.js': proxyquire('../src/providers/excel.js', {
+    '@adobe/helix-onedrive-support': {
+      OneDrive,
+    },
+  }),
+  './providers/azure.js': proxyquire('../src/providers/azure.js', {
+    'request-promise-native': {
+      defaults: () => azureIndex,
+      get: (uri, opts) => azureIndex.get(uri, opts),
+      post: (uri, opts) => azureIndex.post(uri, opts),
+    },
+  }),
 });
 
 describe('Index Tests', () => {
@@ -111,24 +141,66 @@ describe('Index Tests', () => {
     }
     it('index function bails if branch is missing and ref is not usable', async () => {
       await assert.rejects(async () => main({ ref: 'dd25127aa92f65fda6a0927ed3fb00bf5dcea069' }),
-        /branch parameter missing and ref not usable/);
+        /branch parameter missing and ref looks like a commit id/);
     });
   });
 
-  describe('Run Algolia related tests', () => {
-    const dir = p.resolve(SPEC_ROOT, 'algolia');
+  describe('Run tests against Algolia', () => {
+    const dir = p.resolve(SPEC_ROOT);
     fse.readdirSync(dir).forEach((filename) => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
         const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
-        it(`Testing ${name}`, async () => {
+        it(`Testing ${name} against Algolia`, async () => {
           const params = {
             ALGOLIA_APP_ID: 'foo',
             ALGOLIA_API_KEY: 'bar',
             ...input,
           };
           const response = await main(params);
-          assert.deepEqual(response.body.results[0], output[0]);
+          assert.deepEqual(response.body.results[0].algolia, output);
+        }).timeout(60000);
+      }
+    });
+  });
+
+  describe('Run tests against Excel', () => {
+    const dir = p.resolve(SPEC_ROOT);
+    fse.readdirSync(dir).forEach((filename) => {
+      if (filename.endsWith('.json')) {
+        const name = filename.substring(0, filename.length - 5);
+        const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
+        it(`Testing ${name} for Excel`, async () => {
+          const params = {
+            AZURE_WORD2MD_CLIENT_ID: 'foo',
+            AZURE_HELIX_USER: 'bar',
+            AZURE_HELIX_PASSWORD: 'baz',
+            ...input,
+          };
+          const response = await main(params);
+          assert.deepEqual(response.body.results[1].excel, output);
+        }).timeout(60000);
+      }
+    });
+  });
+
+  describe('Run tests against Azure', () => {
+    beforeEach(() => {
+      azureIndex = new AzureIndex('azure');
+    });
+    const dir = p.resolve(SPEC_ROOT);
+    fse.readdirSync(dir).forEach((filename) => {
+      if (filename.endsWith('.json')) {
+        const name = filename.substring(0, filename.length - 5);
+        const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
+        it(`Testing ${name} for Azure`, async () => {
+          const params = {
+            AZURE_SEARCH_API_KEY: 'foo',
+            AZURE_SEARCH_SERVICE_NAME: 'bar',
+            ...input,
+          };
+          const response = await main(params);
+          assert.deepEqual(response.body.results[2].azure, output);
         }).timeout(60000);
       }
     });
@@ -144,14 +216,14 @@ describe('Index Tests', () => {
           'The action did not produce a valid response and exited unexpectedly.', null, 502,
         );
       };
-      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'algolia', 'added_with_path.json'), 'utf8');
+      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'added_with_path.json'), 'utf8');
       const params = {
         ALGOLIA_APP_ID: 'foo',
         ALGOLIA_API_KEY: 'bar',
         ...input,
       };
       await assert.rejects(
-        () => main(params),
+        async () => main(params),
         /The action did not produce a valid response and exited unexpectedly./,
       );
     });
@@ -161,7 +233,7 @@ describe('Index Tests', () => {
           'Response Missing Error Message.', null, 504,
         );
       };
-      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'algolia', 'added_with_path.json'), 'utf8');
+      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'added_with_path.json'), 'utf8');
       const params = {
         ALGOLIA_APP_ID: 'foo',
         ALGOLIA_API_KEY: 'bar',
@@ -174,7 +246,7 @@ describe('Index Tests', () => {
     });
     it('Returning an incomplete response', async () => {
       indexPipelineStub = () => ({ activationId: '148f00fd3d0d47388f00fd3d0d17385f' });
-      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'algolia', 'added_with_path.json'), 'utf8');
+      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'added_with_path.json'), 'utf8');
       const params = {
         ALGOLIA_APP_ID: 'foo',
         ALGOLIA_API_KEY: 'bar',

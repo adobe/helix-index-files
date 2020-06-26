@@ -13,7 +13,7 @@
 'use strict';
 
 const p = require('path');
-const openwhisk = require('openwhisk');
+const ow = require('openwhisk');
 const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
 
 /**
@@ -32,7 +32,7 @@ async function run(params, path) {
   const action = `${pkg}/${type}_json${version ? `@${version}` : ''}`;
 
   log.info(`Invoking ${action} for path: ${path}`);
-  const { activationId, response: { result } } = await openwhisk().actions.invoke({
+  const { activationId, response: { result } } = await ow().actions.invoke({
     name: `${action}`,
     blocking: true,
     params: {
@@ -40,13 +40,11 @@ async function run(params, path) {
     },
   });
 
-  if (!result.body.docs) {
-    const message = `${action} (activation id: ${activationId}) returned no documents`;
+  if (!result.body) {
+    const message = `${action} (activation id: ${activationId}) returned no body`;
     throw new OpenWhiskError(message, null, 500);
   }
-
-  const { body: { docs } } = result;
-  return docs;
+  return result.body;
 }
 
 module.exports = run;

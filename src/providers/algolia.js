@@ -15,8 +15,9 @@
 'use strict';
 
 const p = require('path');
-const pick = require('lodash.pick');
 const algoliasearch = require('algoliasearch');
+
+const mapResult = require('./mapResult.js');
 
 /**
  * Return an array consisting of all parents of a path.
@@ -31,33 +32,6 @@ function makeparents(path) {
   }
   return [...makeparents(parent), parent];
 }
-
-const mapResult = {
-  created: (path, update) => ({
-    status: 201,
-    path,
-    update,
-  }),
-  moved: (path, oldLocation, update) => ({
-    status: 301,
-    path,
-    movedFrom: oldLocation,
-    update,
-  }),
-  notFound: (attributes, gone) => {
-    const [name] = Object.keys(pick(attributes, ['path', 'sourceHash']));
-    return {
-      status: gone ? 204 : 404,
-      [`${name}`]: attributes[name],
-      reason: `Item ${gone ? 'gone' : 'not found'} with ${name}: ${attributes[name]}`,
-    };
-  },
-  error: (path, e) => ({
-    status: 500,
-    path,
-    reason: `Unable to load full metadata for ${path}: ${e.message}`,
-  }),
-};
 
 /**
  * Algolia index provider.
@@ -81,13 +55,14 @@ class Algolia {
       owner, repo, branch,
     } = params;
 
-    this._index = algolia.initIndex(`${owner}--${repo}--${config.name}`);
+    this._indexName = `${owner}--${repo}--${config.name}`;
+    this._index = algolia.initIndex(this._indexName);
     this._branch = branch;
     this._config = config;
     this._log = log;
   }
 
-  async search(attributes) {
+  async _search(attributes) {
     const filters = Object.getOwnPropertyNames(attributes)
       .filter(
         (name) => attributes[name],
@@ -111,6 +86,12 @@ class Algolia {
 
   async update(record) {
     const { path, sourceHash } = record;
+    if (!sourceHash) {
+      const message = `Unable to update ${path}: sourceHash is empty.`;
+      this.log.warn(message);
+      return mapResult.error(path, message);
+    }
+
     const base = {
       objectID: `${this._branch}--${path}`,
       branch: this._branch,
@@ -118,22 +99,21 @@ class Algolia {
       name: p.basename(path),
       parents: makeparents(`/${path}`),
       dir: p.dirname(path),
-      path,
     };
     const object = { ...base, ...record };
 
     // Delete a stale copy at another location
     let oldLocation;
-    const hit = await this.search({ branch: this._branch, sourceHash });
+    const hit = await this._search({ branch: this._branch, sourceHash });
     if (hit && hit.path !== path) {
-      this.log.info(`Deleting index record for resource moved from: ${hit.path}`);
       oldLocation = hit.path;
       await this._index.deleteObject(hit.objectID);
+      this.log.info(`Deleted record in '${this._indexName}' for resource moved from: ${hit.path}`);
     }
 
     // Add record to index
-    this.log.debug(`Adding index record for resource at: ${path}`);
     const result = await this._index.saveObject(object);
+    this.log.info(`Saved record in '${this._indexName}' for resource at: ${path}`);
 
     return oldLocation
       ? mapResult.moved(path, oldLocation, result)
@@ -141,8 +121,9 @@ class Algolia {
   }
 
   async delete(attributes) {
-    const hit = await this.search({ branch: this._branch, ...attributes });
+    const hit = await this._search({ branch: this._branch, ...attributes });
     if (hit) {
+      this.log.info(`Deleting index record for resource at: ${hit.path}`);
       await this._index.deleteObject(hit.objectID);
       return mapResult.notFound({ path: hit.path }, true);
     }
