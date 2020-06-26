@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/adobe/helix-index-files/compare/v2.0.7...v2.1.0) (2020-06-26)
+
+
+### Features
+
+* add excel and azure index provider ([#162](https://github.com/adobe/helix-index-files/issues/162)) ([9c2a76a](https://github.com/adobe/helix-index-files/commit/9c2a76ad46088acad12fc68ea18b8f77e841c95b))
+
 ## [2.0.7](https://github.com/adobe/helix-index-files/compare/v2.0.6...v2.0.7) (2020-06-25)
 
 
