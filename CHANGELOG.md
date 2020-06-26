@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/adobe/helix-index-files/compare/v2.1.0...v2.1.1) (2020-06-26)
+
+
+### Bug Fixes
+
+* **deps:** pin dependency @adobe/helix-onedrive-support to 2.5.0 ([#166](https://github.com/adobe/helix-index-files/issues/166)) ([9f2ee5e](https://github.com/adobe/helix-index-files/commit/9f2ee5efc882f3a0a19c546239d466dbe543e13e))
+
 # [2.1.0](https://github.com/adobe/helix-index-files/compare/v2.0.7...v2.1.0) (2020-06-26)
 
 
