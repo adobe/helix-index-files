@@ -1,3 +1,10 @@
+## [2.1.6](https://github.com/adobe/helix-index-files/compare/v2.1.5...v2.1.6) (2020-06-29)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/openwhisk-action-utils to v4.2.3 ([1bea430](https://github.com/adobe/helix-index-files/commit/1bea430ee809e70fcac81f6dd93180c8a4cdb76f))
+
 ## [2.1.5](https://github.com/adobe/helix-index-files/compare/v2.1.4...v2.1.5) (2020-06-27)
 
 
