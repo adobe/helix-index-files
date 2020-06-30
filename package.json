@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/adobe/helix-index-files#readme",
   "dependencies": {
-    "@adobe/helix-fetch": "1.6.2",
+    "@adobe/helix-fetch": "1.7.0",
     "@adobe/helix-onedrive-support": "2.5.1",
     "@adobe/helix-shared": "7.9.0",
     "@adobe/helix-status": "7.1.3",
