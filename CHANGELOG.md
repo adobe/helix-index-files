@@ -1,3 +1,10 @@
+## [2.1.9](https://github.com/adobe/helix-index-files/compare/v2.1.8...v2.1.9) (2020-07-02)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-status to v8.1.0 ([#179](https://github.com/adobe/helix-index-files/issues/179)) ([c3f307d](https://github.com/adobe/helix-index-files/commit/c3f307df666d263386c29dad73de2a1318d58b04))
+
 ## [2.1.8](https://github.com/adobe/helix-index-files/compare/v2.1.7...v2.1.8) (2020-07-02)
 
 
