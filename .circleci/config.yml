@@ -55,10 +55,8 @@ jobs:
       - run:
           name: revert changes to package-lock.json
           command: git checkout -- package-lock.json
-      - run:
-          name: Configure OpenWhisk
-          command: echo -e "APIHOST=https://adobeioruntime.net\nNAMESPACE=helix-index\nAUTH=$WSK_AUTH\n" > ~/.wskprops
       - helix-post-deploy/config-env
+      - helix-post-deploy/config-wsk
       - run:
           name: Semantic Release
           command: npm run semantic-release
@@ -70,11 +68,11 @@ jobs:
       - run:
           name: Link Sequences
           command: npm run deploy-sequences
-      # disabled until support for custom namespace and action package
-      # - helix-post-deploy/monitoring:
-      #     statuspage_name: Helix Index Files
-      #     statuspage_group: Publishing
-      #     newrelic_group_policy: Publishing Repeated Failure
+      - helix-post-deploy/monitoring:
+          statuspage_name: Helix Index Files
+          statuspage_group: Publishing
+          newrelic_group_policy: Publishing Repeated Failure
+          incubator: true # remove only when promoting service to production
 
   branch-deploy:
     executor: node10
@@ -83,9 +81,7 @@ jobs:
       - run:
           name: revert changes to package-lock.json
           command: git checkout -- package-lock.json
-      - run:
-          name: Configure OpenWhisk
-          command: echo -e "APIHOST=https://adobeioruntime.net\nNAMESPACE=helix-index\nAUTH=$WSK_AUTH\n" > ~/.wskprops
+      - helix-post-deploy/config-wsk
       - run:
           name: Branch Deployment
           command: npm run deploy-ci
@@ -101,12 +97,14 @@ workflows:
     jobs:
       - build
       - branch-deploy:
+          context: Project Helix
           requires:
             - build
           filters:
             branches:
               ignore: master
       - semantic-release:
+          context: Project Helix
           requires:
             - build
           filters:

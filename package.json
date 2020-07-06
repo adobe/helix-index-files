@@ -10,7 +10,6 @@
     "test-postdeploy": "mocha --reporter xunit --reporter-options output=./junit/test-results.xml -g 'Post-Deploy'",
     "lint": "./node_modules/.bin/eslint .",
     "semantic-release": "semantic-release",
-    "docs": "npx jsdoc2md -c .jsdoc.json --files 'src/*.js'  > docs/API.md",
     "commit": "git-cz",
     "build": "wsk-builder -v",
     "deploy": "wsk-builder -v --deploy --test=/_status_check/healthcheck.json",
@@ -18,7 +17,8 @@
     "deploy-ci": "wsk-builder -v --deploy --test=/_status_check/pingdom.xml --pkgVersion=ci$CIRCLE_BUILD_NUM -l ci"
   },
   "wsk": {
-    "name": "helix-services/index-files@${version}"
+    "namespace": "helix",
+    "name": "helix-observation/index-files@${version}"
   },
   "repository": {
     "type": "git",
@@ -55,8 +55,6 @@
     "@semantic-release/changelog": "5.0.1",
     "@semantic-release/exec": "5.0.0",
     "@semantic-release/git": "9.0.0",
-    "@semantic-release/github": "7.0.7",
-    "ajv": "6.12.3",
     "codecov": "3.7.0",
     "commitizen": "4.1.2",
     "cz-conventional-changelog": "3.2.0",
@@ -67,7 +65,6 @@
     "jsdoc-to-markdown": "6.0.1",
     "junit-report-builder": "2.0.0",
     "lint-staged": "10.2.11",
-    "lodash": "4.17.15",
     "mocha": "8.0.1",
     "nock": "13.0.2",
     "nyc": "15.1.0",

@@ -14,7 +14,7 @@
 
 const fse = require('fs-extra');
 const p = require('path');
-const { pick } = require('lodash');
+const pick = require('lodash.pick');
 
 const SPEC_ROOT = p.resolve(__dirname, 'specs');
 
