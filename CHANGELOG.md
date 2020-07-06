@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/adobe/helix-index-files/compare/v2.1.9...v2.2.0) (2020-07-06)
+
+
+### Features
+
+* move to /helix/helix-observation ([#186](https://github.com/adobe/helix-index-files/issues/186)) ([24a0346](https://github.com/adobe/helix-index-files/commit/24a03462ab6c1c41b65a65e1d2e024c3dd9c2c92)), closes [#182](https://github.com/adobe/helix-index-files/issues/182)
+
 ## [2.1.9](https://github.com/adobe/helix-index-files/compare/v2.1.8...v2.1.9) (2020-07-02)
 
 
