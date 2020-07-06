@@ -15,10 +15,8 @@
 ## Usage
 
 ```bash
-curl https://adobeioruntime.net/api/v1/web/helix-index/helix-services/index-files@v1
+curl https://adobeioruntime.net/api/v1/web/helix/helix-observation/index-files@v1
 ```
-
-For more, see the [API documentation](docs/API.md).
 
 ## Development
 
@@ -26,4 +24,4 @@ For more, see the [API documentation](docs/API.md).
 
 Deploying Helix Service requires the `wsk` command line client, authenticated to a namespace of your choice. For Project Helix, we use the `helix-index` namespace.
 
-All commits to master that pass the testing will be deployed automatically. All commits to branches that will pass the testing will get commited as `/helix-index/index-files@ci<num>` and tagged with the CI build number.
+All commits to master that pass the testing will be deployed automatically. All commits to branches that will pass the testing will get deployed as `/helix/helix-observation/index-files@ci<num>` and tagged with the CI build number.
