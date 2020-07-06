@@ -71,6 +71,7 @@ jobs:
       - helix-post-deploy/monitoring:
           statuspage_name: Helix Index Files
           statuspage_group: Publishing
+          action_package: helix-observation
           newrelic_group_policy: Publishing Repeated Failure
           incubator: true # remove only when promoting service to production
 
