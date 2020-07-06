@@ -71,6 +71,7 @@ jobs:
       - helix-post-deploy/monitoring:
           statuspage_name: Helix Index Files
           statuspage_group: Publishing
+          newrelic_url: https://adobeioruntime.net/api/v1/web/helix/helix-observation/index-files@v2/_status_check/healthcheck.json
           newrelic_group_policy: Publishing Repeated Failure
           incubator: true # remove only when promoting service to production
 
