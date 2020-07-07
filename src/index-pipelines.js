@@ -12,24 +12,23 @@
 
 'use strict';
 
-const p = require('path');
 const ow = require('openwhisk');
 const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
 
 /**
  * Fetch documents that will be added to our index.
  *
+ * @param {string} pkgName package name to prepend action name with
  * @param {Object} params parameters
  * @param {string} path path to fetch documents for
  * @returns document array
  */
-async function run(params, path) {
+async function run(pkgName, params, path) {
   const {
-    pkg = 'index-pipelines', version = 'latest',
+    version = 'latest',
     owner, repo, ref, __ow_logger: log,
   } = params;
-  const type = p.extname(path).replace(/\./g, '');
-  const action = `${pkg}/${type}_json${version ? `@${version}` : ''}`;
+  const action = `${pkgName}index-pipelines@${version}`;
 
   log.info(`Invoking ${action} for path: ${path}`);
   const { activationId, response: { result } } = await ow().actions.invoke({
