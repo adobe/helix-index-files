@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/adobe/helix-index-files/compare/v2.2.1...v2.3.0) (2020-07-08)
+
+
+### Features
+
+* use new helix-observation/index-pipelines ([#190](https://github.com/adobe/helix-index-files/issues/190)) ([9b7e565](https://github.com/adobe/helix-index-files/commit/9b7e5651e97d96da378029cc41bd00e2e71e2cf9))
+
 ## [2.2.1](https://github.com/adobe/helix-index-files/compare/v2.2.0...v2.2.1) (2020-07-07)
 
 
