@@ -177,7 +177,7 @@ function replaceExt(path, ext) {
 /**
  * Invoke index-pipelines action for all indices.
  *
- * @param {string} pkgName package name we reside in
+ * @param {string} pkgPrefix prefix of the package we reside in
  * @param {object} indices index configurations
  * @param {object} change change to process
  * @param {object} params parameters
@@ -185,7 +185,7 @@ function replaceExt(path, ext) {
  *
  * @returns object containing index definition and index record, keyed by name
  */
-async function runPipeline(pkgName, indices, change, params, log) {
+async function runPipeline(pkgPrefix, indices, change, params, log) {
   // Create our result where we'll store the HTML responses
   const records = indices
     .reduce((prev, { config, provider }) => {
@@ -210,7 +210,7 @@ async function runPipeline(pkgName, indices, change, params, log) {
 
   // Invoke the pipelines action
   const responses = new Map(await Promise.all(paths.map(async (path) => {
-    const body = await indexPipelines(pkgName, params, path);
+    const body = await indexPipelines(pkgPrefix, params, path);
     return [path, body];
   })));
 
@@ -252,7 +252,7 @@ async function run(params) {
     __OW_ACTION_NAME: actionName,
   } = process.env;
 
-  const pkgName = actionName ? `${actionName.split('/')[2]}/` : '';
+  const pkgPrefix = actionName ? `${actionName.split('/')[2]}/` : '';
 
   const change = getChange(params);
   const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
@@ -264,7 +264,7 @@ async function run(params) {
       [index.config.name]: await handleDelete(index, change, log),
     })));
   } else {
-    const records = await runPipeline(pkgName, indices, change, params, log);
+    const records = await runPipeline(pkgPrefix, indices, change, params, log);
     responses = await Promise.all(records.map(async (record) => ({
       [record.config.name]: await handleUpdate(record, change, log),
     })));

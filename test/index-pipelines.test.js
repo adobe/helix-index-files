@@ -37,7 +37,7 @@ const run = (fn) => proxyquire('../src/index-pipelines.js', {
 });
 
 describe('Index Pipeline Tests', () => {
-  const pkgName = 'helix-observation/';
+  const pkgPrefix = 'helix-observation/';
   const params = {
     owner: 'me',
     repo: 'foo',
@@ -55,7 +55,7 @@ describe('Index Pipeline Tests', () => {
           response: { result: { body: { docs: [] } } },
         };
       },
-    )(pkgName, params, 'test.html');
+    )(pkgPrefix, params, 'test.html');
     assert.equal(actionName, 'helix-observation/index-pipelines@latest');
   });
   it('specifying a version runs that', async () => {
@@ -68,14 +68,14 @@ describe('Index Pipeline Tests', () => {
           response: { result: { body: { docs: [] } } },
         };
       },
-    )(pkgName, { version: '1.0.0', ...params }, 'test.html');
+    )(pkgPrefix, { version: '1.0.0', ...params }, 'test.html');
     assert.equal(actionName, 'helix-observation/index-pipelines@1.0.0');
   });
   it('returning no body element throws', async () => {
     await assert.rejects(
       () => run(
         () => ({ response: { result: {} } }),
-      )(pkgName, params, ''),
+      )(pkgPrefix, params, ''),
       /returned no body/,
     );
   });
@@ -83,7 +83,7 @@ describe('Index Pipeline Tests', () => {
     await assert.rejects(
       () => run(
         () => { throw new Error('boohoo'); },
-      )(pkgName, params, ''),
+      )(pkgPrefix, params, ''),
       /boohoo/,
     );
   });
