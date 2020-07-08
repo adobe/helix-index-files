@@ -252,7 +252,7 @@ async function run(params) {
     __OW_ACTION_NAME: actionName,
   } = process.env;
 
-  const pkgName = actionName ? actionName.match(/^\/([^/]+\/)+[^/]+$/)[1] : '';
+  const pkgName = actionName ? `${actionName.split('/')[2]}/` : '';
 
   const change = getChange(params);
   const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
