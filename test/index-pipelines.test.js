@@ -37,6 +37,7 @@ const run = (fn) => proxyquire('../src/index-pipelines.js', {
 });
 
 describe('Index Pipeline Tests', () => {
+  const pkgPrefix = 'helix-observation/';
   const params = {
     owner: 'me',
     repo: 'foo',
@@ -54,8 +55,8 @@ describe('Index Pipeline Tests', () => {
           response: { result: { body: { docs: [] } } },
         };
       },
-    )(params, 'test.html');
-    assert.equal(actionName, 'index-pipelines/html_json@latest');
+    )(pkgPrefix, params, 'test.html');
+    assert.equal(actionName, 'helix-observation/index-pipelines@latest');
   });
   it('specifying a version runs that', async () => {
     let actionName;
@@ -67,27 +68,14 @@ describe('Index Pipeline Tests', () => {
           response: { result: { body: { docs: [] } } },
         };
       },
-    )({ version: '1.0.0', ...params }, 'test.html');
-    assert.equal(actionName, 'index-pipelines/html_json@1.0.0');
-  });
-  it('specifying an empty version omits the version tag', async () => {
-    let actionName;
-    await run(
-      ({ name }) => {
-        actionName = name;
-        return {
-          activationId: 'e56b6142faf74ee7ab6142faf76ee7a6',
-          response: { result: { body: { docs: [] } } },
-        };
-      },
-    )({ version: '', ...params }, 'test.html');
-    assert.equal(actionName, 'index-pipelines/html_json');
+    )(pkgPrefix, { version: '1.0.0', ...params }, 'test.html');
+    assert.equal(actionName, 'helix-observation/index-pipelines@1.0.0');
   });
   it('returning no body element throws', async () => {
     await assert.rejects(
       () => run(
         () => ({ response: { result: {} } }),
-      )(params, ''),
+      )(pkgPrefix, params, ''),
       /returned no body/,
     );
   });
@@ -95,7 +83,7 @@ describe('Index Pipeline Tests', () => {
     await assert.rejects(
       () => run(
         () => { throw new Error('boohoo'); },
-      )(params, ''),
+      )(pkgPrefix, params, ''),
       /boohoo/,
     );
   });
