@@ -66,7 +66,9 @@ class Azure {
     }
 
     const base = {
-      objectID: Buffer.from(`${path}`).toString('base64'),
+      objectID: Buffer.from(`${path}`).toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//, '_'),
       modificationDate: Date.now(),
     };
     const object = { ...base, ...record };
