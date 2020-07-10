@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/adobe/helix-index-files/compare/v2.3.0...v2.3.1) (2020-07-10)
+
+
+### Bug Fixes
+
+* **azure:** objectID must not contain '/' or '+' ([#191](https://github.com/adobe/helix-index-files/issues/191)) ([d65f975](https://github.com/adobe/helix-index-files/commit/d65f97568819e5375cf7afeb6574db70e9d901d3))
+
 # [2.3.0](https://github.com/adobe/helix-index-files/compare/v2.2.1...v2.3.0) (2020-07-08)
 
 
