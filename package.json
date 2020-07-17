@@ -32,7 +32,7 @@
   "homepage": "https://github.com/adobe/helix-index-files#readme",
   "dependencies": {
     "@adobe/helix-fetch": "1.7.1",
-    "@adobe/helix-onedrive-support": "2.7.0",
+    "@adobe/helix-onedrive-support": "2.8.0",
     "@adobe/helix-shared": "7.9.0",
     "@adobe/helix-status": "8.1.0",
     "@adobe/helix-testutils": "0.4.0",
