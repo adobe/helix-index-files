@@ -1,3 +1,10 @@
+## [2.3.9](https://github.com/adobe/helix-index-files/compare/v2.3.8...v2.3.9) (2020-07-23)
+
+
+### Bug Fixes
+
+* **deps:** update [@adobe](https://github.com/adobe) fixes ([#202](https://github.com/adobe/helix-index-files/issues/202)) ([4db5716](https://github.com/adobe/helix-index-files/commit/4db571686981aa7b9e6b5d24693e748b4e0cd5b3))
+
 ## [2.3.8](https://github.com/adobe/helix-index-files/compare/v2.3.7...v2.3.8) (2020-07-21)
 
 
