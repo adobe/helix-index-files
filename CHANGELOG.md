@@ -1,3 +1,11 @@
+## [2.3.11](https://github.com/adobe/helix-index-files/compare/v2.3.10...v2.3.11) (2020-08-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-fetch to v1.9.0 ([#206](https://github.com/adobe/helix-index-files/issues/206)) ([c965ca8](https://github.com/adobe/helix-index-files/commit/c965ca8013278018808aba6f14cdc9e2eed0d7b6))
+* **deps:** update external fixes ([#207](https://github.com/adobe/helix-index-files/issues/207)) ([59aad7f](https://github.com/adobe/helix-index-files/commit/59aad7f86148f71bc2451a472c77450ec214cb52))
+
 ## [2.3.10](https://github.com/adobe/helix-index-files/compare/v2.3.9...v2.3.10) (2020-07-28)
 
 
