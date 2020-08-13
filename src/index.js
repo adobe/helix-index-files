@@ -271,7 +271,6 @@ async function run(params) {
   const pkgPrefix = actionName ? `${actionName.split('/')[2]}/` : '';
 
   const change = getChange(params);
-  log.info(`Change found: ${JSON.stringify(change, undefined, 2)}`);
   const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
   const indices = createProviders(config.indices, params, log);
 
