@@ -136,6 +136,22 @@ async function handleUpdate({
     };
   }
   if (!path) {
+    if (change.uid) {
+      // This could be a move, so verify we do not keep a record in the index
+      // for an item that has moved outside our domain
+      try {
+        const result = await provider.delete({ sourceHash: change.uid });
+        if (result.status !== 404) {
+          return result;
+        }
+      } catch (e) {
+        log.error(`An error occurred deleting record ${change.uid} in ${config.name}`, e);
+        return {
+          status: 500,
+          reason: e.message,
+        };
+      }
+    }
     return {
       status: 404,
       reason: `Item path not in index definition: ${change.path}`,
@@ -255,6 +271,7 @@ async function run(params) {
   const pkgPrefix = actionName ? `${actionName.split('/')[2]}/` : '';
 
   const change = getChange(params);
+  log.info(`Change found: ${JSON.stringify(change, undefined, 2)}`);
   const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
   const indices = createProviders(config.indices, params, log);
 
