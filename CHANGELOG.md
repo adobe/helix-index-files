@@ -1,3 +1,11 @@
+## [2.3.15](https://github.com/adobe/helix-index-files/compare/v2.3.14...v2.3.15) (2020-08-28)
+
+
+### Bug Fixes
+
+* **azure:** adjust to more restrictive schema ([fc1164f](https://github.com/adobe/helix-index-files/commit/fc1164fba504fef0757ce33b0daaba606e200338))
+* **deps:** update [@adobe](https://github.com/adobe) fixes ([8069bdf](https://github.com/adobe/helix-index-files/commit/8069bdff334a21914322cf215f2ae24af8f9b342))
+
 ## [2.3.14](https://github.com/adobe/helix-index-files/compare/v2.3.13...v2.3.14) (2020-08-17)
 
 
