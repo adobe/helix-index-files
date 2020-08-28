@@ -21,8 +21,8 @@ const proxyquire = require('proxyquire');
 const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
 
 const AlgoliaIndex = require('./AlgoliaIndex.js');
-const OneDrive = require('./OneDrive.js');
 const AzureIndex = require('./AzureIndex.js');
+const ExcelIndex = require('./ExcelIndex.js');
 
 const SPEC_ROOT = p.resolve(__dirname, 'specs');
 
@@ -85,6 +85,11 @@ let indexPipelineStub = fsIndexPipeline;
 let azureIndex;
 
 /**
+ * Excel index
+ */
+let excelIndex;
+
+/**
  * Proxy our real OW action and its requirements.
  *
  * @param {Function} invoke OW action to invoke
@@ -108,8 +113,19 @@ const { main } = proxyquire('../src/index.js', {
     }),
   }),
   './providers/excel.js': proxyquire('../src/providers/excel.js', {
-    '@adobe/helix-onedrive-support': {
-      OneDrive,
+    '@azure/service-bus': {
+      ServiceBusClient: {
+        createFromConnectionString: () => ({
+          createQueueClient: () => ({
+            createSender: () => ({
+              send: async (message) => excelIndex.process(message),
+              close: () => {},
+            }),
+            close: () => {},
+          }),
+          close: () => {},
+        }),
+      },
     },
   }),
   './providers/azure.js': proxyquire('../src/providers/azure.js', {
@@ -165,20 +181,35 @@ describe('Index Tests', () => {
   });
 
   describe('Run tests against Excel', () => {
+    beforeEach(() => {
+      excelIndex = new ExcelIndex('excel');
+    });
     const dir = p.resolve(SPEC_ROOT);
     fse.readdirSync(dir).forEach((filename) => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
-        const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
-        it(`Testing ${name} for Excel`, async () => {
+        const { input, output, ignore } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
+        if (ignore && ignore.includes('excel')) {
+          // some tests do not contain an input sourceHash, which doesn't make sense
+          // with OneDrive where every change contains a sourceHash
+          return;
+        }
+        it(`Testing ${name} against Excel`, async () => {
           const params = {
-            AZURE_WORD2MD_CLIENT_ID: 'foo',
-            AZURE_HELIX_USER: 'bar',
-            AZURE_HELIX_PASSWORD: 'baz',
+            AZURE_SERVICE_BUS_CONN_STRING: 'foo',
+            AZURE_SERVICE_BUS_QUEUE_NAME: 'bar',
             ...input,
           };
           const response = await main(params);
-          assert.deepEqual(response.body.results[1].excel, output);
+          const result = response.body.results[1].excel;
+          if (result.status === 202) {
+            // if the excel index merely accepts the input (because it sends it over the queue)
+            // let's check the latest result on the index contents itself
+            assert.deepEqual(excelIndex.latest, output);
+          } else {
+            // otherwise the result can be compared as usual
+            assert.deepEqual(result, output);
+          }
         }).timeout(60000);
       }
     });
@@ -193,7 +224,7 @@ describe('Index Tests', () => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
         const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
-        it(`Testing ${name} for Azure`, async () => {
+        it(`Testing ${name} against Azure`, async () => {
           const params = {
             AZURE_SEARCH_API_KEY: 'foo',
             AZURE_SEARCH_SERVICE_NAME: 'bar',

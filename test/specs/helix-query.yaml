@@ -92,7 +92,7 @@ indices:
     include:
       - ms/*
       - g/*
-    target: azure
+    target: azure:default
     properties:
       author:
         select: main > div:nth-of-type(3) > p:nth-of-type(1)

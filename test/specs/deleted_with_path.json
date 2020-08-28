@@ -11,5 +11,6 @@
     "status": 204,
     "path": "ms/deleted.html",
     "reason": "Item gone with path: ms/deleted.html"
-  }
+  },
+  "ignore": ["excel"]
 }

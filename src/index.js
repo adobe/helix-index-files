@@ -136,6 +136,23 @@ async function handleUpdate({
     };
   }
   if (!path) {
+    if (change.uid) {
+      // This could be a move from our input domain to some region outside, so verify
+      // we do not keep a record in the index for an item we no longer track
+      try {
+        const result = await provider.delete({ sourceHash: change.uid });
+        if (result.status !== 404) {
+          // yes, the item was present in our index, so return that result
+          return result;
+        }
+      } catch (e) {
+        log.error(`An error occurred deleting record ${change.uid} in ${config.name}`, e);
+        return {
+          status: 500,
+          reason: e.message,
+        };
+      }
+    }
     return {
       status: 404,
       reason: `Item path not in index definition: ${change.path}`,

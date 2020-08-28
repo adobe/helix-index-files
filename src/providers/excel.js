@@ -14,88 +14,40 @@
 
 'use strict';
 
-const { OneDrive } = require('@adobe/helix-onedrive-support');
+const { ServiceBusClient } = require('@azure/service-bus');
 
 const mapResult = require('./mapResult.js');
-const acquireLock = require('./acquirelock.js');
 
 /**
- * Encodes values to be transferred to Excel.
- *
- * @param {any} value value to encode
- * @returns encoded value
- */
-function encode(value) {
-  if (Array.isArray(value)) {
-    return JSON.stringify(value);
-  }
-  if (typeof value === 'string') {
-    if (/^[+=]/.test(value)) {
-      return `'${value}`;
-    }
-  }
-  return value;
-}
-
-/**
- * Excel index provider.
+ * Excel index provider that sends records to be processed to an Azure Queue.
  */
 class Excel {
   constructor(params, config, log) {
-    const opts = {
-      clientId: params.AZURE_WORD2MD_CLIENT_ID,
-      username: params.AZURE_HELIX_USER,
-      password: params.AZURE_HELIX_PASSWORD,
+    const {
+      AZURE_SERVICE_BUS_CONN_STRING: connectionString,
+      AZURE_SERVICE_BUS_QUEUE_NAME: queueName,
+    } = params;
 
-      log,
-    };
-    this._onedrive = new OneDrive(opts);
-    this._shareLink = config.target;
+    if (!connectionString) {
+      throw new Error('AZURE_SERVICE_BUS_CONN_STRING parameter missing.');
+    }
+    if (!queueName) {
+      throw new Error('AZURE_SERVICE_BUS_QUEUE_NAME parameter missing.');
+    }
 
-    // TODO: these should be configurable
-    this._sheetName = config.name;
-    this._tableName = 'Table1';
-
+    this._connectionString = connectionString;
+    this._queueName = queueName;
     this._config = config;
     this._log = log;
   }
 
   async _init() {
-    if (this._headerNames) {
+    if (this._sender) {
       return;
     }
-
-    this._driveItem = await this._onedrive.getDriveItemFromShareLink(this._shareLink);
-    const workbook = this._onedrive.getWorkbook(this._driveItem);
-    this._worksheet = workbook.worksheet(this._sheetName);
-    this._table = workbook.table(this._tableName);
-    this._headerNames = await this._table.getHeaderNames();
-  }
-
-  async _search(query) {
-    const entries = Object.entries(query);
-    if (entries.length !== 1) {
-      throw new Error(`Expected one field in query, got: ${entries.length}`);
-    }
-    const [name, value] = entries[0];
-    if (!value) {
-      throw new Error(`No value specified for field: ${name}`);
-    }
-    await this._init();
-
-    const result = await this._table.getColumn(name);
-    const index = result.findIndex(([columnValue]) => columnValue === value);
-    if (index === -1) {
-      return null;
-    }
-
-    const row = await this._table.getRow(index - 1);
-    const data = this._headerNames.reduce((prev, n, i) => {
-      /* eslint-disable no-param-reassign */
-      prev[n] = row[i];
-      return prev;
-    }, {});
-    return { ...data, '.metadata': { rowIndex: index - 1 } };
+    this._sbClient = ServiceBusClient.createFromConnectionString(this._connectionString);
+    this._queueClient = this._sbClient.createQueueClient(this._queueName);
+    this._sender = this._queueClient.createSender();
   }
 
   async update(record) {
@@ -106,54 +58,44 @@ class Excel {
       return mapResult.error(path, message);
     }
 
-    await this._init();
-
-    const lock = await acquireLock(this._worksheet, sourceHash);
-    if (lock === null) {
-      return mapResult.error(path, `Unable to update record with sourceHash '${sourceHash}': it is currently locked.`);
-    }
-
     try {
-      let oldLocation;
-      let rowIndex = -1;
-
-      const hit = await this._search({ sourceHash });
-      if (hit) {
-        rowIndex = hit['.metadata'].rowIndex;
-        oldLocation = hit.path !== path ? hit.path : null;
-      }
-
-      const values = this._headerNames.reduce((arr, name) => {
-        const value = record[name];
-        arr.push(encode(value));
-        return arr;
-      }, []);
-
-      const result = rowIndex !== -1
-        ? await this._table.replaceRow(rowIndex, values)
-        : await this._table.addRow(values);
-
-      const change = rowIndex === -1 ? 'Added new row' : `Updated row ${rowIndex}`;
-      this.log.info(`${change} in '${this._sheetName}' for resource at: ${path}`);
-
-      return oldLocation
-        ? mapResult.moved(path, oldLocation, result)
-        : mapResult.created(path, result);
+      await this._init();
+      await this._sender.send({
+        body: { record },
+      });
+      return mapResult.accepted(path);
     } finally {
-      await lock.release();
+      await this._close();
     }
   }
 
   async delete(attributes) {
-    await this._init();
-
-    const hit = await this._search(attributes);
-    if (hit) {
-      this.log.info(`Deleting index record for resource at: ${hit.path}`);
-      await this._table.replaceRow(hit['.metadata'].rowIndex, this._headerNames.map(() => ''));
-      return mapResult.notFound({ path: hit.path }, true);
+    const { sourceHash } = attributes;
+    if (!sourceHash) {
+      const message = 'Unable to delete record: sourceHash is empty.';
+      this.log.warn(message);
+      return mapResult.error(sourceHash, message);
     }
-    return mapResult.notFound(attributes, false);
+
+    try {
+      await this._init();
+      await this._sender.send({
+        body: { sourceHash },
+      });
+      return mapResult.accepted(sourceHash);
+    } finally {
+      await this._close();
+    }
+  }
+
+  async _close() {
+    if (this._sender) {
+      await this._sender.close();
+      await this._queueClient.close();
+      await this._sbClient.close();
+
+      this._sender = null;
+    }
   }
 
   get log() {
@@ -163,7 +105,7 @@ class Excel {
 
 module.exports = {
   name: 'Excel',
-  required: ['AZURE_WORD2MD_CLIENT_ID', 'AZURE_HELIX_USER', 'AZURE_HELIX_PASSWORD'],
+  required: ['AZURE_SERVICE_BUS_CONN_STRING', 'AZURE_SERVICE_BUS_QUEUE_NAME'],
   match: (url) => url && /^https:\/\/[^/]+\.sharepoint\.com\//.test(url),
   create: (params, config, log) => new Excel(params, config, log),
 };
