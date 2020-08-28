@@ -7,6 +7,8 @@ indices:
     include:
       - ms/*
       - g/*
+    exclude:
+      - '**/Document.*'
     properties:
       author:
         select: main > div:nth-of-type(3) > p:nth-of-type(1)
@@ -51,6 +53,8 @@ indices:
     include:
       - ms/*
       - g/*
+    exclude:
+      - '**/Document.*'
     target: https://adobe.sharepoint.com/excel
     properties:
       author:
@@ -92,6 +96,8 @@ indices:
     include:
       - ms/*
       - g/*
+    exclude:
+      - '**/Document.*'
     target: azure:default
     properties:
       author:

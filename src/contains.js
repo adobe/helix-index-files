@@ -17,25 +17,26 @@
 const mm = require('micromatch');
 
 /**
- * Return a flag indicating whether a particular path is included
- * in the indexing configuration (include element).
+ * Return a flag indicating whether a particular path is contained
+ * in the indexing configuration (include or exclude element).
  *
- * @param {Array} include indexing configuration's include element
+ * @param {Array} cfg indexing configuration's
  * @param {string} path path to check
+ * @param {boolean} ifmissing what to return if section is missing
  *
  * @returns {Boolean} whether path is included in configuration
  */
-function includes({ include }, path) {
-  if (!include) {
-    // no clause includes everything
-    return true;
+function match(cfg, path, ifmissing) {
+  if (!cfg) {
+    // no section means no match
+    return ifmissing;
   }
-  if (include.length === 0) {
-    // empty include list includes none
+  if (cfg.length === 0) {
+    // empty list means no match
     return false;
   }
-  return mm.isMatch(path, include
-    // expand braces in every include (creates an array of arrays)
+  return mm.isMatch(path, cfg
+    // expand braces in every item (creates an array of arrays)
     .map((i) => mm.braces((i)))
     // flatten to a simple array of strings
     .reduce((a, i) => {
@@ -44,4 +45,18 @@ function includes({ include }, path) {
     }, []));
 }
 
-module.exports = includes;
+/**
+ * Return a flag indicating whether a particular path is contained
+ * in the indexing configuration (include or exclude element). This
+ * is true if a path is either included or *not* excluded.
+ *
+ * @param {Array} cfg indexing configuration's
+ * @param {string} path path to check
+ *
+ * @returns {Boolean} whether path is included in configuration
+ */
+function contains(cfg, path) {
+  return match(cfg.include, path, true) && !match(cfg.exclude, path, false);
+}
+
+module.exports = contains;

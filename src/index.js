@@ -19,7 +19,7 @@ const statusWrap = require('@adobe/helix-status').wrap;
 
 const Change = require('./Change.js');
 const fetchQuery = require('./fetch-query.js');
-const includes = require('./includes.js');
+const contains = require('./contains.js');
 const indexPipelines = require('./index-pipelines.js');
 
 const algolia = require('./providers/algolia.js');
@@ -193,7 +193,7 @@ async function runPipeline(pkgPrefix, indices, change, params, log) {
       prev[config.name] = {
         config,
         provider,
-        path: provider && includes(config, change.path)
+        path: provider && contains(config, change.path)
           ? replaceExt(change.path, config.source)
           : null,
       };
