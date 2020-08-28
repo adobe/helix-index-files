@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/adobe/helix-index-files/compare/v2.3.15...v2.4.0) (2020-08-28)
+
+
+### Features
+
+* **index:** add support for exclude ([#220](https://github.com/adobe/helix-index-files/issues/220)) ([b3fc44e](https://github.com/adobe/helix-index-files/commit/b3fc44e73dc6832ecaf5b6db3d96bb48dcc551ce))
+
 ## [2.3.15](https://github.com/adobe/helix-index-files/compare/v2.3.14...v2.3.15) (2020-08-28)
 
 
