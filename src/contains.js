@@ -48,7 +48,7 @@ function match(cfg, path, ifmissing) {
 /**
  * Return a flag indicating whether a particular path is contained
  * in the indexing configuration (include or exclude element). This
- * is true if a path is either included or *not* excluded.
+ * is true if a path is included and *not* excluded.
  *
  * @param {Array} cfg indexing configuration's
  * @param {string} path path to check
