@@ -1,14 +1,14 @@
 {
   "input": {
-    "description": "change containing a path that is not included",
+    "description": "change containing a file that is excluded",
     "owner": "foo",
     "repo": "bar",
     "ref": "master",
     "branch": "master",
-    "path": "foo/added.html"
+    "path": "foo/Document.html"
   },
   "output": {
     "status": 404,
-    "reason": "Item path not in index definition: foo/added.html"
+    "reason": "Item path not in index definition: foo/Document.html"
   }
 }
