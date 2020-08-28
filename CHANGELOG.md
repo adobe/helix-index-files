@@ -1,3 +1,25 @@
+# [2.4.0](https://github.com/adobe/helix-index-files/compare/v2.3.15...v2.4.0) (2020-08-28)
+
+
+### Features
+
+* **index:** add support for exclude ([#220](https://github.com/adobe/helix-index-files/issues/220)) ([b3fc44e](https://github.com/adobe/helix-index-files/commit/b3fc44e73dc6832ecaf5b6db3d96bb48dcc551ce))
+
+## [2.3.15](https://github.com/adobe/helix-index-files/compare/v2.3.14...v2.3.15) (2020-08-28)
+
+
+### Bug Fixes
+
+* **azure:** adjust to more restrictive schema ([fc1164f](https://github.com/adobe/helix-index-files/commit/fc1164fba504fef0757ce33b0daaba606e200338))
+* **deps:** update [@adobe](https://github.com/adobe) fixes ([8069bdf](https://github.com/adobe/helix-index-files/commit/8069bdff334a21914322cf215f2ae24af8f9b342))
+
+## [2.3.14](https://github.com/adobe/helix-index-files/compare/v2.3.13...v2.3.14) (2020-08-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-onedrive-support to v2.10.0 ([#212](https://github.com/adobe/helix-index-files/issues/212)) ([e508ab4](https://github.com/adobe/helix-index-files/commit/e508ab4a04cc76d75d67d2b63bdec698f551f592))
+
 ## [2.3.13](https://github.com/adobe/helix-index-files/compare/v2.3.12...v2.3.13) (2020-08-11)
 
 
