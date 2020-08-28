@@ -17,7 +17,7 @@
     "deploy-ci": "wsk-builder -v --deploy --test=/_status_check/healthcheck.json --pkgVersion=ci$CIRCLE_BUILD_NUM -l ci"
   },
   "wsk": {
-    "namespace": "dpfister",
+    "namespace": "helix",
     "name": "helix-observation/index-files@${version}"
   },
   "repository": {
