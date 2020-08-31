@@ -6,10 +6,11 @@ on:
 jobs:
   ci_trigger:
     runs-on: ubuntu-latest
-    name: Comment Semantic Release Status
+    name: Impersonated CI Trigger
     steps:
-      - name: Comment
-        id: comment
-        uses: adobe-rnd/github-semantic-release-comment-action@master
+      - name: Trigger
+        id: trigger
+        uses: adobe-rnd/github-touch-action@master
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ secrets.MY_GITHUB_TOKEN }}
+          user: renovate-bot
