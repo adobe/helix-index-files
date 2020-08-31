@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/adobe/helix-index-files/compare/v2.4.0...v2.4.1) (2020-08-31)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-testutils to v0.4.1 ([#223](https://github.com/adobe/helix-index-files/issues/223)) ([a1cee82](https://github.com/adobe/helix-index-files/commit/a1cee820b61edcead32ea185480826615c55a3c6))
+
 # [2.4.0](https://github.com/adobe/helix-index-files/compare/v2.3.15...v2.4.0) (2020-08-28)
 
 
