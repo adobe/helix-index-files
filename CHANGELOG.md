@@ -1,3 +1,10 @@
+## [2.4.5](https://github.com/adobe/helix-index-files/compare/v2.4.4...v2.4.5) (2020-09-11)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-onedrive-support to v2.11.0 ([#228](https://github.com/adobe/helix-index-files/issues/228)) ([df53cb9](https://github.com/adobe/helix-index-files/commit/df53cb91f441b39b957909306187bec455cba3b2))
+
 ## [2.4.4](https://github.com/adobe/helix-index-files/compare/v2.4.3...v2.4.4) (2020-09-10)
 
 
