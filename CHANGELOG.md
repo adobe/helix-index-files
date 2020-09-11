@@ -1,3 +1,10 @@
+## [2.4.6](https://github.com/adobe/helix-index-files/compare/v2.4.5...v2.4.6) (2020-09-11)
+
+
+### Bug Fixes
+
+* **deps:** update [@adobe](https://github.com/adobe) fixes ([#229](https://github.com/adobe/helix-index-files/issues/229)) ([09858a9](https://github.com/adobe/helix-index-files/commit/09858a921379d0756162d1df7d18cdfe649e87b8))
+
 ## [2.4.5](https://github.com/adobe/helix-index-files/compare/v2.4.4...v2.4.5) (2020-09-11)
 
 
