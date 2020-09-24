@@ -15,7 +15,7 @@
 const fse = require('fs-extra');
 const p = require('path');
 
-const SPEC_ROOT = p.resolve(__dirname, 'specs');
+const SPEC_ROOT = p.resolve(__dirname, '..', 'specs');
 
 /**
  * Algolia compatible read-only index loaded from file for testing.

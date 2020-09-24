@@ -20,11 +20,20 @@ const p = require('path');
 const proxyquire = require('proxyquire');
 const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
 
-const AlgoliaIndex = require('./AlgoliaIndex.js');
-const AzureIndex = require('./AzureIndex.js');
-const ExcelIndex = require('./ExcelIndex.js');
+const AlgoliaIndex = require('./mock/AlgoliaIndex.js');
+const AzureIndex = require('./mock/AzureIndex.js');
 
 const SPEC_ROOT = p.resolve(__dirname, 'specs');
+
+/**
+ * Message queues.
+ */
+const queues = [];
+
+/**
+ * Replacement for ServiceBusClient.
+ */
+const ServiceBusClient = require('./mock/ServiceBusClient.js')(queues);
 
 /**
  * Replacement for @adobe/helix-fetch in our test.
@@ -65,8 +74,10 @@ const fsIndexPipeline = async ({ params }) => {
       result: {
         body: {
           algolia: entry,
-          excel: entry,
           azure: entry,
+          excel: entry,
+          'excel-de': entry,
+          'excel-jp': entry,
         },
         statusCode: 200,
       },
@@ -83,11 +94,6 @@ let indexPipelineStub = fsIndexPipeline;
  * Azure index
  */
 let azureIndex;
-
-/**
- * Excel index
- */
-let excelIndex;
 
 /**
  * Proxy our real OW action and its requirements.
@@ -114,18 +120,7 @@ const { main } = proxyquire('../src/index.js', {
   }),
   './providers/excel.js': proxyquire('../src/providers/excel.js', {
     '@azure/service-bus': {
-      ServiceBusClient: {
-        createFromConnectionString: () => ({
-          createQueueClient: () => ({
-            createSender: () => ({
-              send: async (message) => excelIndex.process(message),
-              close: () => {},
-            }),
-            close: () => {},
-          }),
-          close: () => {},
-        }),
-      },
+      ServiceBusClient,
     },
   }),
   './providers/azure.js': proxyquire('../src/providers/azure.js', {
@@ -173,43 +168,8 @@ describe('Index Tests', () => {
             ALGOLIA_API_KEY: 'bar',
             ...input,
           };
-          const response = await main(params);
-          assert.deepEqual(response.body.results[0].algolia, output);
-        }).timeout(60000);
-      }
-    });
-  });
-
-  describe('Run tests against Excel', () => {
-    beforeEach(() => {
-      excelIndex = new ExcelIndex('excel');
-    });
-    const dir = p.resolve(SPEC_ROOT);
-    fse.readdirSync(dir).forEach((filename) => {
-      if (filename.endsWith('.json')) {
-        const name = filename.substring(0, filename.length - 5);
-        const { input, output, ignore } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
-        if (ignore && ignore.includes('excel')) {
-          // some tests do not contain an input sourceHash, which doesn't make sense
-          // with OneDrive where every change contains a sourceHash
-          return;
-        }
-        it(`Testing ${name} against Excel`, async () => {
-          const params = {
-            AZURE_SERVICE_BUS_CONN_STRING: 'foo',
-            AZURE_SERVICE_BUS_QUEUE_NAME: 'bar',
-            ...input,
-          };
-          const response = await main(params);
-          const result = response.body.results[1].excel;
-          if (result.status === 202) {
-            // if the excel index merely accepts the input (because it sends it over the queue)
-            // let's check the latest result on the index contents itself
-            assert.deepEqual(excelIndex.latest, output);
-          } else {
-            // otherwise the result can be compared as usual
-            assert.deepEqual(result, output);
-          }
+          const { body: { results: [{ algolia }] } } = await main(params);
+          assert.deepStrictEqual(algolia, output);
         }).timeout(60000);
       }
     });
@@ -230,8 +190,27 @@ describe('Index Tests', () => {
             AZURE_SEARCH_SERVICE_NAME: 'bar',
             ...input,
           };
-          const response = await main(params);
-          assert.deepEqual(response.body.results[2].azure, output);
+          const { body: { results: [, { azure }] } } = await main(params);
+          assert.deepStrictEqual(azure, output);
+        }).timeout(60000);
+      }
+    });
+  });
+
+  describe('Run tests against Excel', () => {
+    const dir = p.resolve(SPEC_ROOT, 'excel');
+    fse.readdirSync(dir).forEach((filename) => {
+      if (filename.endsWith('.json')) {
+        const name = filename.substring(0, filename.length - 5);
+        const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
+        it(`Testing ${name} against Excel`, async () => {
+          const params = {
+            AZURE_SERVICE_BUS_CONN_STRING: 'foo',
+            AZURE_SERVICE_BUS_QUEUE_NAME: name,
+            ...input,
+          };
+          await main(params);
+          assert.deepStrictEqual(queues[name], output);
         }).timeout(60000);
       }
     });

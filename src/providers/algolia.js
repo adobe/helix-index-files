@@ -139,5 +139,5 @@ module.exports = {
   name: 'Algolia',
   required: ['ALGOLIA_APP_ID', 'ALGOLIA_API_KEY'],
   match: (url) => !url,
-  create: (params, config, log) => new Algolia(params, config, log),
+  create: (params, configs, log) => configs.map((config) => new Algolia(params, config, log)),
 };
