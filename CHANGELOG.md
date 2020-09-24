@@ -1,3 +1,80 @@
+## [2.4.11](https://github.com/adobe/helix-index-files/compare/v2.4.10...v2.4.11) (2020-09-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-onedrive-support to v3 ([#237](https://github.com/adobe/helix-index-files/issues/237)) ([bef2009](https://github.com/adobe/helix-index-files/commit/bef2009c23d707ae42effd172cf2b0ad37545929))
+
+## [2.4.10](https://github.com/adobe/helix-index-files/compare/v2.4.9...v2.4.10) (2020-09-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-status to v8.2.0 ([#236](https://github.com/adobe/helix-index-files/issues/236)) ([5774b4c](https://github.com/adobe/helix-index-files/commit/5774b4c06242d4e6fa5177a8fad0d572ed325497))
+
+## [2.4.9](https://github.com/adobe/helix-index-files/compare/v2.4.8...v2.4.9) (2020-09-21)
+
+
+### Bug Fixes
+
+* **deps:** update external fixes ([#234](https://github.com/adobe/helix-index-files/issues/234)) ([3fff9eb](https://github.com/adobe/helix-index-files/commit/3fff9eb28f069a1484c3b8a34012f6a398752ca6))
+
+## [2.4.8](https://github.com/adobe/helix-index-files/compare/v2.4.7...v2.4.8) (2020-09-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-onedrive-support to v2.12.2 ([#233](https://github.com/adobe/helix-index-files/issues/233)) ([618e7dc](https://github.com/adobe/helix-index-files/commit/618e7dc625cffcf6d07e55538d8a28fada94c37d))
+
+## [2.4.7](https://github.com/adobe/helix-index-files/compare/v2.4.6...v2.4.7) (2020-09-17)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-onedrive-support to v2.12.1 ([#232](https://github.com/adobe/helix-index-files/issues/232)) ([b6f2608](https://github.com/adobe/helix-index-files/commit/b6f26084787e848c77d130b7346b6c579167028e))
+
+## [2.4.6](https://github.com/adobe/helix-index-files/compare/v2.4.5...v2.4.6) (2020-09-11)
+
+
+### Bug Fixes
+
+* **deps:** update [@adobe](https://github.com/adobe) fixes ([#229](https://github.com/adobe/helix-index-files/issues/229)) ([09858a9](https://github.com/adobe/helix-index-files/commit/09858a921379d0756162d1df7d18cdfe649e87b8))
+
+## [2.4.5](https://github.com/adobe/helix-index-files/compare/v2.4.4...v2.4.5) (2020-09-11)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-onedrive-support to v2.11.0 ([#228](https://github.com/adobe/helix-index-files/issues/228)) ([df53cb9](https://github.com/adobe/helix-index-files/commit/df53cb91f441b39b957909306187bec455cba3b2))
+
+## [2.4.4](https://github.com/adobe/helix-index-files/compare/v2.4.3...v2.4.4) (2020-09-10)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-onedrive-support to v2.10.1 ([#227](https://github.com/adobe/helix-index-files/issues/227)) ([0aa3991](https://github.com/adobe/helix-index-files/commit/0aa3991ee92e0a883176d3788869ffb11cd3b2f4))
+
+## [2.4.3](https://github.com/adobe/helix-index-files/compare/v2.4.2...v2.4.3) (2020-09-09)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-shared to v7.12.0 ([#226](https://github.com/adobe/helix-index-files/issues/226)) ([642cf9b](https://github.com/adobe/helix-index-files/commit/642cf9b2076ba719d53430ac988881d11acc37ce))
+
+## [2.4.2](https://github.com/adobe/helix-index-files/compare/v2.4.1...v2.4.2) (2020-09-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/openwhisk-action-utils to v4.3.0 ([#224](https://github.com/adobe/helix-index-files/issues/224)) ([e9abc26](https://github.com/adobe/helix-index-files/commit/e9abc262deefcfc16111a9faeb503f88a060ab63))
+
+## [2.4.1](https://github.com/adobe/helix-index-files/compare/v2.4.0...v2.4.1) (2020-08-31)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-testutils to v0.4.1 ([#223](https://github.com/adobe/helix-index-files/issues/223)) ([a1cee82](https://github.com/adobe/helix-index-files/commit/a1cee820b61edcead32ea185480826615c55a3c6))
+
 # [2.4.0](https://github.com/adobe/helix-index-files/compare/v2.3.15...v2.4.0) (2020-08-28)
 
 
