@@ -1,3 +1,10 @@
+## [2.4.14](https://github.com/adobe/helix-index-files/compare/v2.4.13...v2.4.14) (2020-10-03)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-shared to v7.15.0 ([#242](https://github.com/adobe/helix-index-files/issues/242)) ([321e41a](https://github.com/adobe/helix-index-files/commit/321e41a33806731eca98e5d2594aee1a33c1be5e))
+
 ## [2.4.13](https://github.com/adobe/helix-index-files/compare/v2.4.12...v2.4.13) (2020-09-30)
 
 
