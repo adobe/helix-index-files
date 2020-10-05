@@ -1,0 +1,31 @@
+{
+  "input": {
+    "description": "change containing an update within 'jp' language tree",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "observation": {
+      "type": "onedrive",
+      "change": {
+        "uid": "Ho7yHAYJPjonC6Do",
+        "path": "/pages/jp/brown.docx",
+        "time": "2020-03-03T17:01:12Z",
+        "type": "modified"
+      },
+      "provider": {
+        "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
+      }
+    }
+  },
+  "output": [{
+    "index": "excel-jp",
+    "record": {
+      "path": "/pages/jp/brown.html",
+      "artist": "ジェームズ褐色",
+      "date": 1569369600,
+      "sourceHash": "Ho7yHAYJPjonC6Do",
+      "title": "I feel good",
+      "genres": [ "Soul", "Funk", "Rhythm and Blues" ]
+    }
+  }]
+}

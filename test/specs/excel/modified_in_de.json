@@ -1,0 +1,31 @@
+{
+  "input": {
+    "description": "change containing an update within 'de' language tree",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "observation": {
+      "type": "onedrive",
+      "change": {
+        "uid": "+i/8f6rBgLRF6aM3",
+        "path": "/pages/de/brown.docx",
+        "time": "2020-03-03T17:01:12Z",
+        "type": "modified"
+      },
+      "provider": {
+        "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
+      }
+    }
+  },
+  "output": [{
+    "index": "excel-de",
+    "record": {
+      "path": "/pages/de/brown.html",
+      "artist": "Jakob Braun",
+      "date": 1569369600,
+      "sourceHash": "+i/8f6rBgLRF6aM3",
+      "title": "I feel good",
+      "genres": ["Soul", "Funk", "Rhythm and Blues"]
+    }
+  }]
+}

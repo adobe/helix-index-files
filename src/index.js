@@ -46,28 +46,46 @@ function hasParams(required, actual) {
 }
 
 /**
- * Create providers along index definitions and return an array of objects
- * consisting of an index definition and its providers
+ * Create handlers along index definitions and return an array of objects
+ * consisting of an index definition and its handler.
  *
- * @param {Array} indices array of index definitions
- * @returns array of index definitions and their providers
+ * @param {Array} configs array of index definitions
+ * @param {object} params parameters available
+ * @param {object} log logger
+ *
+ * @returns array of index definitions and their handlers
  */
-function createProviders(indices, params, log) {
-  return indices
-    .map((config) => {
-      let provider;
-      const candidate = providers
-        .filter((c) => hasParams(c.required, params))
-        .find((c) => c.match(config.target));
-      if (candidate) {
-        try {
-          provider = candidate.create(params, config, log);
-        } catch (e) {
-          log.error(`Unable to create provider for ${config.name}`, e);
-        }
+function createHandlers(configs, params, log) {
+  const configMap = configs
+    .map((config) => providers
+      .filter((provider) => hasParams(provider.required, params))
+      .find((provider) => provider.match(config.target)))
+    .reduce((map, provider, i) => {
+      const name = provider ? provider.name : '(none)';
+      if (!map[name]) {
+        // eslint-disable-next-line no-param-reassign
+        map[name] = { provider, configs: [], indices: [] };
       }
-      return { config, provider };
+      map[name].indices.push(i);
+      map[name].configs.push(configs[i]);
+      return map;
+    }, {});
+
+  const result = new Array(configs.length);
+  Object.values(configMap).forEach(({ provider, configs: providerConfigs, indices }) => {
+    let handlers = new Array(indices.length);
+    try {
+      if (provider) {
+        handlers = provider.create(params, providerConfigs, log);
+      }
+    } catch (e) {
+      log.error(`Unable to create handler in ${provider.name}`, e);
+    }
+    indices.forEach((index, i) => {
+      result[index] = { config: configs[index], handler: handlers[i] };
     });
+  });
+  return result;
 }
 
 /**
@@ -95,21 +113,21 @@ function getChange(params) {
 }
 
 /**
- * Handle deletion of an item for all index providers.
+ * Handle deletion of an item for all index handlers.
  *
  * @param {object} param0 parameters
  * @param {Change} change change containing deletion
  * @param {object} log logger
  */
-async function handleDelete({ config, provider }, change, log) {
-  if (!provider) {
+async function handleDelete({ config, handler }, change, log) {
+  if (!handler) {
     return {
       status: 400,
-      reason: 'Provider not available, parameters missing or target unsuitable',
+      reason: 'Handler not available, parameters missing or target unsuitable',
     };
   }
   try {
-    return await provider.delete({ sourceHash: change.uid });
+    return await handler.delete({ sourceHash: change.uid });
   } catch (e) {
     log.error(`An error occurred deleting record ${change.uid} in ${config.name}`, e);
     return {
@@ -120,22 +138,39 @@ async function handleDelete({ config, provider }, change, log) {
 }
 
 /**
- * Handle a single update for an index provider.
+ * Handle a single update for an index handler.
  *
  * @param {object} param0 parameters
  * @param {Change} change change
  * @param {object} log logger
  */
 async function handleUpdate({
-  config, provider, path, body,
+  config, handler, path, include, body,
 }, change, log) {
-  if (!provider) {
+  if (!handler) {
     return {
       status: 400,
-      reason: 'Provider not available, parameters missing or target unsuitable',
+      reason: 'Handler not available, parameters missing or target unsuitable',
     };
   }
-  if (!path) {
+  if (!include) {
+    if (change.uid) {
+      // This could be a move from our input domain to some region outside, so verify
+      // we do not keep a record in the index for an item we no longer track
+      try {
+        const result = await handler.delete({ sourceHash: change.uid });
+        if (result.status !== 404) {
+          // yes, the item was present in our index, so return that result
+          return result;
+        }
+      } catch (e) {
+        log.error(`An error occurred deleting record ${change.uid} in ${config.name}`, e);
+        return {
+          status: 500,
+          reason: e.message,
+        };
+      }
+    }
     return {
       status: 404,
       reason: `Item path not in index definition: ${change.path}`,
@@ -148,8 +183,8 @@ async function handleUpdate({
   try {
     const doc = body.docs ? body.docs[0] : null;
     return doc
-      ? await provider.update({ path, ...doc })
-      : await provider.delete({ path });
+      ? await handler.update({ path, ...doc })
+      : await handler.delete({ path });
   } catch (e) {
     log.error(`An error occurred updating record ${path} in ${config.name}`, e);
     return {
@@ -188,21 +223,20 @@ function replaceExt(path, ext) {
 async function runPipeline(pkgPrefix, indices, change, params, log) {
   // Create our result where we'll store the HTML responses
   const records = indices
-    .reduce((prev, { config, provider }) => {
+    .reduce((prev, { config, handler }) => {
       // eslint-disable-next-line no-param-reassign
       prev[config.name] = {
         config,
-        provider,
-        path: provider && contains(config, change.path)
-          ? replaceExt(change.path, config.source)
-          : null,
+        handler,
+        include: handler && contains(config, change.path),
+        path: replaceExt(change.path, config.source),
       };
       return prev;
     }, {});
 
   // Create a unique set of the paths found
   const paths = Array.from(Object.values(records)
-    .filter(({ path }) => path)
+    .filter(({ include }) => include)
     .reduce((prev, { path }) => {
       prev.add(path);
       return prev;
@@ -215,7 +249,7 @@ async function runPipeline(pkgPrefix, indices, change, params, log) {
   })));
 
   // Finish by filling in all responses acquired
-  Object.values(records).filter(({ path }) => path).forEach((record) => {
+  Object.values(records).filter(({ include }) => include).forEach((record) => {
     const response = responses.get(record.path);
     const body = response[record.config.name];
     if (!body) {
@@ -256,7 +290,7 @@ async function run(params) {
 
   const change = getChange(params);
   const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
-  const indices = createProviders(config.indices, params, log);
+  const indices = createHandlers(config.indices, params, log);
 
   let responses;
   if (change.deleted) {

@@ -166,5 +166,5 @@ module.exports = {
   name: 'Azure',
   required: ['AZURE_SEARCH_API_KEY', 'AZURE_SEARCH_SERVICE_NAME'],
   match: (url) => url && url.startsWith('azure'),
-  create: (params, config, log) => new Azure(params, config, log),
+  create: (params, configs, log) => configs.map((config) => new Azure(params, config, log)),
 };

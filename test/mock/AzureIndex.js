@@ -16,10 +16,10 @@ const fse = require('fs-extra');
 const p = require('path');
 const pick = require('lodash.pick');
 
-const SPEC_ROOT = p.resolve(__dirname, 'specs');
+const SPEC_ROOT = p.resolve(__dirname, '..', 'specs');
 
 /**
- * Algolia compatible read-only index loaded from file for testing.
+ * Azure compatible index loaded from file for testing.
  */
 class AzureIndex {
   constructor(name) {

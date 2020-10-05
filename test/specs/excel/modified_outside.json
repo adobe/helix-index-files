@@ -1,0 +1,26 @@
+{
+  "input": {
+    "description": "change outside our domain, should be treated like a deletion",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "observation": {
+      "type": "onedrive",
+      "change": {
+        "uid": "8qRlJYKzHfuDcbjN",
+        "path": "/drafts/green.docx",
+        "time": "2020-03-03T17:01:12Z",
+        "type": "modified"
+      },
+      "provider": {
+        "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
+      }
+    }
+  },
+  "output": [{
+    "deleted": true,
+    "record": {
+      "sourceHash": "8qRlJYKzHfuDcbjN"
+    }
+  }]
+}

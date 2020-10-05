@@ -20,11 +20,20 @@ const p = require('path');
 const proxyquire = require('proxyquire');
 const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
 
-const AlgoliaIndex = require('./AlgoliaIndex.js');
-const OneDrive = require('./OneDrive.js');
-const AzureIndex = require('./AzureIndex.js');
+const AlgoliaIndex = require('./mock/AlgoliaIndex.js');
+const AzureIndex = require('./mock/AzureIndex.js');
 
 const SPEC_ROOT = p.resolve(__dirname, 'specs');
+
+/**
+ * Message queues.
+ */
+const queues = [];
+
+/**
+ * Replacement for ServiceBusClient.
+ */
+const ServiceBusClient = require('./mock/ServiceBusClient.js')(queues);
 
 /**
  * Replacement for @adobe/helix-fetch in our test.
@@ -65,8 +74,10 @@ const fsIndexPipeline = async ({ params }) => {
       result: {
         body: {
           algolia: entry,
-          excel: entry,
           azure: entry,
+          excel: entry,
+          'excel-de': entry,
+          'excel-jp': entry,
         },
         statusCode: 200,
       },
@@ -108,8 +119,8 @@ const { main } = proxyquire('../src/index.js', {
     }),
   }),
   './providers/excel.js': proxyquire('../src/providers/excel.js', {
-    '@adobe/helix-onedrive-support': {
-      OneDrive,
+    '@azure/service-bus': {
+      ServiceBusClient,
     },
   }),
   './providers/azure.js': proxyquire('../src/providers/azure.js', {
@@ -157,28 +168,8 @@ describe('Index Tests', () => {
             ALGOLIA_API_KEY: 'bar',
             ...input,
           };
-          const response = await main(params);
-          assert.deepEqual(response.body.results[0].algolia, output);
-        }).timeout(60000);
-      }
-    });
-  });
-
-  describe('Run tests against Excel', () => {
-    const dir = p.resolve(SPEC_ROOT);
-    fse.readdirSync(dir).forEach((filename) => {
-      if (filename.endsWith('.json')) {
-        const name = filename.substring(0, filename.length - 5);
-        const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
-        it(`Testing ${name} for Excel`, async () => {
-          const params = {
-            AZURE_WORD2MD_CLIENT_ID: 'foo',
-            AZURE_HELIX_USER: 'bar',
-            AZURE_HELIX_PASSWORD: 'baz',
-            ...input,
-          };
-          const response = await main(params);
-          assert.deepEqual(response.body.results[1].excel, output);
+          const { body: { results: [{ algolia }] } } = await main(params);
+          assert.deepStrictEqual(algolia, output);
         }).timeout(60000);
       }
     });
@@ -193,14 +184,33 @@ describe('Index Tests', () => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
         const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
-        it(`Testing ${name} for Azure`, async () => {
+        it(`Testing ${name} against Azure`, async () => {
           const params = {
             AZURE_SEARCH_API_KEY: 'foo',
             AZURE_SEARCH_SERVICE_NAME: 'bar',
             ...input,
           };
-          const response = await main(params);
-          assert.deepEqual(response.body.results[2].azure, output);
+          const { body: { results: [, { azure }] } } = await main(params);
+          assert.deepStrictEqual(azure, output);
+        }).timeout(60000);
+      }
+    });
+  });
+
+  describe('Run tests against Excel', () => {
+    const dir = p.resolve(SPEC_ROOT, 'excel');
+    fse.readdirSync(dir).forEach((filename) => {
+      if (filename.endsWith('.json')) {
+        const name = filename.substring(0, filename.length - 5);
+        const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
+        it(`Testing ${name} against Excel`, async () => {
+          const params = {
+            AZURE_SERVICE_BUS_CONN_STRING: 'foo',
+            AZURE_SERVICE_BUS_QUEUE_NAME: name,
+            ...input,
+          };
+          await main(params);
+          assert.deepStrictEqual(queues[name], output);
         }).timeout(60000);
       }
     });

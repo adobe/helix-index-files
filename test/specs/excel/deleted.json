@@ -1,0 +1,24 @@
+{
+  "input": {
+    "description": "change containing a deletion",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "master",
+    "observation": {
+      "type": "onedrive",
+      "change": {
+        "uid": "+i/8f6rBgLRF6aM3",
+        "type": "deleted"
+      },
+      "provider": {
+        "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
+      }
+    }
+  },
+  "output": [{
+    "deleted": true,
+    "record": {
+      "sourceHash": "+i/8f6rBgLRF6aM3"
+    }
+  }]
+}
