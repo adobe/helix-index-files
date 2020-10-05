@@ -1,3 +1,15 @@
+# [3.0.0](https://github.com/adobe/helix-index-files/compare/v2.4.14...v3.0.0) (2020-10-05)
+
+
+### Features
+
+* **index:** use Azure Queue for Excel Indexer ([#221](https://github.com/adobe/helix-index-files/issues/221)) ([6b377da](https://github.com/adobe/helix-index-files/commit/6b377da627be8ea52b9d4d6b119b2275069cc12f))
+
+
+### BREAKING CHANGES
+
+* **index:** excel provider no longer directly changes sheet but uses a queue
+
 ## [2.4.14](https://github.com/adobe/helix-index-files/compare/v2.4.13...v2.4.14) (2020-10-03)
 
 
