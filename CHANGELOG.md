@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/adobe/helix-index-files/compare/v3.0.0...v3.0.1) (2020-10-06)
+
+
+### Bug Fixes
+
+* **excel:** derive destination queue name ([#245](https://github.com/adobe/helix-index-files/issues/245)) ([894a576](https://github.com/adobe/helix-index-files/commit/894a576d650c5f6c6741e651a17a0df85eed1f10))
+
 # [3.0.0](https://github.com/adobe/helix-index-files/compare/v2.4.14...v3.0.0) (2020-10-05)
 
 
