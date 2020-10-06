@@ -24,15 +24,16 @@ const mapResult = require('./mapResult.js');
 class Excel {
   constructor(params, configs, log) {
     const {
+      owner, repo, ref,
+    } = params;
+
+    const {
       AZURE_SERVICE_BUS_CONN_STRING: connectionString,
-      AZURE_SERVICE_BUS_QUEUE_NAME: queueName,
+      AZURE_SERVICE_BUS_QUEUE_NAME: queueName = `excel-indexer/${owner}/${repo}/${ref}`,
     } = params;
 
     if (!connectionString) {
       throw new Error('AZURE_SERVICE_BUS_CONN_STRING parameter missing.');
-    }
-    if (!queueName) {
-      throw new Error('AZURE_SERVICE_BUS_QUEUE_NAME parameter missing.');
     }
 
     this._connectionString = connectionString;
@@ -82,7 +83,7 @@ class Excel {
       return mapResult.error(path, message);
     }
     await this._send({ index, record });
-    return mapResult.accepted(path);
+    return mapResult.accepted(path, this._queueName);
   }
 
   /**
@@ -112,7 +113,7 @@ class Excel {
       await this._send({ deleted: true, record: { sourceHash } });
       this._deletes[sourceHash] = 0;
     }
-    return mapResult.accepted(sourceHash);
+    return mapResult.accepted(sourceHash, this._queueName);
   }
 
   /**
@@ -150,7 +151,7 @@ class Excel {
 
 module.exports = {
   name: 'Excel',
-  required: ['AZURE_SERVICE_BUS_CONN_STRING', 'AZURE_SERVICE_BUS_QUEUE_NAME'],
+  required: ['AZURE_SERVICE_BUS_CONN_STRING'],
   match: (url) => url && /^https:\/\/[^/]+\.sharepoint\.com\//.test(url),
   create: (params, configs, log) => Excel.createProvider(params, configs, log),
 };
