@@ -20,9 +20,10 @@ const mapResult = {
     path,
     update,
   }),
-  accepted: (path) => ({
+  accepted: (path, update) => ({
     status: 202,
     path,
+    update,
   }),
   moved: (path, oldLocation, update) => ({
     status: 301,

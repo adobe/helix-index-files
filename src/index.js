@@ -58,9 +58,11 @@ function hasParams(required, actual) {
 function createHandlers(configs, params, log) {
   const configMap = configs
     .map((config) => providers
+      // keep providers that have the required parameters and match the target
       .filter((provider) => hasParams(provider.required, params))
       .find((provider) => provider.match(config.target)))
     .reduce((map, provider, i) => {
+      // create a map of providers with their configurations in helix-query.yaml
       const name = provider ? provider.name : '(none)';
       if (!map[name]) {
         // eslint-disable-next-line no-param-reassign
@@ -79,8 +81,9 @@ function createHandlers(configs, params, log) {
         handlers = provider.create(params, providerConfigs, log);
       }
     } catch (e) {
-      log.error(`Unable to create handler in ${provider.name}`, e);
+      log.error(`Unable to create handlers in ${provider.name}`, e);
     }
+    // fill in all index definitions and their respective handler
     indices.forEach((index, i) => {
       result[index] = { config: configs[index], handler: handlers[i] };
     });
