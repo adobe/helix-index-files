@@ -1,3 +1,10 @@
+## [3.0.2](https://github.com/adobe/helix-index-files/compare/v3.0.1...v3.0.2) (2020-10-11)
+
+
+### Bug Fixes
+
+* **deps:** update external fixes ([8d8f994](https://github.com/adobe/helix-index-files/commit/8d8f99453afbb55d550479b5a0105822bd774ca8))
+
 ## [3.0.1](https://github.com/adobe/helix-index-files/compare/v3.0.0...v3.0.1) (2020-10-06)
 
 
