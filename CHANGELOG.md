@@ -1,3 +1,10 @@
+## [3.0.3](https://github.com/adobe/helix-index-files/compare/v3.0.2...v3.0.3) (2020-10-12)
+
+
+### Bug Fixes
+
+* **deps:** pin dependency @azure/service-bus to 1.1.9 ([#246](https://github.com/adobe/helix-index-files/issues/246)) ([a760cb6](https://github.com/adobe/helix-index-files/commit/a760cb6ae89c6f2de94cc9825a88a4c03186bd6c))
+
 ## [3.0.2](https://github.com/adobe/helix-index-files/compare/v3.0.1...v3.0.2) (2020-10-11)
 
 
