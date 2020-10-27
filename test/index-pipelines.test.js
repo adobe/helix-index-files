@@ -41,8 +41,8 @@ describe('Index Pipeline Tests', () => {
   const params = {
     owner: 'me',
     repo: 'foo',
-    ref: 'master',
-    branch: 'master',
+    ref: 'main',
+    branch: 'main',
     __ow_logger: log,
   };
   it('specifying no version runs latest', async () => {

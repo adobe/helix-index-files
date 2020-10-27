@@ -138,7 +138,7 @@ describe('Index Tests', () => {
     const paramsKV = [
       ['owner', 'foo'],
       ['repo', 'bar'],
-      ['ref', 'master'],
+      ['ref', 'main'],
       ['path', 'test.html'],
     ];
     for (let i = 0; i < paramsKV.length; i += 1) {

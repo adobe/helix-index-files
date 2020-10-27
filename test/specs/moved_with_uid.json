@@ -3,7 +3,7 @@
     "description": "move an existing item within a mountpoint",
     "owner": "foo",
     "repo": "bar",
-    "ref": "master",
+    "ref": "main",
     "observation": {
       "type": "onedrive",
       "change": {

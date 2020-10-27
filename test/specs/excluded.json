@@ -3,8 +3,8 @@
     "description": "change containing a file that is excluded",
     "owner": "foo",
     "repo": "bar",
-    "ref": "master",
-    "branch": "master",
+    "ref": "main",
+    "branch": "main",
     "path": "foo/Document.html"
   },
   "output": {

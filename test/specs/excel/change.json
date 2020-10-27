@@ -3,7 +3,7 @@
     "description": "non-observation change",
     "owner": "foo",
     "repo": "bar",
-    "ref": "master",
+    "ref": "main",
     "path": "/pages/en/brown.html"
   },
   "output": [{

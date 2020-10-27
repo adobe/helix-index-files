@@ -3,7 +3,7 @@
     "description": "change containing a deletion within a mountpoint",
     "owner": "foo",
     "repo": "bar",
-    "ref": "master",
+    "ref": "main",
     "observation": {
       "type": "onedrive",
       "change": {

@@ -3,8 +3,8 @@
     "description": "change containing a deletion with a path",
     "owner": "foo",
     "repo": "bar",
-    "ref": "master",
-    "branch": "master",
+    "ref": "main",
+    "branch": "main",
     "path": "ms/deleted.html"
   },
   "output": {

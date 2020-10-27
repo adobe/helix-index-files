@@ -3,8 +3,8 @@
     "description": "change containing an addition with a path",
     "owner": "foo",
     "repo": "bar",
-    "ref": "master",
-    "branch": "master",
+    "ref": "main",
+    "branch": "main",
     "path": "ms/added.html"
   },
   "output": {

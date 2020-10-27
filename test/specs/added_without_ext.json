@@ -3,8 +3,8 @@
     "description": "change containing an addition without an extension",
     "owner": "foo",
     "repo": "bar",
-    "ref": "master",
-    "branch": "master",
+    "ref": "main",
+    "branch": "main",
     "path": "g/added"
   },
   "output": {

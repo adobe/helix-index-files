@@ -3,8 +3,8 @@
     "description": "change containing a modification of an unknown item",
     "owner": "foo",
     "repo": "bar",
-    "ref": "master",
-    "branch": "master",
+    "ref": "main",
+    "branch": "main",
     "path": "ms/inexistent.html"
   },
   "output": {

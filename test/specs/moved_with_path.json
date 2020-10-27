@@ -3,8 +3,8 @@
     "description": "move an existing item with a path",
     "owner": "foo",
     "repo": "bar",
-    "ref": "master",
-    "branch": "master",
+    "ref": "main",
+    "branch": "main",
     "path": "ms/moved_to.html"
   },
   "output": {
