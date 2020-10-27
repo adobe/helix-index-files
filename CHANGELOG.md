@@ -1,3 +1,10 @@
+# [3.1.0](https://github.com/adobe/helix-index-files/compare/v3.0.4...v3.1.0) (2020-10-27)
+
+
+### Features
+
+* **index:** use normalized path from listener if available ([#251](https://github.com/adobe/helix-index-files/issues/251)) ([e57852b](https://github.com/adobe/helix-index-files/commit/e57852b845f0cb8f65402f18d0146210e74f7902))
+
 ## [3.0.4](https://github.com/adobe/helix-index-files/compare/v3.0.3...v3.0.4) (2020-10-12)
 
 
