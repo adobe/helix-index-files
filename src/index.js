@@ -102,7 +102,9 @@ function getChange(params) {
   if (observation) {
     const { change, mountpoint } = observation;
     const opts = { uid: change.uid, path: change.path, type: change.type };
-    if (mountpoint && opts.path) {
+    if (change['normalized-path']) {
+      opts.path = change['normalized-path'];
+    } else if (mountpoint && opts.path) {
       const re = new RegExp(`^${mountpoint.root}/`);
       const repl = mountpoint.path.replace(/^\/+/, '');
       opts.path = opts.path.replace(re, repl);
