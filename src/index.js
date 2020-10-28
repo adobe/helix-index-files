@@ -189,7 +189,7 @@ async function handleUpdate({
     const doc = body.docs ? body.docs[0] : null;
     return doc
       ? await handler.update({ path, ...doc })
-      : await handler.delete({ path });
+      : await handler.delete({ path, sourceHash: change.uid });
   } catch (e) {
     log.error(`An error occurred updating record ${path} in ${config.name}`, e);
     return {
