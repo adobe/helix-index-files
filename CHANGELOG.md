@@ -1,3 +1,10 @@
+## [3.1.1](https://github.com/adobe/helix-index-files/compare/v3.1.0...v3.1.1) (2020-10-29)
+
+
+### Bug Fixes
+
+* handle change notification for gone items correctly ([#252](https://github.com/adobe/helix-index-files/issues/252)) ([be2a92a](https://github.com/adobe/helix-index-files/commit/be2a92ac9b0513cd82dea7a7e601c2c6b0f66b57))
+
 # [3.1.0](https://github.com/adobe/helix-index-files/compare/v3.0.4...v3.1.0) (2020-10-27)
 
 
