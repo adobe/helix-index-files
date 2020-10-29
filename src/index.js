@@ -277,14 +277,8 @@ async function run(params) {
     owner, repo, ref, __ow_logger: log,
   } = params;
 
-  if (!owner) {
-    throw new Error('owner parameter missing.');
-  }
-  if (!repo) {
-    throw new Error('repo parameter missing.');
-  }
-  if (!ref) {
-    throw new Error('ref parameter missing.');
+  if (!owner || !repo || !ref) {
+    return { statusCode: 500, body: 'owner/repo/ref missing' };
   }
 
   const {
