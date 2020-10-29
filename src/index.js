@@ -96,7 +96,7 @@ function createHandlers(configs, params, log) {
  * Return a change object with path, uid and type
  *
  * @param {object} params Runtime parameters
- * @returns change object
+ * @returns change object or null
  */
 function getChange(params) {
   const { observation } = params;
@@ -112,10 +112,10 @@ function getChange(params) {
     }
     return new Change(opts);
   }
-  if (!params.path) {
-    throw new Error('path parameter missing.');
+  if (params.path) {
+    return new Change({ path: params.path });
   }
-  return new Change({ path: params.path });
+  return null;
 }
 
 /**
@@ -284,18 +284,19 @@ async function run(params) {
   } = params;
 
   if (!owner || !repo || !ref) {
-    return { statusCode: 500, body: 'owner/repo/ref missing' };
+    return { statusCode: 400, body: 'owner/repo/ref missing' };
+  }
+
+  const change = getChange(params);
+  if (!change) {
+    return { statusCode: 400, body: 'path parameter missing' };
   }
 
   const {
-    __OW_ACTION_NAME: actionName,
+    __OW_ACTION_NAME: actionName = '/helix/helix-observation/index-files',
   } = process.env;
 
-  log.info(`action name: ${actionName}`);
-
-  const pkgPrefix = actionName ? `${actionName.split('/')[2]}/` : '';
-
-  const change = getChange(params);
+  const pkgPrefix = `${actionName.split('/')[2]}/`;
   const config = (await new IndexConfig()
     .withRepo(owner, repo, ref)
     .init()).toJSON();

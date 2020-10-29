@@ -112,23 +112,23 @@ const { main } = proxyquire('../src/index.js', {
 
 describe('Index Tests', () => {
   describe('Argument checking', () => {
-    it('index function returns 500 if owner/repo/ref is missing', async () => {
-      assert.strictEqual((await main({})).statusCode, 500);
+    it('index function returns 400 if owner/repo/ref is missing', async () => {
+      assert.strictEqual((await main({})).statusCode, 400);
       assert.strictEqual((await main({
         owner: 'foo',
-      })).statusCode, 500);
+      })).statusCode, 400);
       assert.strictEqual((await main({
         owner: 'foo',
         repo: 'bar',
-      })).statusCode, 500);
+      })).statusCode, 400);
     });
 
-    it('index function throws if path is missing', async () => {
-      await assert.rejects(async () => main({
+    it('index function returns 400 if path is missing', async () => {
+      assert.strictEqual((await main({
         owner: 'foo',
         repo: 'bar',
         ref: 'baz',
-      }), /path parameter missing/);
+      })).statusCode, 400);
     });
 
     it('index function bails if branch is missing and ref is not usable', async () => {
