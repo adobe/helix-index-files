@@ -38,7 +38,7 @@ describe(`Post-Deploy Tests (https://adobeioruntime.net/${getbaseurl()})`, () =>
       .get(`${getbaseurl()}`)
       .then((response) => {
         expect(response.text).to.equal('owner/repo/ref missing');
-        expect(response).to.have.status(500);
+        expect(response).to.have.status(400);
       }).catch((e) => {
         throw e;
       });
