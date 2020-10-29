@@ -15,16 +15,17 @@
 const flatten = require('lodash.flatten');
 const { logger } = require('@adobe/openwhisk-action-logger');
 const { wrap } = require('@adobe/openwhisk-action-utils');
+const { IndexConfig } = require('@adobe/helix-shared');
 const statusWrap = require('@adobe/helix-status').wrap;
 
 const Change = require('./Change.js');
-const fetchQuery = require('./fetch-query.js');
 const contains = require('./contains.js');
 const indexPipelines = require('./index-pipelines.js');
 
 const algolia = require('./providers/algolia.js');
 const azure = require('./providers/azure.js');
 const excel = require('./providers/excel.js');
+const mapResult = require('./providers/mapResult.js');
 
 /**
  * List of known index providers.
@@ -49,7 +50,7 @@ function hasParams(required, actual) {
  * Create handlers along index definitions and return an array of objects
  * consisting of an index definition and its handler.
  *
- * @param {Array} configs array of index definitions
+ * @param {Array} configs index definitions
  * @param {object} params parameters available
  * @param {object} log logger
  *
@@ -187,6 +188,11 @@ async function handleUpdate({
   }
   try {
     const doc = body.docs ? body.docs[0] : null;
+    if (doc && !doc.sourceHash) {
+      const message = `Unable to update ${path}: sourceHash is empty.`;
+      log.warn(message);
+      return mapResult.error(path, message);
+    }
     return doc
       ? await handler.update({ path, ...doc })
       : await handler.delete({ path, sourceHash: change.uid });
@@ -285,11 +291,16 @@ async function run(params) {
     __OW_ACTION_NAME: actionName,
   } = process.env;
 
+  log.into(`action name: ${actionName}`);
+
   const pkgPrefix = actionName ? `${actionName.split('/')[2]}/` : '';
 
   const change = getChange(params);
-  const config = await fetchQuery({ owner, repo, ref }, { timeout: 1000 });
-  const indices = createHandlers(config.indices, params, log);
+  const config = (await new IndexConfig()
+    .withRepo(owner, repo, ref)
+    .init()).toJSON();
+
+  const indices = createHandlers(Object.values(config.indices), params, log);
 
   let responses;
   if (change.deleted) {

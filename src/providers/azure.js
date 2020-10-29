@@ -28,13 +28,6 @@ class Azure {
       AZURE_SEARCH_SERVICE_NAME: serviceName,
     } = params;
 
-    if (!apiKey) {
-      throw new Error('AZURE_SEARCH_API_KEY parameter missing.');
-    }
-    if (!serviceName) {
-      throw new Error('AZURE_SEARCH_SERVICE_NAME parameter missing.');
-    }
-
     this._apiKey = apiKey;
     this._serviceName = serviceName;
 
@@ -59,11 +52,6 @@ class Azure {
 
   async update(record) {
     const { path, sourceHash } = record;
-    if (!sourceHash) {
-      const message = `Unable to update ${path}: sourceHash is empty.`;
-      this.log.warn(message);
-      return mapResult.error(path, message);
-    }
 
     const base = {
       objectID: Buffer.from(`${path}`).toString('base64')
