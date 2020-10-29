@@ -189,7 +189,7 @@ async function handleUpdate({
   try {
     const doc = body.docs ? body.docs[0] : null;
     if (doc && !doc.sourceHash) {
-      const message = `Unable to update ${path}: sourceHash is empty.`;
+      const message = `Unable to update ${path}: sourceHash in indexed document is empty.`;
       log.warn(message);
       return mapResult.error(path, message);
     }
