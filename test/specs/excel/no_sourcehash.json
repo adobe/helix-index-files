@@ -1,0 +1,9 @@
+{
+  "input": {
+    "description": "change related to item without source hash",
+    "owner": "foo",
+    "repo": "bar",
+    "ref": "main",
+    "path": "/pages/en/redding.html"
+  }
+}

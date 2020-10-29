@@ -16,6 +16,7 @@
 
 const assert = require('assert');
 const fse = require('fs-extra');
+const nock = require('nock');
 const p = require('path');
 const proxyquire = require('proxyquire');
 const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
@@ -34,24 +35,6 @@ const queues = [];
  * Replacement for ServiceBusClient.
  */
 const ServiceBusClient = require('./mock/ServiceBusClient.js')(queues);
-
-/**
- * Replacement for @adobe/helix-fetch in our test.
- */
-const fsFetch = async (url) => {
-  const path = `test/specs/${url.split('/').slice(-1).join('/')}`;
-  if (await fse.pathExists(path)) {
-    return {
-      ok: true,
-      status: 200,
-      text: async () => fse.readFile(path, 'utf8'),
-    };
-  }
-  return {
-    ok: false,
-    status: 404,
-  };
-};
 
 /**
  * Replacement for OW action index-pipeline in our tests.
@@ -101,11 +84,6 @@ let azureIndex;
  * @param {Function} invoke OW action to invoke
  */
 const { main } = proxyquire('../src/index.js', {
-  './fetch-query.js': proxyquire('../src/fetch-query.js', {
-    '@adobe/helix-fetch': {
-      fetch: fsFetch,
-    },
-  }),
   './index-pipelines.js': proxyquire('../src/index-pipelines.js', {
     openwhisk: () => ({
       actions: {
@@ -134,26 +112,39 @@ const { main } = proxyquire('../src/index.js', {
 
 describe('Index Tests', () => {
   describe('Argument checking', () => {
-    // Invoke our action with missing combinations of parameters
-    const paramsKV = [
-      ['owner', 'foo'],
-      ['repo', 'bar'],
-      ['ref', 'main'],
-      ['path', 'test.html'],
-    ];
-    for (let i = 0; i < paramsKV.length; i += 1) {
-      const params = paramsKV.slice(0, i).reduce((acc, [k, v]) => {
-        acc[`${k}`] = v;
-        return acc;
-      }, {});
-      it(`index function bails if argument ${paramsKV[i][0]} is missing`, async () => {
-        await assert.rejects(async () => main(params), /\w+ parameter missing/);
-      });
-    }
+    it('index function returns 400 if owner/repo/ref is missing', async () => {
+      assert.strictEqual((await main({})).statusCode, 400);
+      assert.strictEqual((await main({
+        owner: 'foo',
+      })).statusCode, 400);
+      assert.strictEqual((await main({
+        owner: 'foo',
+        repo: 'bar',
+      })).statusCode, 400);
+    });
+
+    it('index function returns 400 if path is missing', async () => {
+      assert.strictEqual((await main({
+        owner: 'foo',
+        repo: 'bar',
+        ref: 'baz',
+      })).statusCode, 400);
+    });
+
     it('index function bails if branch is missing and ref is not usable', async () => {
       await assert.rejects(async () => main({ ref: 'dd25127aa92f65fda6a0927ed3fb00bf5dcea069' }),
         /branch parameter missing and ref looks like a commit id/);
     });
+  });
+
+  before(async () => {
+    nock('https://raw.githubusercontent.com')
+      .get((uri) => uri.startsWith('/foo/bar/main'))
+      .reply(200, (uri) => {
+        const path = p.resolve(SPEC_ROOT, p.basename(uri));
+        return fse.readFile(path, 'utf-8');
+      })
+      .persist();
   });
 
   describe('Run tests against Algolia', () => {
@@ -263,7 +254,7 @@ describe('Index Tests', () => {
         ...input,
       };
       await assert.rejects(
-        () => main(params),
+        async () => main(params),
         /TypeError: Cannot destructure property `result` of 'undefined' or 'null'/,
       );
     });

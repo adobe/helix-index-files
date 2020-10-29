@@ -5,8 +5,8 @@
   "description": "Helix File Indexing Service",
   "main": "src/index.js",
   "scripts": {
-    "test": " nyc --reporter=text --reporter=lcov -i -g 'Post-Deploy' --check-coverage --statements 50 --branches 20 --lines 55 mocha",
-    "test-ci": "nyc --reporter=text --reporter=lcov -i -g 'Post-Deploy' --check-coverage --statements 85 --branches 80 --lines 85 mocha --reporter xunit --reporter-options output=./junit/test-results.xml && codecov",
+    "test": " nyc --reporter=text --reporter=lcov -i -g 'Post-Deploy' --check-coverage --statements 50 --branches 20 --lines 55 mocha -i -f 'Post-Deploy'",
+    "test-ci": "nyc --reporter=text --reporter=lcov -i -g 'Post-Deploy' --check-coverage --statements 85 --branches 80 --lines 85 mocha -i -f 'Post-Deploy' --reporter xunit --reporter-options output=./junit/test-results.xml && codecov",
     "test-postdeploy": "mocha --reporter xunit --reporter-options output=./junit/test-results.xml -g 'Post-Deploy'",
     "lint": "./node_modules/.bin/eslint .",
     "semantic-release": "semantic-release",
@@ -54,6 +54,8 @@
     "@semantic-release/changelog": "5.0.1",
     "@semantic-release/exec": "5.0.0",
     "@semantic-release/git": "9.0.0",
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
     "codecov": "3.8.0",
     "commitizen": "4.2.2",
     "cz-conventional-changelog": "3.3.0",
@@ -65,7 +67,7 @@
     "junit-report-builder": "2.1.0",
     "lint-staged": "10.4.2",
     "mocha": "8.2.0",
-    "nock": "13.0.4",
+    "nock": "^13.0.4",
     "nyc": "15.1.0",
     "proxyquire": "2.1.3",
     "semantic-release": "17.2.1"

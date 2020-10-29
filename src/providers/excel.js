@@ -32,10 +32,6 @@ class Excel {
       AZURE_SERVICE_BUS_QUEUE_NAME: queueName = `excel-indexer/${owner}/${repo}/${ref}`,
     } = params;
 
-    if (!connectionString) {
-      throw new Error('AZURE_SERVICE_BUS_CONN_STRING parameter missing.');
-    }
-
     this._connectionString = connectionString;
     this._queueName = queueName;
     this._log = log;
@@ -74,14 +70,7 @@ class Excel {
    * @returns web response
    */
   async _update(index, record) {
-    const { log } = this;
-
-    const { path, sourceHash } = record;
-    if (!sourceHash) {
-      const message = `Unable to update ${path}: sourceHash is empty.`;
-      log.warn(message);
-      return mapResult.error(path, message);
-    }
+    const { path } = record;
     await this._send({ index, record });
     return mapResult.accepted(path, this._queueName);
   }
@@ -96,15 +85,7 @@ class Excel {
    * @returns web response
    */
   async _delete(attributes) {
-    const { log } = this;
-
     const { sourceHash } = attributes;
-    if (!sourceHash) {
-      const message = 'Unable to delete record: sourceHash is empty.';
-      log.warn(message);
-      return mapResult.error(sourceHash, message);
-    }
-
     if (!this._deletes[sourceHash]) {
       this._deletes[sourceHash] = 0;
     }
@@ -142,10 +123,6 @@ class Excel {
 
   get indices() {
     return this._indices;
-  }
-
-  get log() {
-    return this._log;
   }
 }
 

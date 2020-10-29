@@ -43,12 +43,6 @@ class Algolia {
       ALGOLIA_API_KEY: apiKey,
     } = params;
 
-    if (!appID) {
-      throw new Error('ALGOLIA_APP_ID parameter missing.');
-    }
-    if (!apiKey) {
-      throw new Error('ALGOLIA_API_KEY parameter missing.');
-    }
     const algolia = algoliasearch(appID, apiKey);
 
     const {
@@ -86,11 +80,6 @@ class Algolia {
 
   async update(record) {
     const { path, sourceHash } = record;
-    if (!sourceHash) {
-      const message = `Unable to update ${path}: sourceHash is empty.`;
-      this.log.warn(message);
-      return mapResult.error(path, message);
-    }
 
     const base = {
       objectID: `${this._branch}--${path}`,
