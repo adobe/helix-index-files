@@ -291,7 +291,7 @@ async function run(params) {
     __OW_ACTION_NAME: actionName,
   } = process.env;
 
-  log.into(`action name: ${actionName}`);
+  log.info(`action name: ${actionName}`);
 
   const pkgPrefix = actionName ? `${actionName.split('/')[2]}/` : '';
 
