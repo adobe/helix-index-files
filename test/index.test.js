@@ -134,22 +134,25 @@ const { main } = proxyquire('../src/index.js', {
 
 describe('Index Tests', () => {
   describe('Argument checking', () => {
-    // Invoke our action with missing combinations of parameters
-    const paramsKV = [
-      ['owner', 'foo'],
-      ['repo', 'bar'],
-      ['ref', 'main'],
-      ['path', 'test.html'],
-    ];
-    for (let i = 0; i < paramsKV.length; i += 1) {
-      const params = paramsKV.slice(0, i).reduce((acc, [k, v]) => {
-        acc[`${k}`] = v;
-        return acc;
-      }, {});
-      it(`index function bails if argument ${paramsKV[i][0]} is missing`, async () => {
-        await assert.rejects(async () => main(params), /\w+ parameter missing/);
-      });
-    }
+    it('index function returns 500 if owner/repo/ref is missing', async () => {
+      assert.strictEqual((await main({})).statusCode, 500);
+      assert.strictEqual((await main({
+        owner: 'foo',
+      })).statusCode, 500);
+      assert.strictEqual((await main({
+        owner: 'foo',
+        repo: 'bar',
+      })).statusCode, 500);
+    });
+
+    it('index function throws if path is missing', async () => {
+      await assert.rejects(async () => main({
+        owner: 'foo',
+        repo: 'bar',
+        ref: 'baz',
+      }), /path parameter missing/);
+    });
+
     it('index function bails if branch is missing and ref is not usable', async () => {
       await assert.rejects(async () => main({ ref: 'dd25127aa92f65fda6a0927ed3fb00bf5dcea069' }),
         /branch parameter missing and ref looks like a commit id/);
