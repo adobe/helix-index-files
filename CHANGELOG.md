@@ -1,3 +1,10 @@
+## [3.1.2](https://github.com/adobe/helix-index-files/compare/v3.1.1...v3.1.2) (2020-10-29)
+
+
+### Bug Fixes
+
+* missing arguments should result in 400 not 500 ([7718388](https://github.com/adobe/helix-index-files/commit/7718388e868155a8acce8b7c4d7d4f6dfb01557a))
+
 ## [3.1.1](https://github.com/adobe/helix-index-files/compare/v3.1.0...v3.1.1) (2020-10-29)
 
 
