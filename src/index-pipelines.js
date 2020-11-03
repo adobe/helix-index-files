@@ -47,7 +47,7 @@ async function run(pkgPrefix, params, path) {
   Object.values(results).forEach((r) => {
     const { error } = r;
     if (error && error.status !== 404) {
-      const message = `${action} failed for path ${path}, status: ${error.status}`;
+      const message = `${action} failed for path: ${path}, status: ${error.status}`;
       throw new OpenWhiskError(message, null, error.status);
     }
   });

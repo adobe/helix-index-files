@@ -42,9 +42,9 @@ describe('Index Pipeline Tests', () => {
     owner: 'me',
     repo: 'foo',
     ref: 'main',
-    branch: 'main',
     __ow_logger: log,
   };
+  const path = 'foo/bar.html';
   it('specifying no version runs latest', async () => {
     let actionName;
     await run(
@@ -55,7 +55,7 @@ describe('Index Pipeline Tests', () => {
           response: { result: { body: { docs: [] } } },
         };
       },
-    )(pkgPrefix, params, 'test.html');
+    )(pkgPrefix, params, path);
     assert.equal(actionName, 'helix-observation/index-pipelines@latest');
   });
   it('specifying a version runs that', async () => {
@@ -68,14 +68,14 @@ describe('Index Pipeline Tests', () => {
           response: { result: { body: { docs: [] } } },
         };
       },
-    )(pkgPrefix, { version: '1.0.0', ...params }, 'test.html');
+    )(pkgPrefix, { version: '1.0.0', ...params }, path);
     assert.equal(actionName, 'helix-observation/index-pipelines@1.0.0');
   });
   it('returning no body element throws', async () => {
     await assert.rejects(
       () => run(
         () => ({ response: { result: {} } }),
-      )(pkgPrefix, params, ''),
+      )(pkgPrefix, params, path),
       /returned no body/,
     );
   });
@@ -83,8 +83,16 @@ describe('Index Pipeline Tests', () => {
     await assert.rejects(
       () => run(
         () => { throw new Error('boohoo'); },
-      )(pkgPrefix, params, ''),
+      )(pkgPrefix, params, path),
       /boohoo/,
+    );
+  });
+  it('returning any non-404 error throws', async () => {
+    await assert.rejects(
+      async () => run(
+        () => ({ response: { result: { body: { any: { error: { status: 504 } } } } } }),
+      )(pkgPrefix, params, path),
+      /failed for path: .*, status: 504/,
     );
   });
 });
