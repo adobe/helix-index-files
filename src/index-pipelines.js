@@ -39,11 +39,19 @@ async function run(pkgPrefix, params, path) {
     },
   });
 
-  if (!result.body) {
+  const results = result.body;
+  if (!results) {
     const message = `${action} (activation id: ${activationId}) returned no body`;
     throw new OpenWhiskError(message, null, 500);
   }
-  return result.body;
+  Object.values(results).forEach((r) => {
+    const { error } = r;
+    if (error && error.status !== 404) {
+      const message = `${action} failed for path ${path}, status: ${error.status}`;
+      throw new OpenWhiskError(message, null, error.status);
+    }
+  });
+  return results;
 }
 
 module.exports = run;
