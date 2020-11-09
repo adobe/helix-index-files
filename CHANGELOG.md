@@ -1,3 +1,10 @@
+## [3.1.4](https://github.com/adobe/helix-index-files/compare/v3.1.3...v3.1.4) (2020-11-09)
+
+
+### Bug Fixes
+
+* propagate index failure to caller ([#258](https://github.com/adobe/helix-index-files/issues/258)) ([6fda5ea](https://github.com/adobe/helix-index-files/commit/6fda5eaa3057899cb71c31f9a70af25ae3119901))
+
 ## [3.1.3](https://github.com/adobe/helix-index-files/compare/v3.1.2...v3.1.3) (2020-11-09)
 
 
