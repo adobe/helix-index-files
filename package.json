@@ -37,7 +37,7 @@
     "@adobe/helix-testutils": "0.4.1",
     "@adobe/openwhisk-action-logger": "2.2.2",
     "@adobe/openwhisk-action-utils": "4.3.2",
-    "@azure/service-bus": "1.1.10",
+    "@azure/service-bus": "7.0.0",
     "algoliasearch": "4.8.0",
     "lodash.flatten": "4.4.0",
     "lodash.pick": "4.4.0",
