@@ -57,9 +57,8 @@ class Excel {
   }
 
   async _init() {
-    this._sbClient = ServiceBusClient.createFromConnectionString(this._connectionString);
-    this._queueClient = this._sbClient.createQueueClient(this._queueName);
-    this._sender = this._queueClient.createSender();
+    this._sbClient = new ServiceBusClient(this._connectionString);
+    this._sender = this._sbClient.createSender(this._queueName);
   }
 
   /**
@@ -114,7 +113,6 @@ class Excel {
   async _close() {
     if (this._sender) {
       await this._sender.close();
-      await this._queueClient.close();
       await this._sbClient.close();
 
       this._sender = null;
