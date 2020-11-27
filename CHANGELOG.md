@@ -1,3 +1,10 @@
+## [3.1.11](https://github.com/adobe/helix-index-files/compare/v3.1.10...v3.1.11) (2020-11-27)
+
+
+### Bug Fixes
+
+* change to use @azure/service-bus@7.0.0 ([#269](https://github.com/adobe/helix-index-files/issues/269)) ([ad5f751](https://github.com/adobe/helix-index-files/commit/ad5f7513562d4746909e234734829137ff0178e2))
+
 ## [3.1.10](https://github.com/adobe/helix-index-files/compare/v3.1.9...v3.1.10) (2020-11-27)
 
 
