@@ -15,24 +15,26 @@
 /**
  * ServiceBusClient mock.
  */
-const ServiceBusClient = (queues) => ({
-  createFromConnectionString: () => ({
-    createQueueClient: (name) => {
-      const queue = queues[name];
-      if (!queue) {
-        // eslint-disable-next-line no-param-reassign
-        queues[name] = [];
-      }
-      return {
-        createSender: () => ({
-          send: ({ body }) => queues[name].push(body),
-          close: () => {},
-        }),
-        close: () => {},
-      };
-    },
-    close: () => {},
-  }),
-});
+const ServiceBusClient = (queues) => class {
+  constructor(connString) {
+    this._connString = connString;
+    this._queues = queues;
+  }
+
+  createSender(name) {
+    if (!this._queues[name]) {
+      this._queues[name] = [];
+    }
+    const queue = this._queues[name];
+    return {
+      send: ({ body }) => queue.push(body),
+      close: () => {},
+    };
+  }
+
+  close() {
+    this._closed = true;
+  }
+};
 
 module.exports = ServiceBusClient;
