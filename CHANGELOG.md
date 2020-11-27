@@ -1,3 +1,10 @@
+## [3.1.12](https://github.com/adobe/helix-index-files/compare/v3.1.11...v3.1.12) (2020-11-27)
+
+
+### Bug Fixes
+
+* Sender.send is gone, use sendMessages ([#271](https://github.com/adobe/helix-index-files/issues/271)) ([afa9b93](https://github.com/adobe/helix-index-files/commit/afa9b93f40cfd28c94a85c49cc7b7534f292b3cc))
+
 ## [3.1.11](https://github.com/adobe/helix-index-files/compare/v3.1.10...v3.1.11) (2020-11-27)
 
 
