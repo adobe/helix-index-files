@@ -102,7 +102,7 @@ class Excel {
   async _send(op) {
     try {
       await this._init();
-      await this._sender.send({
+      await this._sender.sendMessages({
         body: op,
       });
     } finally {

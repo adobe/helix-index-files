@@ -27,7 +27,7 @@ const ServiceBusClient = (queues) => class {
     }
     const queue = this._queues[name];
     return {
-      send: ({ body }) => queue.push(body),
+      sendMessages: ({ body }) => queue.push(body),
       close: () => {},
     };
   }
