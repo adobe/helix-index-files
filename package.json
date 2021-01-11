@@ -32,7 +32,7 @@
   "homepage": "https://github.com/adobe/helix-index-files#readme",
   "dependencies": {
     "@adobe/helix-fetch": "1.9.2",
-    "@adobe/helix-shared": "7.18.2",
+    "@adobe/helix-shared": "7.18.3",
     "@adobe/helix-status": "9.0.0",
     "@adobe/helix-testutils": "0.4.2",
     "@adobe/openwhisk-action-logger": "2.3.1",
