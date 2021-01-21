@@ -99,21 +99,23 @@ function createHandlers(configs, params, log) {
  * @returns change object or null
  */
 function getChange(params) {
+  const addLeadingSlash = (path) => (!path.startsWith('/') ? `/${path}` : path);
   const { observation } = params;
+
   if (observation) {
     const { change, mountpoint } = observation;
     const opts = { uid: change.uid, path: change.path, type: change.type };
     if (change['normalized-path']) {
-      opts.path = change['normalized-path'];
+      opts.path = addLeadingSlash(change['normalized-path']);
     } else if (mountpoint && opts.path) {
       const re = new RegExp(`^${mountpoint.root}/`);
       const repl = mountpoint.path.replace(/^\/+/, '');
-      opts.path = opts.path.replace(re, repl);
+      opts.path = addLeadingSlash(opts.path.replace(re, repl));
     }
     return new Change(opts);
   }
   if (params.path) {
-    return new Change({ path: params.path });
+    return new Change({ path: addLeadingSlash(params.path) });
   }
   return null;
 }

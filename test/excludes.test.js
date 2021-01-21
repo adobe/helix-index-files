@@ -32,9 +32,9 @@ describe('Exclude tests', () => {
         'ms/posts/{2018..2019}/*.md',
       ],
     };
-    assert.equal(contains(cfg, 'ms/posts/2018/test.md'), false);
-    assert.equal(contains(cfg, 'ms/posts/2019/test.md'), false);
-    assert.equal(contains(cfg, 'ms/posts/2017/test.md'), true);
+    assert.equal(contains(cfg, '/ms/posts/2018/test.md'), false);
+    assert.equal(contains(cfg, '/ms/posts/2019/test.md'), false);
+    assert.equal(contains(cfg, '/ms/posts/2017/test.md'), true);
   });
   it('exclude containing parenthesis supported', () => {
     const cfg = {
@@ -42,21 +42,29 @@ describe('Exclude tests', () => {
         'ms/(de|en|fr)/posts/*.md',
       ],
     };
-    assert.equal(contains(cfg, 'ms/en/posts/test.md'), false);
-    assert.equal(contains(cfg, 'ms/it/posts/test.md'), true);
+    assert.equal(contains(cfg, '/ms/en/posts/test.md'), false);
+    assert.equal(contains(cfg, '/ms/it/posts/test.md'), true);
   });
   it('exclude containing all combinations supported', () => {
     const cfg = {
       exclude: [
         'ms/(de|en|fr)/posts/{2016..2020}/*.(docx|md)',
-        'ms/(de|en|fr)/archive/*.(docx|md)',
+        '/ms/(de|en|fr)/archive/*.(docx|md)',
       ],
     };
-    assert.equal(contains(cfg, 'ms/en/posts/2016/test.md'), false);
-    assert.equal(contains(cfg, 'ms/en/posts/2017/test.docx'), false);
-    assert.equal(contains(cfg, 'ms/en/posts/2021/test.md'), true);
-    assert.equal(contains(cfg, 'ms/de/archive/test.md'), false);
-    assert.equal(contains(cfg, 'ms/de/archive/test.docx'), false);
-    assert.equal(contains(cfg, 'ms/it/archive/test.md'), true);
+    assert.equal(contains(cfg, '/ms/en/posts/2016/test.md'), false);
+    assert.equal(contains(cfg, '/ms/en/posts/2017/test.docx'), false);
+    assert.equal(contains(cfg, '/ms/en/posts/2021/test.md'), true);
+    assert.equal(contains(cfg, '/ms/de/archive/test.md'), false);
+    assert.equal(contains(cfg, '/ms/de/archive/test.docx'), false);
+    assert.equal(contains(cfg, '/ms/it/archive/test.md'), true);
+  });
+  it('exclude new documents, multi-level asterisk should with leading slash', () => {
+    const cfg = {
+      exclude: [
+        '**/Document.docx',
+      ],
+    };
+    assert.equal(contains(cfg, '/ms/Document.docx'), false);
   });
 });

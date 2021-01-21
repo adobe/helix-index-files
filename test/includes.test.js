@@ -29,12 +29,12 @@ describe('Include tests', () => {
   it('include containing braces supported', () => {
     const cfg = {
       include: [
-        'ms/posts/{2018..2019}/*.md',
+        '/ms/posts/{2018..2019}/*.md',
       ],
     };
-    assert.equal(contains(cfg, 'ms/posts/2018/test.md'), true);
-    assert.equal(contains(cfg, 'ms/posts/2019/test.md'), true);
-    assert.equal(contains(cfg, 'ms/posts/2017/test.md'), false);
+    assert.equal(contains(cfg, '/ms/posts/2018/test.md'), true);
+    assert.equal(contains(cfg, '/ms/posts/2019/test.md'), true);
+    assert.equal(contains(cfg, '/ms/posts/2017/test.md'), false);
   });
   it('include containing parenthesis supported', () => {
     const cfg = {
@@ -42,21 +42,21 @@ describe('Include tests', () => {
         'ms/(de|en|fr)/posts/*.md',
       ],
     };
-    assert.equal(contains(cfg, 'ms/en/posts/test.md'), true);
-    assert.equal(contains(cfg, 'ms/it/posts/test.md'), false);
+    assert.equal(contains(cfg, '/ms/en/posts/test.md'), true);
+    assert.equal(contains(cfg, '/ms/it/posts/test.md'), false);
   });
   it('include containing all combinations supported', () => {
     const cfg = {
       include: [
         'ms/(de|en|fr)/posts/{2016..2020}/*.(docx|md)',
-        'ms/(de|en|fr)/archive/*.(docx|md)',
+        '/ms/(de|en|fr)/archive/*.(docx|md)',
       ],
     };
-    assert.equal(contains(cfg, 'ms/en/posts/2016/test.md'), true);
-    assert.equal(contains(cfg, 'ms/en/posts/2017/test.docx'), true);
-    assert.equal(contains(cfg, 'ms/en/posts/2021/test.md'), false);
-    assert.equal(contains(cfg, 'ms/de/archive/test.md'), true);
-    assert.equal(contains(cfg, 'ms/de/archive/test.docx'), true);
-    assert.equal(contains(cfg, 'ms/it/archive/test.md'), false);
+    assert.equal(contains(cfg, '/ms/en/posts/2016/test.md'), true);
+    assert.equal(contains(cfg, '/ms/en/posts/2017/test.docx'), true);
+    assert.equal(contains(cfg, '/ms/en/posts/2021/test.md'), false);
+    assert.equal(contains(cfg, '/ms/de/archive/test.md'), true);
+    assert.equal(contains(cfg, '/ms/de/archive/test.docx'), true);
+    assert.equal(contains(cfg, '/ms/it/archive/test.md'), false);
   });
 });

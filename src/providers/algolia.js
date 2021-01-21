@@ -86,7 +86,7 @@ class Algolia {
       branch: this._branch,
       creationDate: new Date().getTime(),
       name: p.basename(path),
-      parents: makeparents(`/${path}`),
+      parents: makeparents(`${path}`),
       dir: p.dirname(path),
     };
     const object = { ...base, ...record };

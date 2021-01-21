@@ -1,12 +1,12 @@
 [
   {
-    "path": "ms/existing.html",
+    "path": "/ms/existing.html",
     "sourceHash": "Ho7yHAYJPjonC6Do",
     "objectID": "main--ms/existing.html",
     "name": "existing"
   },
   {
-    "path": "ms/deleted.html",
+    "path": "/ms/deleted.html",
     "sourceHash": "hlNXFkdVwFlqlpof",
     "objectID": "main--ms/deleted.html",
     "name": "deleted"
