@@ -1,3 +1,10 @@
+## [3.1.30](https://github.com/adobe/helix-index-files/compare/v3.1.29...v3.1.30) (2021-01-21)
+
+
+### Bug Fixes
+
+* **deps:** update external fixes ([#291](https://github.com/adobe/helix-index-files/issues/291)) ([cc63964](https://github.com/adobe/helix-index-files/commit/cc63964f748f1eff73eec421e3ca5346e3865c8b))
+
 ## [3.1.29](https://github.com/adobe/helix-index-files/compare/v3.1.28...v3.1.29) (2021-01-21)
 
 
