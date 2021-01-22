@@ -1,3 +1,10 @@
+## [3.1.31](https://github.com/adobe/helix-index-files/compare/v3.1.30...v3.1.31) (2021-01-22)
+
+
+### Bug Fixes
+
+* assume paths have leading slash ([#293](https://github.com/adobe/helix-index-files/issues/293)) ([f045504](https://github.com/adobe/helix-index-files/commit/f04550432a278c81219f65801a934db24e535449))
+
 ## [3.1.30](https://github.com/adobe/helix-index-files/compare/v3.1.29...v3.1.30) (2021-01-21)
 
 
