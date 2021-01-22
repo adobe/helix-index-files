@@ -9,7 +9,7 @@
   },
   "output": {
     "status": 201,
-    "path": "g/added",
+    "path": "/g/added",
     "update": 3
   }
 }

@@ -36,6 +36,8 @@ function match(cfg, path, ifmissing) {
     return false;
   }
   return mm.isMatch(path, cfg
+    // prepend slash if necessary
+    .map((i) => (i.startsWith('/') || i.startsWith('**') ? i : `/${i}`))
     // expand braces in every item (creates an array of arrays)
     .map((i) => mm.braces((i)))
     // flatten to a simple array of strings

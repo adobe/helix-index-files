@@ -23,8 +23,8 @@
   },
   "output": {
     "status": 301,
-    "path": "ms/moved_to.html",
-    "movedFrom": "ms/existing.html",
+    "path": "/ms/moved_to.html",
+    "movedFrom": "/ms/existing.html",
     "update": 2
   }
 }

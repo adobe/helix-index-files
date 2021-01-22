@@ -9,6 +9,6 @@
   },
   "output": {
     "status": 404,
-    "reason": "Item path not in index definition: foo/Document.html"
+    "reason": "Item path not in index definition: /foo/Document.html"
   }
 }

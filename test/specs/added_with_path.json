@@ -9,7 +9,7 @@
   },
   "output": {
     "status": 201,
-    "path": "ms/added.html",
+    "path": "/ms/added.html",
     "update": 3
   }
 }
