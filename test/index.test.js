@@ -257,7 +257,7 @@ describe('Index Tests', () => {
       };
       await assert.rejects(
         async () => main(params),
-        /TypeError: Cannot destructure property `result` of 'undefined' or 'null'/,
+        /TypeError: Cannot read property 'result' of undefined/,
       );
     });
   });
