@@ -1,3 +1,10 @@
+## [3.1.34](https://github.com/adobe/helix-index-files/compare/v3.1.33...v3.1.34) (2021-01-30)
+
+
+### Bug Fixes
+
+* **ci:** use latest orb ([f72bce3](https://github.com/adobe/helix-index-files/commit/f72bce3aa09296549e96c7e191d5a1d8ecf04551))
+
 ## [3.1.33](https://github.com/adobe/helix-index-files/compare/v3.1.32...v3.1.33) (2021-01-30)
 
 
