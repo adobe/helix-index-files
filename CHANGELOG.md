@@ -1,3 +1,10 @@
+## [3.1.37](https://github.com/adobe/helix-index-files/compare/v3.1.36...v3.1.37) (2021-02-01)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-shared to v7.19.5 ([#304](https://github.com/adobe/helix-index-files/issues/304)) ([0f6512b](https://github.com/adobe/helix-index-files/commit/0f6512b10216711f8ee49786e1dbea0ec7f8ac9b))
+
 ## [3.1.36](https://github.com/adobe/helix-index-files/compare/v3.1.35...v3.1.36) (2021-01-30)
 
 
