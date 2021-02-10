@@ -1,3 +1,10 @@
+## [3.1.39](https://github.com/adobe/helix-index-files/compare/v3.1.38...v3.1.39) (2021-02-10)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-status to v9.0.2 ([e646de9](https://github.com/adobe/helix-index-files/commit/e646de970510f5407aaaef62cb8a6a222502aad8))
+
 ## [3.1.38](https://github.com/adobe/helix-index-files/compare/v3.1.37...v3.1.38) (2021-02-02)
 
 
