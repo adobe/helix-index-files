@@ -1,3 +1,11 @@
+## [3.1.41](https://github.com/adobe/helix-index-files/compare/v3.1.40...v3.1.41) (2021-02-12)
+
+
+### Bug Fixes
+
+* **deps:** remove helix-fetch (unused) ([380f7c2](https://github.com/adobe/helix-index-files/commit/380f7c2502da07f58d3d45135eac6b551c484dbe))
+* **deps:** update dependency @adobe/helix-fetch to v2 ([8743378](https://github.com/adobe/helix-index-files/commit/8743378b6643371a0a2180017c10beed37c8653a))
+
 ## [3.1.40](https://github.com/adobe/helix-index-files/compare/v3.1.39...v3.1.40) (2021-02-12)
 
 
