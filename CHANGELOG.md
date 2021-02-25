@@ -1,3 +1,10 @@
+## [3.1.50](https://github.com/adobe/helix-index-files/compare/v3.1.49...v3.1.50) (2021-02-25)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-testutils to v0.4.3 ([#325](https://github.com/adobe/helix-index-files/issues/325)) ([aa12a66](https://github.com/adobe/helix-index-files/commit/aa12a66716478f0fc40845819ffcb455b2c0ac44))
+
 ## [3.1.49](https://github.com/adobe/helix-index-files/compare/v3.1.48...v3.1.49) (2021-02-25)
 
 
