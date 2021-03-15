@@ -1,3 +1,10 @@
+## [3.1.53](https://github.com/adobe/helix-index-files/compare/v3.1.52...v3.1.53) (2021-03-15)
+
+
+### Bug Fixes
+
+* **deps:** update dependency yaml to v1.10.2 ([#331](https://github.com/adobe/helix-index-files/issues/331)) ([67e3d94](https://github.com/adobe/helix-index-files/commit/67e3d9481098f1a9693256a137bb6548b64b3155))
+
 ## [3.1.52](https://github.com/adobe/helix-index-files/compare/v3.1.51...v3.1.52) (2021-03-13)
 
 
