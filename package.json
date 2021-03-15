@@ -44,7 +44,7 @@
     "openwhisk": "3.21.3",
     "request": "2.88.2",
     "request-promise-native": "1.0.9",
-    "yaml": "1.10.1"
+    "yaml": "1.10.2"
   },
   "devDependencies": {
     "@adobe/eslint-config-helix": "1.1.4",
