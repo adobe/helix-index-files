@@ -13,10 +13,16 @@
 'use strict';
 
 class Change {
-  constructor({ path, uid = null, type = 'modified' }) {
+  constructor({
+    path,
+    uid = null,
+    type = 'modified',
+    time = null,
+  }) {
     this._path = path;
     this._uid = uid;
     this._type = type;
+    this._time = time;
   }
 
   get path() {
@@ -29,6 +35,10 @@ class Change {
 
   get deleted() {
     return this._type === 'deleted';
+  }
+
+  get time() {
+    return this._time;
   }
 }
 

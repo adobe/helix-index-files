@@ -84,13 +84,13 @@ class Excel {
    * @returns web response
    */
   async _delete(attributes) {
-    const { sourceHash } = attributes;
+    const { sourceHash, eventTime } = attributes;
     if (!this._deletes[sourceHash]) {
       this._deletes[sourceHash] = 0;
     }
     this._deletes[sourceHash] += 1;
     if (this._deletes[sourceHash] === this._indices.length) {
-      await this._send({ deleted: true, record: { sourceHash } });
+      await this._send({ deleted: true, record: { sourceHash, eventTime } });
       this._deletes[sourceHash] = 0;
     }
     return mapResult.accepted(sourceHash, this._queueName);

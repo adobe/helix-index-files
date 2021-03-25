@@ -203,6 +203,10 @@ describe('Index Tests', () => {
             ...input,
           };
           await main(params);
+          if (!input.observation && queues[name]) {
+            // eslint-disable-next-line no-param-reassign
+            queues[name].forEach(({ record }) => delete record.eventTime);
+          }
           assert.deepStrictEqual(queues[name], output);
         }).timeout(60000);
       }
@@ -256,8 +260,8 @@ describe('Index Tests', () => {
         ...input,
       };
       await assert.rejects(
-        async () => main(params),
-        /TypeError: Cannot read property 'result' of undefined/,
+        () => main(params),
+        { name: 'TypeError' },
       );
     });
   });

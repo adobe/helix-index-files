@@ -104,7 +104,12 @@ function getChange(params) {
 
   if (observation) {
     const { change, mountpoint } = observation;
-    const opts = { uid: change.uid, path: change.path, type: change.type };
+    const opts = {
+      uid: change.uid,
+      path: change.path,
+      time: change.time,
+      type: change.type,
+    };
     if (change['normalized-path']) {
       opts.path = addLeadingSlash(change['normalized-path']);
     } else if (mountpoint && opts.path) {
@@ -115,7 +120,10 @@ function getChange(params) {
     return new Change(opts);
   }
   if (params.path) {
-    return new Change({ path: addLeadingSlash(params.path) });
+    return new Change({
+      path: addLeadingSlash(params.path),
+      time: new Date().toISOString(),
+    });
   }
   return null;
 }
@@ -135,7 +143,7 @@ async function handleDelete({ config, handler }, change, log) {
     };
   }
   try {
-    return await handler.delete({ sourceHash: change.uid });
+    return await handler.delete({ sourceHash: change.uid, eventTime: change.time });
   } catch (e) {
     log.error(`An error occurred deleting record ${change.uid} in ${config.name}`, e);
     return {
@@ -166,7 +174,7 @@ async function handleUpdate({
       // This could be a move from our input domain to some region outside, so verify
       // we do not keep a record in the index for an item we no longer track
       try {
-        const result = await handler.delete({ sourceHash: change.uid });
+        const result = await handler.delete({ sourceHash: change.uid, eventTime: change.time });
         if (result.status !== 404) {
           // yes, the item was present in our index, so return that result
           return result;
@@ -196,8 +204,8 @@ async function handleUpdate({
       return mapResult.error(path, message);
     }
     return doc
-      ? await handler.update({ path, ...doc })
-      : await handler.delete({ path, sourceHash: change.uid });
+      ? await handler.update({ path, eventTime: change.time, ...doc })
+      : await handler.delete({ path, eventTime: change.time, sourceHash: change.uid });
   } catch (e) {
     log.error(`An error occurred updating record ${path} in ${config.name}`, e);
     return {
@@ -293,6 +301,8 @@ async function run(params) {
   if (!change) {
     return { statusCode: 400, body: 'path parameter missing' };
   }
+
+  log.info(`Received change event on ${owner}/${repo}/${ref}`, change);
 
   const {
     __OW_ACTION_NAME: actionName = '/helix/helix-observation/index-files',
