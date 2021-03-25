@@ -1,3 +1,10 @@
+## [3.1.54](https://github.com/adobe/helix-index-files/compare/v3.1.53...v3.1.54) (2021-03-25)
+
+
+### Bug Fixes
+
+* log event time if available ([#332](https://github.com/adobe/helix-index-files/issues/332)) ([a668773](https://github.com/adobe/helix-index-files/commit/a66877332b7d9dc0bc9642415e6476173c47560b))
+
 ## [3.1.53](https://github.com/adobe/helix-index-files/compare/v3.1.52...v3.1.53) (2021-03-15)
 
 
