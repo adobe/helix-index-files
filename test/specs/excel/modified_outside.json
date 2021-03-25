@@ -20,7 +20,8 @@
   "output": [{
     "deleted": true,
     "record": {
-      "sourceHash": "8qRlJYKzHfuDcbjN"
+      "sourceHash": "8qRlJYKzHfuDcbjN",
+      "eventTime": "2020-03-03T17:01:12Z"
     }
   }]
 }
