@@ -1,3 +1,10 @@
+## [3.1.55](https://github.com/adobe/helix-index-files/compare/v3.1.54...v3.1.55) (2021-03-30)
+
+
+### Bug Fixes
+
+* add reason to error message ([#334](https://github.com/adobe/helix-index-files/issues/334)) ([728aebb](https://github.com/adobe/helix-index-files/commit/728aebb05ca5535009ca9c0b88bb5119ffb6933c))
+
 ## [3.1.54](https://github.com/adobe/helix-index-files/compare/v3.1.53...v3.1.54) (2021-03-25)
 
 
