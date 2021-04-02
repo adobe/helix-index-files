@@ -71,6 +71,19 @@ describe('Index Pipeline Tests', () => {
     )(pkgPrefix, { version: '1.0.0', ...params }, path);
     assert.equal(actionName, 'helix-observation/index-pipelines@1.0.0');
   });
+  it('returning a string body works too', async () => {
+    let actionName;
+    await run(
+      ({ name }) => {
+        actionName = name;
+        return {
+          activationId: 'e56b6142faf74ee7ab6142faf76ee7a6',
+          response: { result: { body: '{ "docs": [] }' } },
+        };
+      },
+    )(pkgPrefix, { version: '1.0.0', ...params }, path);
+    assert.equal(actionName, 'helix-observation/index-pipelines@1.0.0');
+  });
   it('returning no body element throws', async () => {
     await assert.rejects(
       () => run(
