@@ -1,3 +1,10 @@
+## [3.1.57](https://github.com/adobe/helix-index-files/compare/v3.1.56...v3.1.57) (2021-04-07)
+
+
+### Bug Fixes
+
+* **excel:** add log message for message sent to queue ([91e6ee2](https://github.com/adobe/helix-index-files/commit/91e6ee2419bee7b27fd195883a6e1948f5d8e8fd))
+
 ## [3.1.56](https://github.com/adobe/helix-index-files/compare/v3.1.55...v3.1.56) (2021-04-05)
 
 
