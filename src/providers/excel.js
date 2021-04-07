@@ -105,6 +105,7 @@ class Excel {
       await this._sender.sendMessages({
         body: op,
       });
+      this._log.info(`Sent message to queue (${this._queueName}): ${JSON.stringify(op, undefined, 2)}`);
     } finally {
       await this._close();
     }
