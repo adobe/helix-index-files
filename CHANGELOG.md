@@ -1,3 +1,10 @@
+## [3.1.56](https://github.com/adobe/helix-index-files/compare/v3.1.55...v3.1.56) (2021-04-05)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @azure/service-bus to v7.0.4 ([#336](https://github.com/adobe/helix-index-files/issues/336)) ([956a18c](https://github.com/adobe/helix-index-files/commit/956a18ccad6d9ce098c7ae00e38b962c4003c2e5))
+
 ## [3.1.55](https://github.com/adobe/helix-index-files/compare/v3.1.54...v3.1.55) (2021-03-30)
 
 
