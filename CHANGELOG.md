@@ -1,3 +1,10 @@
+## [3.1.58](https://github.com/adobe/helix-index-files/compare/v3.1.57...v3.1.58) (2021-04-09)
+
+
+### Bug Fixes
+
+* invoking universalized action through ow.actions() doesn't return JSON but a string ([00da77e](https://github.com/adobe/helix-index-files/commit/00da77eaf687dd285056bdbebbc414c951a056ee))
+
 ## [3.1.57](https://github.com/adobe/helix-index-files/compare/v3.1.56...v3.1.57) (2021-04-07)
 
 
