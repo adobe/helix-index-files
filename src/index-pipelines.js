@@ -39,7 +39,11 @@ async function run(pkgPrefix, params, path) {
     },
   });
 
-  const results = result.body;
+  let results = result.body;
+  if (typeof results === 'string') {
+    // universal runtime returns JSON as string to parse
+    results = JSON.parse(results);
+  }
   if (!results) {
     const message = `${action} (activation id: ${activationId}) returned no body`;
     throw new OpenWhiskError(message, null, 500);
