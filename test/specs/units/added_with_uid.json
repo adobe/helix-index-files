@@ -8,6 +8,7 @@
       "type": "onedrive",
       "change": {
         "uid": "wWEauysPbRKv1TLr",
+        "normalized-path": "/pages/en/brown.docx",
         "path": "/mount/en/brown.docx",
         "time": "2020-03-03T17:01:12Z",
         "type": "modified"

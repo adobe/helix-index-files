@@ -45,6 +45,22 @@ indices:
         value: |
           attribute(el, 'content')
         faceted: true
+      last-modified:
+        select: none
+        value: |
+          headers['last-modified']
+      condition-unsupported:
+        select: meta[name="x-source-hash"]
+        value: |
+          attribute(el, 'content') ? attribute(el, 'content') : 'missing'
+      call-unknown-function:
+        select: meta[name="x-source-hash"]
+        value: |
+          unknown(el, 'content')
+      member-unknown-var:
+        select: none
+        value: |
+          myobj['prop']
 
   azure:
     source: html

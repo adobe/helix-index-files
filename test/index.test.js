@@ -92,6 +92,19 @@ describe('Index Tests', () => {
       await assert.rejects(async () => main({ ref: 'dd25127aa92f65fda6a0927ed3fb00bf5dcea069' }),
         /branch parameter missing and ref looks like a commit id/);
     });
+
+    it('Indexing an incomplete document gives a 409', async () => {
+      const params = {
+        ALGOLIA_APP_ID: 'foo',
+        ALGOLIA_API_KEY: 'bar',
+        owner: 'foo',
+        repo: 'bar',
+        ref: 'main',
+        path: '/pages/en/incomplete.html',
+      };
+      const { body: { results: [{ algolia }] } } = await main(params);
+      assert.strictEqual(algolia.status, 409);
+    }).timeout(60000);
   });
 
   before(async () => {
@@ -128,7 +141,7 @@ describe('Index Tests', () => {
   });
 
   describe('Run tests against Algolia', () => {
-    const dir = p.resolve(SPEC_ROOT);
+    const dir = p.resolve(SPEC_ROOT, 'units');
     fse.readdirSync(dir).forEach((filename) => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
@@ -150,7 +163,7 @@ describe('Index Tests', () => {
     beforeEach(() => {
       azureIndex = new AzureIndex('azure');
     });
-    const dir = p.resolve(SPEC_ROOT);
+    const dir = p.resolve(SPEC_ROOT, 'units');
     fse.readdirSync(dir).forEach((filename) => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
@@ -173,7 +186,7 @@ describe('Index Tests', () => {
      * Excel pushes changes into a queue, so we don't check the immediate result, but
      * the contents of the queue after processing the change.
      */
-    const dir = p.resolve(SPEC_ROOT);
+    const dir = p.resolve(SPEC_ROOT, 'units');
     fse.readdirSync(dir).forEach((filename) => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
