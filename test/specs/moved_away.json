@@ -23,7 +23,7 @@
   },
   "output": {
     "status": 204,
-    "path": "/ms/existing.html",
-    "reason": "Item gone with path: /ms/existing.html"
+    "path": "/pages/en/redding.html",
+    "reason": "Item gone with path: /pages/en/redding.html"
   }
 }

@@ -7,14 +7,14 @@
     "observation": {
       "type": "onedrive",
       "change": {
-        "uid": "Ho7yHAYJPjonC6Do",
-        "path": "/theblog/moved_to.docx",
+        "uid": "JJYxCM1NDG4ahJm9f",
+        "path": "/mount/de/brown.docx",
         "time": "2020-03-03T17:01:12Z",
         "type": "modified"
       },
       "mountpoint": {
-        "path": "/ms/",
-        "root": "/theblog"
+        "path": "/pages/",
+        "root": "/mount"
       },
       "provider": {
         "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
@@ -23,8 +23,8 @@
   },
   "output": {
     "status": 301,
-    "path": "/ms/moved_to.html",
-    "movedFrom": "/ms/existing.html",
+    "path": "/pages/de/brown.html",
+    "movedFrom": "/pages/brown.html",
     "update": 2
   }
 }

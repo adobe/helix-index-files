@@ -5,11 +5,22 @@
     "repo": "bar",
     "ref": "main",
     "branch": "main",
-    "path": "ms/added.html"
+    "path": "/pages/en/brown.html"
   },
   "output": {
     "status": 201,
-    "path": "/ms/added.html",
+    "path": "/pages/en/brown.html",
     "update": 3
-  }
+  },
+  "queue": [{
+    "index": "excel",
+    "record": {
+      "path": "/pages/en/brown.html",
+      "artist": "James Brown",
+      "date": 1569369600,
+      "sourceHash": "wWEauysPbRKv1TLr",
+      "title": "I feel good",
+      "genres": ["Soul", "Funk", "Rhythm and Blues"]
+    }
+  }]
 }

@@ -5,7 +5,7 @@
     "repo": "bar",
     "ref": "main",
     "branch": "main",
-    "path": "foo/added.html"
+    "path": "/foo/added.html"
   },
   "output": {
     "status": 404,

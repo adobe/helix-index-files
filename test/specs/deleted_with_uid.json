@@ -7,12 +7,12 @@
     "observation": {
       "type": "onedrive",
       "change": {
-        "uid": "hlNXFkdVwFlqlpof",
+        "uid": "JJYxCM1NDG4ahJm9f",
         "type": "deleted"
       },
       "mountpoint": {
-        "path": "/ms/",
-        "root": "/theblog"
+        "path": "/pages/",
+        "root": "/mount"
       },
       "provider": {
         "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
@@ -21,7 +21,14 @@
   },
   "output": {
     "status": 204,
-    "path": "/ms/deleted.html",
-    "reason": "Item gone with path: /ms/deleted.html"
-  }
+    "path": "/pages/brown.html",
+    "reason": "Item gone with path: /pages/brown.html"
+  },
+  "queue": [{
+    "deleted": true,
+    "record": {
+      "sourceHash": "JJYxCM1NDG4ahJm9f",
+      "eventTime": null
+    }
+  }]
 }

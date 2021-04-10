@@ -11,8 +11,8 @@
         "type": "deleted"
       },
       "mountpoint": {
-        "path": "/ms/",
-        "root": "/theblog"
+        "path": "/pages/",
+        "root": "/mount"
       },
       "provider": {
         "driveId": "b!PpnkewKFAEaDTS6slvlVjh_3ih9lhEZMgYWwps6bPIWZMmLU5xGqS4uES8kIQZbH"
@@ -23,5 +23,12 @@
     "status": 404,
     "sourceHash": "+4tpPzJl45rr6aJA",
     "reason": "Item not found with sourceHash: +4tpPzJl45rr6aJA"
-  }
+  },
+  "queue": [{
+    "deleted": true,
+    "record": {
+      "sourceHash": "+4tpPzJl45rr6aJA",
+      "eventTime": null
+    }
+  }]
 }

@@ -31,6 +31,7 @@
   },
   "homepage": "https://github.com/adobe/helix-index-files#readme",
   "dependencies": {
+    "@adobe/helix-fetch": "^2.1.5",
     "@adobe/helix-shared": "7.19.10",
     "@adobe/helix-status": "9.0.4",
     "@adobe/helix-testutils": "0.4.3",
@@ -38,10 +39,12 @@
     "@adobe/openwhisk-action-utils": "4.4.1",
     "@azure/service-bus": "7.0.4",
     "algoliasearch": "4.8.6",
+    "jsdom": "^16.5.2",
+    "jsep": "^0.4.0",
     "lodash.flatten": "4.4.0",
     "lodash.pick": "4.4.0",
     "micromatch": "4.0.2",
-    "openwhisk": "3.21.3",
+    "moment": "^2.29.1",
     "request": "2.88.2",
     "request-promise-native": "1.0.9",
     "yaml": "1.10.2"

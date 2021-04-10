@@ -5,8 +5,7 @@ indices:
     source: html
     fetch: https://{repo}-{owner}.project-helix.page/{path}
     include:
-      - ms/*
-      - g/*
+      - /pages/**
     exclude:
       - '**/Document.*'
     properties:
@@ -51,8 +50,7 @@ indices:
     source: html
     fetch: https://{repo}-{owner}.project-helix.page/{path}
     include:
-      - ms/*
-      - g/*
+      - /pages/**
     exclude:
       - '**/Document.*'
     target: azure:default
@@ -112,9 +110,9 @@ indices:
         value: |
           parseTimestamp(el, '[POSTED ON] MM-DD-YYYY')
       genres:
-        select: main > div:last-of-type > p:nth-of-type(2)
+        select: main > div:last-of-type > p:nth-of-type(1)
         values: |
-          match(el, '(Products: )? ([^,]+)')
+          match(el, '(Genres: )? ([^,]+)')
       sourceHash:
         select: head > meta[name=x-source-hash
         value: |
