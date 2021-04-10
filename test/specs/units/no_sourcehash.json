@@ -4,12 +4,12 @@
     "owner": "foo",
     "repo": "bar",
     "ref": "main",
-    "path": "/pages/en/redding.html"
+    "path": "/pages/en/no-sourcehash.html"
   },
   "output": {
-    "status": 204,
-    "path": "/pages/en/redding.html",
-    "reason": "Item gone with path: /pages/en/redding.html"
+    "status": 500,
+    "path": "/pages/en/no-sourcehash.html",
+    "reason": "Unable to update /pages/en/no-sourcehash.html: sourceHash in indexed document is empty."
   },
   "queue": []
 }

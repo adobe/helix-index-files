@@ -233,17 +233,16 @@ function replaceExt(path, ext) {
 }
 
 /**
- * Invoke index-pipelines action for all indices.
+ * Run indexing for all indices configured.
  *
- * @param {string} pkgPrefix prefix of the package we reside in
  * @param {object} indices index configurations
  * @param {object} change change to process
  * @param {object} params parameters
  * @param {object} log OW logger
  *
- * @returns object containing index definition and index record, keyed by name
+ * @returns array of operation results
  */
-async function runPipeline(pkgPrefix, indices, change, params, log) {
+async function runPipeline(indices, change, params, log) {
   const { owner, repo, ref } = params;
 
   // Create our result where we'll store the HTML responses
@@ -272,33 +271,6 @@ async function runPipeline(pkgPrefix, indices, change, params, log) {
       value.body = await indexPipelines(params, value, log);
     }));
   return Object.values(indexMap);
-
-  // const paths = Array.from(Object.values(records)
-  //   .filter(({ include }) => include)
-  //   .reduce((prev, { path }) => {
-  //     prev.add(path);
-  //     return prev;
-  //   }, new Set()));
-
-  // Invoke the pipelines action
-  // const responses = new Map(await Promise.all(paths.map(async (path) => {
-  //   const body = await indexPipelines(pkgPrefix, params, path);
-  //   return [path, body];
-  // })));
-
-  // Finish by filling in all responses acquired
-  // Object.values(indexMap).filter(({ include }) => include).forEach((record) => {
-  //   const response = responses.get(record.path);
-  //   const body = response[record.config.name];
-  //   if (!body) {
-  //     log.info(`Pipeline did not return entry for index:
-  //        ${record.config.name}, path: ${record.path}`);
-  //   } else {
-  //     // eslint-disable-next-line no-param-reassign
-  //     record.body = body;
-  //   }
-  // });
-  // return Object.values(indexMap);
 }
 
 /**
@@ -322,11 +294,6 @@ async function run(params) {
 
   log.info(`Received change event on ${owner}/${repo}/${ref}`, change);
 
-  const {
-    __OW_ACTION_NAME: actionName = '/helix/helix-observation/index-files',
-  } = process.env;
-
-  const pkgPrefix = `${actionName.split('/')[2]}/`;
   const config = (await new IndexConfig()
     .withRepo(owner, repo, ref)
     .init()).toJSON();
@@ -339,7 +306,7 @@ async function run(params) {
       [index.config.name]: await handleDelete(index, change, log),
     })));
   } else {
-    const records = await runPipeline(pkgPrefix, indices, change, params, log);
+    const records = await runPipeline(indices, change, params, log);
     responses = await Promise.all(records.map(async (record) => ({
       [record.config.name]: await handleUpdate(record, change, log),
     })));

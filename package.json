@@ -18,7 +18,8 @@
   },
   "wsk": {
     "namespace": "helix",
-    "name": "helix-observation/index-files@${version}"
+    "name": "helix-observation/index-files@${version}",
+    "memory": 512
   },
   "repository": {
     "type": "git",
