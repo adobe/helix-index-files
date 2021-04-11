@@ -36,6 +36,10 @@ indices:
         select: main > div:nth-of-type(2) img:first-of-type
         value: |
           attribute(el, 'src')
+      paragraph:
+        select: main > div:nth-of-type(5)
+        value: |
+          innerHTML(el)
       teaser:
         select: main > div:nth-child(n+4) p
         value: |
@@ -45,10 +49,18 @@ indices:
         value: |
           attribute(el, 'content')
         faceted: true
+      external-path:
+        select: none
+        value: |
+          replace(path, '/test/specs/', '/')
       last-modified:
         select: none
         value: |
-          headers['last-modified']
+          parseTimestamp(headers['last-modified'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
+      missing-header:
+        select: none
+        value: |
+          parseTimestamp(headers['date'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
       condition-unsupported:
         select: meta[name="x-source-hash"]
         value: |
