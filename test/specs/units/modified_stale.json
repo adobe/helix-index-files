@@ -18,9 +18,9 @@
     }
   },
   "output": {
-    "status": 201,
-    "path": "/pages/en/brown.html",
-    "update": 3
+    "status": 500,
+    "reason": "Unable to update /pages/en/brown.html: indexed record is outdated.",
+    "path": "/pages/en/brown.html"
   },
   "queue": []
 }

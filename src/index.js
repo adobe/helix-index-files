@@ -159,7 +159,7 @@ async function handleDelete({ config, handler }, change, log) {
  * @returns true if the record is outdated and shouldn't be used for indexing
  */
 function isOutdated(record, headers, change) {
-  if (record.sourceHash === change.uid) {
+  if (!change.uid || record.sourceHash === change.uid) {
     // this is consistent
     return false;
   }
