@@ -17,7 +17,11 @@
       }
     }
   },
-  "output": [{
+  "output": {
+    "status": 404,
+    "reason": "Item path not in index definition: /drafts/green.docx"
+  },
+  "queue": [{
     "deleted": true,
     "record": {
       "sourceHash": "8qRlJYKzHfuDcbjN",

@@ -5,11 +5,11 @@
     "repo": "bar",
     "ref": "main",
     "branch": "main",
-    "path": "/ms/deleted.html"
+    "path": "/pages/en/redding.docx"
   },
   "output": {
     "status": 204,
-    "path": "/ms/deleted.html",
-    "reason": "Item gone with path: /ms/deleted.html"
+    "path": "/pages/en/redding.html",
+    "reason": "Item gone with path: /pages/en/redding.html"
   }
 }

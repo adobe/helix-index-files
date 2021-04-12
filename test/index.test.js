@@ -21,7 +21,6 @@ const fse = require('fs-extra');
 const nock = require('nock');
 const p = require('path');
 const proxyquire = require('proxyquire');
-const OpenWhiskError = require('openwhisk/lib/openwhisk_error');
 
 const AlgoliaIndex = require('./mock/AlgoliaIndex.js');
 const AzureIndex = require('./mock/AzureIndex.js');
@@ -39,43 +38,6 @@ const queues = [];
 const ServiceBusClient = require('./mock/ServiceBusClient.js')(queues);
 
 /**
- * Replacement for OW action index-pipeline in our tests.
- */
-const fsIndexPipeline = async ({ params }) => {
-  const {
-    path,
-  } = params;
-  const indexedJSON = `test/specs/index-pipelines/${path}.json`;
-
-  let entry;
-  if (await fse.pathExists(indexedJSON)) {
-    const doc = JSON.parse(await fse.readFile(indexedJSON, 'utf8'));
-    entry = { docs: [doc] };
-  } else {
-    entry = { error: { status: 404, reason: `File not found: ${indexedJSON}` } };
-  }
-  return {
-    response: {
-      result: {
-        body: {
-          algolia: entry,
-          azure: entry,
-          excel: entry,
-          'excel-de': entry,
-          'excel-jp': entry,
-        },
-        statusCode: 200,
-      },
-    },
-  };
-};
-
-/**
- * Index pipeline stub.
- */
-let indexPipelineStub = fsIndexPipeline;
-
-/**
  * Azure index
  */
 let azureIndex;
@@ -86,13 +48,6 @@ let azureIndex;
  * @param {Function} invoke OW action to invoke
  */
 const { main } = proxyquire('../src/index.js', {
-  './index-pipelines.js': proxyquire('../src/index-pipelines.js', {
-    openwhisk: () => ({
-      actions: {
-        invoke: indexPipelineStub,
-      },
-    }),
-  }),
   './providers/algolia.js': proxyquire('../src/providers/algolia.js', {
     algoliasearch: () => ({
       initIndex: (name) => new AlgoliaIndex(name),
@@ -137,20 +92,56 @@ describe('Index Tests', () => {
       await assert.rejects(async () => main({ ref: 'dd25127aa92f65fda6a0927ed3fb00bf5dcea069' }),
         /branch parameter missing and ref looks like a commit id/);
     });
+
+    it('Indexing an incomplete document gives a 409', async () => {
+      const params = {
+        ALGOLIA_APP_ID: 'foo',
+        ALGOLIA_API_KEY: 'bar',
+        owner: 'foo',
+        repo: 'bar',
+        ref: 'main',
+        path: '/pages/en/incomplete.html',
+      };
+      const { body: { results: [{ algolia }] } } = await main(params);
+      assert.strictEqual(algolia.status, 409);
+    }).timeout(60000);
   });
 
   before(async () => {
     nock('https://raw.githubusercontent.com')
       .get((uri) => uri.startsWith('/foo/bar/main'))
-      .reply(200, (uri) => {
+      .reply((uri) => {
         const path = p.resolve(SPEC_ROOT, p.basename(uri));
-        return fse.readFile(path, 'utf-8');
+        if (!fse.existsSync(path)) {
+          return [404, `File not found: ${path}`];
+        }
+        return [200, fse.readFileSync(path, 'utf-8')];
+      })
+      .persist();
+  });
+
+  before(async () => {
+    nock('https://bar-foo.project-helix.page')
+      .get((uri) => uri.startsWith('/pages'))
+      .reply((uri) => {
+        let path = p.resolve(SPEC_ROOT, uri.substr(1));
+        const dot = path.lastIndexOf('.');
+        if (dot <= path.lastIndexOf('/')) {
+          path = `${path}.html`;
+        }
+        if (!fse.existsSync(path)) {
+          return [404, `File not found: ${path}`];
+        }
+        return [200, fse.readFileSync(path, 'utf-8'), {
+          'last-modified': 'Mon, 22 Feb 2021 15:28:00 GMT',
+          server: 'nock',
+        }];
       })
       .persist();
   });
 
   describe('Run tests against Algolia', () => {
-    const dir = p.resolve(SPEC_ROOT);
+    const dir = p.resolve(SPEC_ROOT, 'units');
     fse.readdirSync(dir).forEach((filename) => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
@@ -172,7 +163,7 @@ describe('Index Tests', () => {
     beforeEach(() => {
       azureIndex = new AzureIndex('azure');
     });
-    const dir = p.resolve(SPEC_ROOT);
+    const dir = p.resolve(SPEC_ROOT, 'units');
     fse.readdirSync(dir).forEach((filename) => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
@@ -191,78 +182,32 @@ describe('Index Tests', () => {
   });
 
   describe('Run tests against Excel', () => {
-    const dir = p.resolve(SPEC_ROOT, 'excel');
+    /**
+     * Excel pushes changes into a queue, so we don't check the immediate result, but
+     * the contents of the queue after processing the change.
+     */
+    const dir = p.resolve(SPEC_ROOT, 'units');
     fse.readdirSync(dir).forEach((filename) => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
-        const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
-        it(`Testing ${name} against Excel`, async () => {
-          const params = {
-            AZURE_SERVICE_BUS_CONN_STRING: 'foo',
-            AZURE_SERVICE_BUS_QUEUE_NAME: name,
-            ...input,
-          };
-          await main(params);
-          if (!input.observation && queues[name]) {
-            // eslint-disable-next-line no-param-reassign
-            queues[name].forEach(({ record }) => delete record.eventTime);
-          }
-          assert.deepStrictEqual(queues[name], output);
-        }).timeout(60000);
+        const { input, queue } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
+        if (queue) {
+          it(`Testing ${name} against Excel`, async () => {
+            const params = {
+              AZURE_SERVICE_BUS_CONN_STRING: 'foo',
+              AZURE_SERVICE_BUS_QUEUE_NAME: name,
+              ...input,
+            };
+            await main(params);
+            if (!input.observation && queues[name]) {
+              // eslint-disable-next-line no-param-reassign
+              queues[name].forEach(({ record }) => delete record.eventTime);
+            }
+            const result = queues[name] || [];
+            assert.deepStrictEqual(result, queue);
+          }).timeout(60000);
+        }
       }
-    });
-  });
-
-  describe('Tests returning bogus results from index-pipelines', () => {
-    afterEach(() => {
-      indexPipelineStub = fsIndexPipeline;
-    });
-    it('Throwing 502 in index pipeline propagates the error through our action', async () => {
-      indexPipelineStub = () => {
-        throw new OpenWhiskError(
-          'The action did not produce a valid response and exited unexpectedly.', null, 502,
-        );
-      };
-      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'added_with_path.json'), 'utf8');
-      const params = {
-        ALGOLIA_APP_ID: 'foo',
-        ALGOLIA_API_KEY: 'bar',
-        ...input,
-      };
-      await assert.rejects(
-        async () => main(params),
-        /The action did not produce a valid response and exited unexpectedly./,
-      );
-    });
-    it('Throwing 504 in index pipeline propagates the error through our action', async () => {
-      indexPipelineStub = () => {
-        throw new OpenWhiskError(
-          'Response Missing Error Message.', null, 504,
-        );
-      };
-      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'added_with_path.json'), 'utf8');
-      const params = {
-        ALGOLIA_APP_ID: 'foo',
-        ALGOLIA_API_KEY: 'bar',
-        ...input,
-      };
-      await assert.rejects(
-        () => main(params),
-        /Response Missing Error Message./,
-      );
-    });
-    it('Returning an incomplete response', async () => {
-      indexPipelineStub = () => ({ activationId: '148f00fd3d0d47388f00fd3d0d17385f' });
-      const { input } = fse.readJSONSync(p.resolve(SPEC_ROOT, 'added_with_path.json'), 'utf8');
-      const params = {
-        ALGOLIA_APP_ID: 'foo',
-        ALGOLIA_API_KEY: 'bar',
-        ...input,
-      };
-      await assert.rejects(
-        () => main(params),
-        { name: 'TypeError' },
-      );
     });
   });
 });

@@ -20,7 +20,7 @@ const statusWrap = require('@adobe/helix-status').wrap;
 
 const Change = require('./Change.js');
 const contains = require('./contains.js');
-const indexPipelines = require('./index-pipelines.js');
+const indexPipelines = require('./index-pipelines.js').run;
 
 const algolia = require('./providers/algolia.js');
 const azure = require('./providers/azure.js');
@@ -161,7 +161,7 @@ async function handleDelete({ config, handler }, change, log) {
  * @param {object} log logger
  */
 async function handleUpdate({
-  config, handler, path, include, body,
+  config, handler, url, body,
 }, change, log) {
   if (!handler) {
     return {
@@ -169,7 +169,7 @@ async function handleUpdate({
       reason: 'Handler not available, parameters missing or target unsuitable',
     };
   }
-  if (!include) {
+  if (!url) {
     if (change.uid) {
       // This could be a move from our input domain to some region outside, so verify
       // we do not keep a record in the index for an item we no longer track
@@ -196,6 +196,8 @@ async function handleUpdate({
   if (error && error.status !== 404) {
     return error;
   }
+  const path = url.pathname;
+
   try {
     const doc = body.docs ? body.docs[0] : null;
     if (doc && !doc.sourceHash) {
@@ -231,56 +233,44 @@ function replaceExt(path, ext) {
 }
 
 /**
- * Invoke index-pipelines action for all indices.
+ * Run indexing for all indices configured.
  *
- * @param {string} pkgPrefix prefix of the package we reside in
  * @param {object} indices index configurations
  * @param {object} change change to process
  * @param {object} params parameters
  * @param {object} log OW logger
  *
- * @returns object containing index definition and index record, keyed by name
+ * @returns array of operation results
  */
-async function runPipeline(pkgPrefix, indices, change, params, log) {
+async function runPipeline(indices, change, params, log) {
+  const { owner, repo, ref } = params;
+
   // Create our result where we'll store the HTML responses
-  const records = indices
-    .reduce((prev, { config, handler }) => {
+  const indexMap = indices
+    .reduce((obj, { config, handler }) => {
       // eslint-disable-next-line no-param-reassign
-      prev[config.name] = {
+      obj[config.name] = {
         config,
         handler,
-        include: handler && contains(config, change.path),
-        path: replaceExt(change.path, config.source),
+        url: handler && contains(config, change.path)
+          ? new URL(config.fetch
+            .replace(/\{owner\}/g, owner)
+            .replace(/\{repo\}/g, repo)
+            .replace(/\{ref\}/g, ref)
+            .replace(/\{path\}/g, replaceExt(change.path, config.source))
+            .replace(/(?<!:)\/\/+/g, '/')) // remove multiple slashes not preceded by colon
+          : null,
       };
-      return prev;
+      return obj;
     }, {});
 
-  // Create a unique set of the paths found
-  const paths = Array.from(Object.values(records)
-    .filter(({ include }) => include)
-    .reduce((prev, { path }) => {
-      prev.add(path);
-      return prev;
-    }, new Set()));
-
-  // Invoke the pipelines action
-  const responses = new Map(await Promise.all(paths.map(async (path) => {
-    const body = await indexPipelines(pkgPrefix, params, path);
-    return [path, body];
-  })));
-
-  // Finish by filling in all responses acquired
-  Object.values(records).filter(({ include }) => include).forEach((record) => {
-    const response = responses.get(record.path);
-    const body = response[record.config.name];
-    if (!body) {
-      log.info(`Pipeline did not return entry for index: ${record.config.name}, path: ${record.path}`);
-    } else {
+  await Promise.all(Object.values(indexMap)
+    .filter((value) => value.url)
+    .map(async (value) => {
       // eslint-disable-next-line no-param-reassign
-      record.body = body;
-    }
-  });
-  return Object.values(records);
+      value.body = await indexPipelines(params, value, log);
+    }));
+  return Object.values(indexMap);
 }
 
 /**
@@ -304,11 +294,6 @@ async function run(params) {
 
   log.info(`Received change event on ${owner}/${repo}/${ref}`, change);
 
-  const {
-    __OW_ACTION_NAME: actionName = '/helix/helix-observation/index-files',
-  } = process.env;
-
-  const pkgPrefix = `${actionName.split('/')[2]}/`;
   const config = (await new IndexConfig()
     .withRepo(owner, repo, ref)
     .init()).toJSON();
@@ -321,7 +306,7 @@ async function run(params) {
       [index.config.name]: await handleDelete(index, change, log),
     })));
   } else {
-    const records = await runPipeline(pkgPrefix, indices, change, params, log);
+    const records = await runPipeline(indices, change, params, log);
     responses = await Promise.all(records.map(async (record) => ({
       [record.config.name]: await handleUpdate(record, change, log),
     })));

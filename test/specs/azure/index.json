@@ -1,14 +1,14 @@
 [
   {
-    "path": "/ms/existing.html",
+    "path": "/pages/en/redding.html",
     "sourceHash": "Ho7yHAYJPjonC6Do",
-    "objectID": "main--ms/existing.html",
-    "name": "existing"
+    "objectID": "main--pages/en/redding.html",
+    "name": "redding"
   },
   {
-    "path": "/ms/deleted.html",
-    "sourceHash": "hlNXFkdVwFlqlpof",
-    "objectID": "main--ms/deleted.html",
-    "name": "deleted"
+    "path": "/pages/brown.html",
+    "sourceHash": "JJYxCM1NDG4ahJm9f",
+    "objectID": "main--pages/brown.html",
+    "name": "brown"
   }
 ]

@@ -5,11 +5,11 @@
     "repo": "bar",
     "ref": "main",
     "branch": "main",
-    "path": "g/added"
+    "path": "/pages/en/brown"
   },
   "output": {
     "status": 201,
-    "path": "/g/added",
+    "path": "/pages/en/brown",
     "update": 3
   }
 }

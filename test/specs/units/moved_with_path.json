@@ -5,12 +5,12 @@
     "repo": "bar",
     "ref": "main",
     "branch": "main",
-    "path": "ms/moved_to.html"
+    "path": "/pages/de/brown.html"
   },
   "output": {
     "status": 301,
-    "path": "/ms/moved_to.html",
-    "movedFrom": "/ms/existing.html",
+    "path": "/pages/de/brown.html",
+    "movedFrom": "/pages/brown.html",
     "update": 2
   }
 }
