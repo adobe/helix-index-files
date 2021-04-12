@@ -154,7 +154,14 @@ async function handleDelete({ config, handler }, change, log) {
 }
 
 /**
- * Return a flag indicating whether a index record contains outdated data.
+ * Return a flag indicating whether a index record contains outdated data. This
+ * is true if:
+ *
+ * - the change UID and the HTML UID (or source hash) are different
+ * - the change event time is later than the last modified of the HTML
+ *
+ * In that case, the change reported relates to a different and more recent
+ * item, so we shouldn't add an index record for an outdated item.
  *
  * @returns true if the record is outdated and shouldn't be used for indexing
  */
