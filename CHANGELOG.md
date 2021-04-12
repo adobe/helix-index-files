@@ -1,3 +1,10 @@
+## [3.1.61](https://github.com/adobe/helix-index-files/compare/v3.1.60...v3.1.61) (2021-04-12)
+
+
+### Bug Fixes
+
+* **index:** discard stale records ([#342](https://github.com/adobe/helix-index-files/issues/342)) ([28de0da](https://github.com/adobe/helix-index-files/commit/28de0dafd995faf4bdab69b110450db8db6e1883))
+
 ## [3.1.60](https://github.com/adobe/helix-index-files/compare/v3.1.59...v3.1.60) (2021-04-12)
 
 
