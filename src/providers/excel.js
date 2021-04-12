@@ -71,7 +71,7 @@ class Excel {
   async _update(index, record) {
     const { path } = record;
     await this._send({ index, record });
-    return mapResult.accepted(path, this._queueName);
+    return mapResult.accepted({ path }, this._queueName);
   }
 
   /**
@@ -85,6 +85,10 @@ class Excel {
    */
   async _delete(attributes) {
     const { sourceHash, eventTime } = attributes;
+    if (!sourceHash) {
+      // we can not delete an item without source hash
+      return mapResult.notFound(attributes, false);
+    }
     if (!this._deletes[sourceHash]) {
       this._deletes[sourceHash] = 0;
     }
@@ -93,7 +97,7 @@ class Excel {
       await this._send({ deleted: true, record: { sourceHash, eventTime } });
       this._deletes[sourceHash] = 0;
     }
-    return mapResult.accepted(sourceHash, this._queueName);
+    return mapResult.accepted({ sourceHash }, this._queueName);
   }
 
   /**

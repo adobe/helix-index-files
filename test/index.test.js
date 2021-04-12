@@ -93,7 +93,7 @@ describe('Index Tests', () => {
         /branch parameter missing and ref looks like a commit id/);
     });
 
-    it('Indexing an incomplete document gives a 409', async () => {
+    it('Indexing an incomplete document gives a 500', async () => {
       const params = {
         ALGOLIA_APP_ID: 'foo',
         ALGOLIA_API_KEY: 'bar',
@@ -102,8 +102,8 @@ describe('Index Tests', () => {
         ref: 'main',
         path: '/pages/en/incomplete.html',
       };
-      const { body: { results: [{ algolia }] } } = await main(params);
-      assert.strictEqual(algolia.status, 409);
+      const result = await main(params);
+      assert.strictEqual(result.status, 500);
     }).timeout(60000);
   });
 
@@ -152,7 +152,7 @@ describe('Index Tests', () => {
             ALGOLIA_API_KEY: 'bar',
             ...input,
           };
-          const { body: { results: [{ algolia }] } } = await main(params);
+          const { body: { results: [algolia] } } = await main(params);
           assert.deepStrictEqual(algolia, output);
         }).timeout(60000);
       }
@@ -174,7 +174,7 @@ describe('Index Tests', () => {
             AZURE_SEARCH_SERVICE_NAME: 'bar',
             ...input,
           };
-          const { body: { results: [, { azure }] } } = await main(params);
+          const { body: { results: [, azure] } } = await main(params);
           assert.deepStrictEqual(azure, output);
         }).timeout(60000);
       }

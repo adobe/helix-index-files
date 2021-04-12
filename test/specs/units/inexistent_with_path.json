@@ -5,11 +5,12 @@
     "repo": "bar",
     "ref": "main",
     "branch": "main",
-    "path": "/pages/franklin.html"
+    "path": "/pages/en/franklin.html"
   },
   "output": {
     "status": 404,
-    "path": "/pages/franklin.html",
-    "reason": "Item not found with path: /pages/franklin.html"
-  }
+    "path": "/pages/en/franklin.html",
+    "reason": "Item not found with path: /pages/en/franklin.html"
+  },
+  "queue": []
 }

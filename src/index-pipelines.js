@@ -98,7 +98,7 @@ async function fetchHTML(url, log) {
   const s = body.trim();
   if (s.substring(s.length - 7).toLowerCase() !== '</html>') {
     log.warn(`Document returned from ${url} seems incomplete (html end tag not found)`);
-    return { error: { reason: 'document incomplete', status: 409 } };
+    return { error: { reason: 'document incomplete', status: 500 } };
   }
   return { body, headers: new Headers(resp.headers) };
 }

@@ -288,31 +288,26 @@ async function runPipeline(indices, change, params, log) {
   const { owner, repo, ref } = params;
 
   // Create our result where we'll store the HTML responses
-  const indexMap = indices
-    .reduce((obj, { config, handler }) => {
-      // eslint-disable-next-line no-param-reassign
-      obj[config.name] = {
-        config,
-        handler,
-        url: handler && contains(config, change.path)
-          ? new URL(config.fetch
-            .replace(/\{owner\}/g, owner)
-            .replace(/\{repo\}/g, repo)
-            .replace(/\{ref\}/g, ref)
-            .replace(/\{path\}/g, replaceExt(change.path, config.source))
-            .replace(/(?<!:)\/\/+/g, '/')) // remove multiple slashes not preceded by colon
-          : null,
-      };
-      return obj;
-    }, {});
-
-  await Promise.all(Object.values(indexMap)
+  const values = indices
+    .map(({ config, handler }) => ({
+      config,
+      handler,
+      url: handler && contains(config, change.path)
+        ? new URL(config.fetch
+          .replace(/\{owner\}/g, owner)
+          .replace(/\{repo\}/g, repo)
+          .replace(/\{ref\}/g, ref)
+          .replace(/\{path\}/g, replaceExt(change.path, config.source))
+          .replace(/(?<!:)\/\/+/g, '/')) // remove multiple slashes not preceded by colon
+        : null,
+    }));
+  await Promise.all(values
     .filter((value) => value.url)
-    .map(async (value) => {
+    .map((async (value) => {
       // eslint-disable-next-line no-param-reassign
       value.body = await indexPipelines(params, value, log);
-    }));
-  return Object.values(indexMap);
+    })));
+  return values;
 }
 
 /**
@@ -344,17 +339,20 @@ async function run(params) {
 
   let responses;
   if (change.deleted) {
-    responses = await Promise.all(indices.map(async (index) => ({
-      [index.config.name]: await handleDelete(index, change, log),
-    })));
+    responses = await Promise.all(indices.map(
+      async (index) => handleDelete(index, change, log),
+    ));
   } else {
     const records = await runPipeline(indices, change, params, log);
-    responses = await Promise.all(records.map(async (record) => ({
-      [record.config.name]: await handleUpdate(record, change, log),
-    })));
+    responses = await Promise.all(records.map(
+      async (record) => handleUpdate(record, change, log),
+    ));
   }
   const results = flatten(responses);
-  return { statusCode: 207, body: { results } };
+  const status = results.reduce(
+    (curr, r) => (r.status >= 500 ? r.status : curr), 207,
+  );
+  return { status, body: { results } };
 }
 
 /**
