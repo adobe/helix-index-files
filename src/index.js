@@ -303,10 +303,10 @@ async function runPipeline(indices, change, params, log) {
     }));
   await Promise.all(values
     .filter((value) => value.url)
-    .map((async (value) => {
+    .map(async (value) => {
       // eslint-disable-next-line no-param-reassign
       value.body = await indexPipelines(params, value, log);
-    })));
+    }));
   return values;
 }
 
