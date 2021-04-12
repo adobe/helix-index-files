@@ -154,6 +154,41 @@ async function handleDelete({ config, handler }, change, log) {
 }
 
 /**
+ * Return a flag indicating whether a index record contains outdated data. This
+ * is true if:
+ *
+ * - the change UID and the HTML UID (or source hash) are different
+ * - the change event time is later than the last modified of the HTML
+ *
+ * In that case, the change reported relates to a different and more recent
+ * item, so we shouldn't add an index record for an outdated item.
+ *
+ * @returns true if the record is outdated and shouldn't be used for indexing
+ */
+function isOutdated(record, headers, change) {
+  if (!change.uid || record.sourceHash === change.uid) {
+    // this is consistent
+    return false;
+  }
+  const lastModified = headers.get('last-modified');
+  if (!lastModified || !change.time) {
+    // unable to determine whether there is a discrepancy without dates
+    return false;
+  }
+  const lastModifiedMs = Date.parse(lastModified);
+  if (Number.isNaN(lastModifiedMs)) {
+    // last modified date is unusable
+    return false;
+  }
+  const eventTimeMs = Date.parse(change.time);
+  if (Number.isNaN(eventTimeMs)) {
+    // event time is unusable
+    return false;
+  }
+  return eventTimeMs > lastModifiedMs;
+}
+
+/**
  * Handle a single update for an index handler.
  *
  * @param {object} param0 parameters
@@ -199,14 +234,21 @@ async function handleUpdate({
   const path = url.pathname;
 
   try {
-    const doc = body.docs ? body.docs[0] : null;
-    if (doc && !doc.sourceHash) {
-      const message = `Unable to update ${path}: sourceHash in indexed document is empty.`;
-      log.warn(message);
-      return mapResult.error(path, message);
+    const { record, headers } = body;
+    if (record) {
+      if (!record.sourceHash) {
+        const message = `Unable to update ${path}: sourceHash in indexed document is empty.`;
+        log.warn(message);
+        return mapResult.error(path, message);
+      }
+      if (isOutdated(record, headers, change)) {
+        const message = `Unable to update ${path}: indexed record is outdated.`;
+        log.warn(message);
+        return mapResult.error(path, message);
+      }
     }
-    return doc
-      ? await handler.update({ path, eventTime: change.time, ...doc })
+    return record
+      ? await handler.update({ path, eventTime: change.time, ...record })
       : await handler.delete({ path, eventTime: change.time, sourceHash: change.uid });
   } catch (e) {
     log.error(`An error occurred updating record ${path} in ${config.name}`, e);

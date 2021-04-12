@@ -195,10 +195,8 @@ function indexHTML(path, document, headers, index, log) {
 }
 
 function evaluateHtml(body, headers, path, index, log) {
-  const docs = [];
   const { document } = new JSDOM(body).window;
-  docs.push(indexHTML(path, document, headers, index, log));
-  return docs;
+  return indexHTML(path, document, headers, index, log);
 }
 
 async function run(params, config, log) {
@@ -207,7 +205,7 @@ async function run(params, config, log) {
     return result;
   }
   const { body, headers } = result;
-  return { docs: evaluateHtml(body, headers, config.url.pathname, config.config, log) };
+  return { record: evaluateHtml(body, headers, config.url.pathname, config.config, log), headers };
 }
 
 module.exports.run = run;
