@@ -1,3 +1,10 @@
+## [3.1.59](https://github.com/adobe/helix-index-files/compare/v3.1.58...v3.1.59) (2021-04-12)
+
+
+### Bug Fixes
+
+* **deps:** pin dependencies ([95e7453](https://github.com/adobe/helix-index-files/commit/95e7453f9c4fbaf73a77d91ded17ec24b7de6426))
+
 ## [3.1.58](https://github.com/adobe/helix-index-files/compare/v3.1.57...v3.1.58) (2021-04-09)
 
 
