@@ -1,3 +1,10 @@
+## [3.1.62](https://github.com/adobe/helix-index-files/compare/v3.1.61...v3.1.62) (2021-04-12)
+
+
+### Bug Fixes
+
+* simplify response, treat errors more consistently ([658428a](https://github.com/adobe/helix-index-files/commit/658428a5068268afb2103db3ce623ee4a99187a0))
+
 ## [3.1.61](https://github.com/adobe/helix-index-files/compare/v3.1.60...v3.1.61) (2021-04-12)
 
 
