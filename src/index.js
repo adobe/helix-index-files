@@ -317,7 +317,7 @@ async function runPipeline(indices, change, params, log) {
  */
 async function run(params) {
   const {
-    owner, repo, ref, __ow_logger: log,
+    owner, repo, ref, __ow_logger: log, '.deliveryCount': deliveryCount = 0,
   } = params;
 
   if (!owner || !repo || !ref) {
@@ -329,7 +329,7 @@ async function run(params) {
     return { statusCode: 400, body: 'path parameter missing' };
   }
 
-  log.info(`Received change event on ${owner}/${repo}/${ref}`, change);
+  log.info(`Received change event on ${owner}/${repo}/${ref}`, change, `(delivery count: ${deliveryCount})`);
 
   const config = (await new IndexConfig()
     .withRepo(owner, repo, ref)

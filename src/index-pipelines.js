@@ -93,12 +93,12 @@ async function fetchHTML(url, log) {
   if (!resp.ok) {
     const message = body < 100 ? body : `${body.substr(0, 100)}...`;
     log.warn(`Fetching ${url} failed: statusCode: ${resp.status}, message: '${message}'`);
-    return { error: { reason: message, status: resp.status } };
+    return { error: { path: url.pathname, status: resp.status, reason: message } };
   }
   const s = body.trim();
   if (s.substring(s.length - 7).toLowerCase() !== '</html>') {
     log.warn(`Document returned from ${url} seems incomplete (html end tag not found)`);
-    return { error: { reason: 'document incomplete', status: 500 } };
+    return { error: { path: url.pathname, status: 500, reason: 'document incomplete' } };
   }
   return { body, headers: new Headers(resp.headers) };
 }
