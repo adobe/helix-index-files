@@ -1,3 +1,10 @@
+## [3.1.63](https://github.com/adobe/helix-index-files/compare/v3.1.62...v3.1.63) (2021-04-13)
+
+
+### Bug Fixes
+
+* use delivery count offered by task-worker ([#343](https://github.com/adobe/helix-index-files/issues/343)) ([b9c4417](https://github.com/adobe/helix-index-files/commit/b9c4417b2c73d193647348bdf804220b3a7e3721))
+
 ## [3.1.62](https://github.com/adobe/helix-index-files/compare/v3.1.61...v3.1.62) (2021-04-12)
 
 
