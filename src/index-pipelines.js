@@ -68,15 +68,16 @@ const helpers = {
  * HTML source is fetched at most once.
  *
  * @param {object} url url
+ * @param {object} log logger
  * @returns response body or error
  */
 async function fetchHTML(url, log) {
-  log.info(`Reading HTML from: ${url}`);
+  log.info(`Reading HTML from: ${url.href}`);
 
   let resp;
   let body;
   try {
-    resp = await fetch(url, {
+    resp = await fetch(url.href, {
       headers: {
         'User-Agent': 'index-pipelines/html_json',
       },
@@ -92,12 +93,12 @@ async function fetchHTML(url, log) {
   }
   if (!resp.ok) {
     const message = body < 100 ? body : `${body.substr(0, 100)}...`;
-    log.warn(`Fetching ${url} failed: statusCode: ${resp.status}, message: '${message}'`);
+    log.warn(`Fetching ${url.href} failed: statusCode: ${resp.status}, message: '${message}'`);
     return { error: { path: url.pathname, status: resp.status, reason: message } };
   }
   const s = body.trim();
   if (s.substring(s.length - 7).toLowerCase() !== '</html>') {
-    log.warn(`Document returned from ${url} seems incomplete (html end tag not found)`);
+    log.warn(`Document returned from ${url.href} seems incomplete (html end tag not found)`);
     return { error: { path: url.pathname, status: 500, reason: 'document incomplete' } };
   }
   return { body, headers: new Headers(resp.headers) };
@@ -200,7 +201,7 @@ function evaluateHtml(body, headers, path, index, log) {
 }
 
 async function run(params, config, log) {
-  const result = await fetchHTML(config.url.href, log);
+  const result = await fetchHTML(config.url, log);
   if (result.error) {
     return result;
   }
