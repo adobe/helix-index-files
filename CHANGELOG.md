@@ -1,3 +1,10 @@
+## [3.1.64](https://github.com/adobe/helix-index-files/compare/v3.1.63...v3.1.64) (2021-04-14)
+
+
+### Bug Fixes
+
+* use URL, not a string ([9264a1e](https://github.com/adobe/helix-index-files/commit/9264a1e5fb5b6c99cfb210060b2a48db3b10beb7))
+
 ## [3.1.63](https://github.com/adobe/helix-index-files/compare/v3.1.62...v3.1.63) (2021-04-13)
 
 
