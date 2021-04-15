@@ -26,12 +26,10 @@ indices:
         select: main > div:last-of-type > p:first-of-type
         values: |
           match(el, '(Topics: )? ([^,]+)')
-        faceted: true
       products:
         select: main > div:last-of-type > p:nth-of-type(2)
         values: |
           match(el, '(Products: )? ([^,]+)')
-        faceted: true
       hero:
         select: main > div:nth-of-type(2) img:first-of-type
         value: |
@@ -142,7 +140,7 @@ indices:
         values: |
           match(el, '(Genres: )? ([^,]+)')
       sourceHash:
-        select: head > meta[name=x-source-hash
+        select: head > meta[name="x-source-hash"]
         value: |
           attribute(el, 'content')
 
@@ -157,4 +155,3 @@ indices:
     include:
       - /pages/jp/*
     target: https://adobe.sharepoint.com/excel-jp
-
