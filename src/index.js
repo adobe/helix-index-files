@@ -340,12 +340,12 @@ async function run(params) {
   let responses;
   if (change.deleted) {
     responses = await Promise.all(indices.map(
-      async (index) => handleDelete(index, change, log),
+      async (index) => ({ name: index.config.name, ...await handleDelete(index, change, log) }),
     ));
   } else {
     const records = await runPipeline(indices, change, params, log);
     responses = await Promise.all(records.map(
-      async (record) => handleUpdate(record, change, log),
+      async (record) => ({ name: record.config.name, ...await handleUpdate(record, change, log) }),
     ));
   }
   const results = flatten(responses);

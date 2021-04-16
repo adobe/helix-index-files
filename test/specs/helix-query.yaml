@@ -43,7 +43,7 @@ indices:
         value: |
           words(textContent(el), 0, 20)
       sourceHash:
-        select: head > meta[name=x-source-hash
+        select: head > meta[name="x-source-hash"]
         value: |
           attribute(el, 'content')
         faceted: true
@@ -110,7 +110,7 @@ indices:
         value: |
           words(textContent(el), 0, 20)
       sourceHash:
-        select: head > meta[name=x-source-hash
+        select: head > meta[name="x-source-hash"]
         value: |
           attribute(el, 'content')
 
