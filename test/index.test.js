@@ -153,6 +153,7 @@ describe('Index Tests', () => {
             ...input,
           };
           const { body: { results: [algolia] } } = await main(params);
+          delete algolia.name;
           assert.deepStrictEqual(algolia, output);
         }).timeout(60000);
       }
@@ -175,6 +176,7 @@ describe('Index Tests', () => {
             ...input,
           };
           const { body: { results: [, azure] } } = await main(params);
+          delete azure.name;
           assert.deepStrictEqual(azure, output);
         }).timeout(60000);
       }
