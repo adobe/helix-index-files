@@ -1,3 +1,10 @@
+## [3.1.65](https://github.com/adobe/helix-index-files/compare/v3.1.64...v3.1.65) (2021-04-16)
+
+
+### Bug Fixes
+
+* add index name in multi-record output ([#344](https://github.com/adobe/helix-index-files/issues/344)) ([e0db403](https://github.com/adobe/helix-index-files/commit/e0db403e97e60f57ce1abd834e0300bffca7dd81))
+
 ## [3.1.64](https://github.com/adobe/helix-index-files/compare/v3.1.63...v3.1.64) (2021-04-14)
 
 
