@@ -1,3 +1,10 @@
+## [3.1.66](https://github.com/adobe/helix-index-files/compare/v3.1.65...v3.1.66) (2021-04-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency algoliasearch to v4.9.0 ([6226b6b](https://github.com/adobe/helix-index-files/commit/6226b6b61965113a6367618c600667aa2e3d7aa4))
+
 ## [3.1.65](https://github.com/adobe/helix-index-files/compare/v3.1.64...v3.1.65) (2021-04-16)
 
 
