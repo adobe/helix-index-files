@@ -370,7 +370,7 @@ async function main(req, context) {
   const status = results.reduce(
     (curr, r) => (r.status >= 500 ? r.status : curr), 207,
   );
-  return new Response(JSON.stringify(results), {
+  return new Response(JSON.stringify(results, null, 2), {
     status,
   });
 }
