@@ -327,7 +327,7 @@ async function main(req, context) {
     owner, repo, ref, '.deliveryCount': deliveryCount = 0,
   } = context.data;
 
-  if (!owner || !repo || !ref) {
+  if (!(owner && repo && ref)) {
     return new Response('owner/repo/ref missing', {
       status: 400,
     });
@@ -344,11 +344,16 @@ async function main(req, context) {
 
   // Load index manually, as requiredConfig interferes with bodyData
   // (see: https://github.com/adobe/helix-shared/issues/500)
+  //
+  // When fixed, use:
+  // const config = context.config.index.toJSON();
+
   const config = (await new IndexConfig()
     .withRepo(owner, repo, ref)
     .init()).toJSON();
-
-  const indices = createHandlers(Object.values(config.indices), env, log);
+  const indices = createHandlers(Object.values(config.indices), {
+    ...env, owner, repo, ref,
+  }, log);
 
   let responses;
   if (change.deleted) {
@@ -371,6 +376,7 @@ async function main(req, context) {
 }
 
 module.exports.main = wrap(main)
+  // .with(requiredConfig, 'index')
   .with(bodyData)
   .with(helixStatus)
   .with(logger.trace)
