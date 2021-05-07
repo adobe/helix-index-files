@@ -1,3 +1,10 @@
+## [3.1.67](https://github.com/adobe/helix-index-files/compare/v3.1.66...v3.1.67) (2021-05-07)
+
+
+### Bug Fixes
+
+* move to universal ([#349](https://github.com/adobe/helix-index-files/issues/349)) ([9525580](https://github.com/adobe/helix-index-files/commit/95255808c1c115ad01fb485b21c88da36e16ce73))
+
 ## [3.1.66](https://github.com/adobe/helix-index-files/compare/v3.1.65...v3.1.66) (2021-04-18)
 
 
