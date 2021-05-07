@@ -13,10 +13,13 @@
 'use strict';
 
 const flatten = require('lodash.flatten');
-const { logger } = require('@adobe/openwhisk-action-logger');
-const { wrap } = require('@adobe/openwhisk-action-utils');
-const { IndexConfig } = require('@adobe/helix-shared');
-const statusWrap = require('@adobe/helix-status').wrap;
+
+const { logger } = require('@adobe/helix-universal-logger');
+const { requiredConfig } = require('@adobe/helix-shared-config');
+const bodyData = require('@adobe/helix-shared-body-data');
+const wrap = require('@adobe/helix-shared-wrap');
+const { wrap: helixStatus } = require('@adobe/helix-status');
+const { Response } = require('@adobe/helix-universal');
 
 const Change = require('./Change.js');
 const contains = require('./contains.js');
@@ -26,6 +29,7 @@ const algolia = require('./providers/algolia.js');
 const azure = require('./providers/azure.js');
 const excel = require('./providers/excel.js');
 const mapResult = require('./providers/mapResult.js');
+const recordsWrap = require('./records-wrapper.js');
 
 /**
  * List of known index providers.
@@ -311,31 +315,32 @@ async function runPipeline(indices, change, params, log) {
 }
 
 /**
- * Runtime action.
+ * Indexes a resource and stores the index record in a provider.
  *
- * @param {object} params parameters
+ * @param {Request} req request object
+ * @param {Context} context request context
+ * @returns {Response} the response
  */
-async function run(params) {
+async function main(req, context) {
+  const { env, log } = context;
+
   const {
-    owner, repo, ref, __ow_logger: log, '.deliveryCount': deliveryCount = 0,
-  } = params;
+    owner, repo, ref, '.deliveryCount': deliveryCount = 0,
+  } = context.data;
 
-  if (!owner || !repo || !ref) {
-    return { statusCode: 400, body: 'owner/repo/ref missing' };
-  }
-
-  const change = getChange(params);
+  const change = getChange(context.data);
   if (!change) {
-    return { statusCode: 400, body: 'path parameter missing' };
+    return new Response('no change provided (neither path nor observation)', {
+      status: 400,
+    });
   }
 
   log.info(`Received change event on ${owner}/${repo}/${ref}`, change, `(delivery count: ${deliveryCount})`);
 
-  const config = (await new IndexConfig()
-    .withRepo(owner, repo, ref)
-    .init()).toJSON();
-
-  const indices = createHandlers(Object.values(config.indices), params, log);
+  const config = context.config.index.toJSON();
+  const indices = createHandlers(Object.values(config.indices), {
+    ...env, owner, repo, ref,
+  }, log);
 
   let responses;
   if (change.deleted) {
@@ -343,7 +348,7 @@ async function run(params) {
       async (index) => ({ name: index.config.name, ...await handleDelete(index, change, log) }),
     ));
   } else {
-    const records = await runPipeline(indices, change, params, log);
+    const records = await runPipeline(indices, change, context.data, log);
     responses = await Promise.all(records.map(
       async (record) => ({ name: record.config.name, ...await handleUpdate(record, change, log) }),
     ));
@@ -352,30 +357,15 @@ async function run(params) {
   const status = results.reduce(
     (curr, r) => (r.status >= 500 ? r.status : curr), 207,
   );
-  return { status, body: { results } };
+  return new Response(JSON.stringify(results, null, 2), {
+    status,
+  });
 }
 
-/**
- * Fill a missing branch in the parameters.
- *
- * @param {function} func function to wrap
- */
-function fillBranch(func) {
-  return (params) => {
-    if (params && params.ref && !params.branch) {
-      const { ref } = params;
-      if (ref.length === 40 && /^[a-f0-9]+$/.test(ref)) {
-        throw new Error(`branch parameter missing and ref looks like a commit id: ${ref}`);
-      } else {
-        // eslint-disable-next-line no-param-reassign
-        params.branch = params.ref;
-      }
-    }
-    return func(params);
-  };
-}
-
-module.exports.main = wrap(run)
-  .with(logger)
-  .with(statusWrap)
-  .with(fillBranch);
+module.exports.main = wrap(main)
+  .with(requiredConfig, 'index')
+  .with(bodyData)
+  .with(recordsWrap)
+  .with(helixStatus)
+  .with(logger.trace)
+  .with(logger);

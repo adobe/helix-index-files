@@ -13,34 +13,26 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 
+'use strict';
+
 const chai = require('chai');
 const chaiHttp = require('chai-http');
-const packjson = require('../package.json');
+const { createTargets } = require('./post-deploy-utils.js');
 
 chai.use(chaiHttp);
 const { expect } = chai;
 
-function getbaseurl() {
-  const namespace = 'helix';
-  const package = 'helix-observation';
-  const name = packjson.name.replace('@adobe/helix-', '');
-  let version = `${packjson.version}`;
-  if (process.env.CI && process.env.CIRCLE_BUILD_NUM && process.env.CIRCLE_BRANCH !== 'main') {
-    version = `ci${process.env.CIRCLE_BUILD_NUM}`;
-  }
-  return `api/v1/web/${namespace}/${package}/${name}@${version}`;
-}
-
-describe(`Post-Deploy Tests (https://adobeioruntime.net/${getbaseurl()})`, () => {
-  it('Invoke our action', async () => {
-    await chai
-      .request('https://adobeioruntime.net/')
-      .get(`${getbaseurl()}`)
-      .then((response) => {
-        expect(response.text).to.equal('owner/repo/ref missing');
-        expect(response).to.have.status(400);
-      }).catch((e) => {
-        throw e;
-      });
-  }).timeout(50000);
+createTargets().forEach((target) => {
+  describe(`Post-Deploy Tests (${target.title()})`, () => {
+    it('Invoke action', async () => {
+      await chai
+        .request(target.host())
+        .get(target.urlPath())
+        .then((response) => {
+          expect(response).to.have.status(400);
+        }).catch((e) => {
+          throw e;
+        });
+    }).timeout(50000);
+  });
 });

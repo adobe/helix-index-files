@@ -25,6 +25,8 @@ const proxyquire = require('proxyquire');
 const AlgoliaIndex = require('./mock/AlgoliaIndex.js');
 const AzureIndex = require('./mock/AzureIndex.js');
 
+const { retrofit } = require('./utils.js');
+
 const SPEC_ROOT = p.resolve(__dirname, 'specs');
 
 /**
@@ -47,7 +49,7 @@ let azureIndex;
  *
  * @param {Function} invoke OW action to invoke
  */
-const { main } = proxyquire('../src/index.js', {
+const { main: proxyMain } = proxyquire('../src/index.js', {
   './providers/algolia.js': proxyquire('../src/providers/algolia.js', {
     algoliasearch: () => ({
       initIndex: (name) => new AlgoliaIndex(name),
@@ -68,6 +70,21 @@ const { main } = proxyquire('../src/index.js', {
 });
 
 describe('Index Tests', () => {
+  const main = retrofit(proxyMain);
+
+  before(async () => {
+    nock('https://raw.githubusercontent.com')
+      .get((uri) => uri.startsWith('/foo/bar/main'))
+      .reply((uri) => {
+        const path = p.resolve(SPEC_ROOT, p.basename(uri));
+        if (!fse.existsSync(path)) {
+          return [404, `File not found: ${path}`];
+        }
+        return [200, fse.readFileSync(path, 'utf-8')];
+      })
+      .persist();
+  });
+
   describe('Argument checking', () => {
     it('index function returns 400 if owner/repo/ref is missing', async () => {
       assert.strictEqual((await main({})).statusCode, 400);
@@ -84,40 +101,24 @@ describe('Index Tests', () => {
       assert.strictEqual((await main({
         owner: 'foo',
         repo: 'bar',
-        ref: 'baz',
+        ref: 'main',
       })).statusCode, 400);
-    });
-
-    it('index function bails if branch is missing and ref is not usable', async () => {
-      await assert.rejects(async () => main({ ref: 'dd25127aa92f65fda6a0927ed3fb00bf5dcea069' }),
-        /branch parameter missing and ref looks like a commit id/);
     });
 
     it('Indexing an incomplete document gives a 500', async () => {
       const params = {
-        ALGOLIA_APP_ID: 'foo',
-        ALGOLIA_API_KEY: 'bar',
         owner: 'foo',
         repo: 'bar',
         ref: 'main',
         path: '/pages/en/incomplete.html',
       };
-      const result = await main(params);
-      assert.strictEqual(result.status, 500);
+      const env = {
+        ALGOLIA_APP_ID: 'foo',
+        ALGOLIA_API_KEY: 'bar',
+      };
+      const res = await main(params, env);
+      assert.strictEqual(res.statusCode, 500);
     }).timeout(60000);
-  });
-
-  before(async () => {
-    nock('https://raw.githubusercontent.com')
-      .get((uri) => uri.startsWith('/foo/bar/main'))
-      .reply((uri) => {
-        const path = p.resolve(SPEC_ROOT, p.basename(uri));
-        if (!fse.existsSync(path)) {
-          return [404, `File not found: ${path}`];
-        }
-        return [200, fse.readFileSync(path, 'utf-8')];
-      })
-      .persist();
   });
 
   before(async () => {
@@ -147,12 +148,11 @@ describe('Index Tests', () => {
         const name = filename.substring(0, filename.length - 5);
         const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
         it(`Testing ${name} against Algolia`, async () => {
-          const params = {
+          const env = {
             ALGOLIA_APP_ID: 'foo',
             ALGOLIA_API_KEY: 'bar',
-            ...input,
           };
-          const { body: { results: [algolia] } } = await main(params);
+          const [algolia] = JSON.parse((await main(input, env)).body);
           delete algolia.name;
           assert.deepStrictEqual(algolia, output);
         }).timeout(60000);
@@ -170,12 +170,11 @@ describe('Index Tests', () => {
         const name = filename.substring(0, filename.length - 5);
         const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
         it(`Testing ${name} against Azure`, async () => {
-          const params = {
+          const env = {
             AZURE_SEARCH_API_KEY: 'foo',
             AZURE_SEARCH_SERVICE_NAME: 'bar',
-            ...input,
           };
-          const { body: { results: [, azure] } } = await main(params);
+          const [, azure] = JSON.parse((await main(input, env)).body);
           delete azure.name;
           assert.deepStrictEqual(azure, output);
         }).timeout(60000);
@@ -195,12 +194,11 @@ describe('Index Tests', () => {
         const { input, queue } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
         if (queue) {
           it(`Testing ${name} against Excel`, async () => {
-            const params = {
+            const env = {
               AZURE_SERVICE_BUS_CONN_STRING: 'foo',
               AZURE_SERVICE_BUS_QUEUE_NAME: name,
-              ...input,
             };
-            await main(params);
+            await main(input, env, {}, true);
             if (!input.observation && queues[name]) {
               // eslint-disable-next-line no-param-reassign
               queues[name].forEach(({ record }) => delete record.eventTime);
