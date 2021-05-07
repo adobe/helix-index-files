@@ -21,7 +21,7 @@ class OpenwhiskTarget {
   constructor(opts = {}) {
     Object.assign(this, {
       namespace: 'helix',
-      package: 'helix-services',
+      package: 'helix-observation',
       name: packjson.name.replace('@adobe/helix-', ''),
       version: String(packjson.version),
     }, opts);
