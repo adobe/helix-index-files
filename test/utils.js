@@ -20,22 +20,26 @@ function retrofit(fn) {
       return new URL(`https://adobeioruntime.net/api/v1/web/helix/${pkg}/${name}@${version}`);
     },
   };
-  return async (params = {}, env = {}, invocation = {}) => {
-    // const req = new Request('https://helix-service.com/publish', {
-    //   method: 'POST',
-    //   body: params,
-    // });
-    const req = new Request('https://helix-service.com/publish');
+  return async (params = {}, env = {}, invocation = {}, sqs = false) => {
     const context = {
       resolver,
       env,
       // eslint-disable-next-line no-underscore-dangle
       log: params.__ow_logger,
       invocation,
-      records: [{
-        body: JSON.stringify(params),
-      }],
     };
+    let req;
+    if (!sqs) {
+      req = new Request('https://helix-service.com/publish', {
+        method: 'POST',
+        body: params,
+      });
+    } else {
+      req = new Request('https://helix-service.com/publish');
+      context.records = [{
+        body: JSON.stringify(params),
+      }];
+    }
     const resp = await fn(req, context);
     return {
       statusCode: resp.status,

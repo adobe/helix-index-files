@@ -198,7 +198,7 @@ describe('Index Tests', () => {
               AZURE_SERVICE_BUS_CONN_STRING: 'foo',
               AZURE_SERVICE_BUS_QUEUE_NAME: name,
             };
-            await main(input, env);
+            await main(input, env, {}, true);
             if (!input.observation && queues[name]) {
               // eslint-disable-next-line no-param-reassign
               queues[name].forEach(({ record }) => delete record.eventTime);
