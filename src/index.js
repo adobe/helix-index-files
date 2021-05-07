@@ -15,9 +15,9 @@
 const flatten = require('lodash.flatten');
 
 const { logger } = require('@adobe/helix-universal-logger');
-const { IndexConfig } = require('@adobe/helix-shared');
-const wrap = require('@adobe/helix-shared-wrap');
+const { requiredConfig } = require('@adobe/helix-shared-config');
 const bodyData = require('@adobe/helix-shared-body-data');
+const wrap = require('@adobe/helix-shared-wrap');
 const { wrap: helixStatus } = require('@adobe/helix-status');
 const { Response } = require('@adobe/helix-universal');
 
@@ -29,6 +29,7 @@ const algolia = require('./providers/algolia.js');
 const azure = require('./providers/azure.js');
 const excel = require('./providers/excel.js');
 const mapResult = require('./providers/mapResult.js');
+const recordsWrap = require('./records-wrapper.js');
 
 /**
  * List of known index providers.
@@ -327,12 +328,6 @@ async function main(req, context) {
     owner, repo, ref, '.deliveryCount': deliveryCount = 0,
   } = context.data;
 
-  if (!(owner && repo && ref)) {
-    return new Response('owner/repo/ref missing', {
-      status: 400,
-    });
-  }
-
   const change = getChange(context.data);
   if (!change) {
     return new Response('no change provided (neither path nor observation)', {
@@ -342,15 +337,7 @@ async function main(req, context) {
 
   log.info(`Received change event on ${owner}/${repo}/${ref}`, change, `(delivery count: ${deliveryCount})`);
 
-  // Load index manually, as requiredConfig interferes with bodyData
-  // (see: https://github.com/adobe/helix-shared/issues/500)
-  //
-  // When fixed, use:
-  // const config = context.config.index.toJSON();
-
-  const config = (await new IndexConfig()
-    .withRepo(owner, repo, ref)
-    .init()).toJSON();
+  const config = context.config.index.toJSON();
   const indices = createHandlers(Object.values(config.indices), {
     ...env, owner, repo, ref,
   }, log);
@@ -376,8 +363,9 @@ async function main(req, context) {
 }
 
 module.exports.main = wrap(main)
-  // .with(requiredConfig, 'index')
+  .with(requiredConfig, 'index')
   .with(bodyData)
+  .with(recordsWrap)
   .with(helixStatus)
   .with(logger.trace)
   .with(logger);

@@ -12,6 +12,8 @@
 
 'use strict';
 
+const { Request } = require('@adobe/helix-fetch');
+
 function retrofit(fn) {
   const resolver = {
     createURL({ package: pkg, name, version }) {
@@ -19,19 +21,22 @@ function retrofit(fn) {
     },
   };
   return async (params = {}, env = {}, invocation = {}) => {
+    // const req = new Request('https://helix-service.com/publish', {
+    //   method: 'POST',
+    //   body: params,
+    // });
+    const req = new Request('https://helix-service.com/publish');
     const context = {
       resolver,
       env,
       // eslint-disable-next-line no-underscore-dangle
       log: params.__ow_logger,
       invocation,
+      records: [{
+        body: JSON.stringify(params),
+      }],
     };
-    const resp = await fn({
-      url: new URL('https://helix-service.com/publish'),
-      headers: new Map([['content-type', 'application/json']]),
-      json: () => params,
-      text: () => JSON.stringify(params),
-    }, context);
+    const resp = await fn(req, context);
     return {
       statusCode: resp.status,
       body: await resp.text(),
