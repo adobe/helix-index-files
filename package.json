@@ -42,7 +42,7 @@
     "@adobe/helix-universal": "1.5.0",
     "@adobe/helix-universal-logger": "1.0.3",
     "@azure/service-bus": "7.2.0",
-    "algoliasearch": "4.9.3",
+    "algoliasearch": "4.10.2",
     "jsdom": "16.6.0",
     "jsep": "0.4.0",
     "lodash.flatten": "4.4.0",
