@@ -26,6 +26,7 @@ class Excel {
       AWS_SQS_QUEUE_NAME: queueName = `https://sqs.${region}.amazonaws.com/${accountId}/helix-excel-${owner}-${repo}.fifo`,
     } = params;
 
+    log.info(`Using SQS client on: ${queueName}`);
     this._client = new SQSClient({ region });
 
     this._queueName = queueName;
