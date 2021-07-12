@@ -124,7 +124,7 @@ class Excel {
 
 module.exports = {
   name: 'Excel',
-  required: ['AWS_REGION', 'AWS_ACCOUNT_ID', 'AWS_SQS_QUEUE_NAME'],
+  required: ['AWS_REGION', 'AWS_ACCOUNT_ID'],
   match: (url) => url && /^https:\/\/[^/]+\.sharepoint\.com\//.test(url),
   create: (params, configs, log) => Excel.createProvider(params, configs, log),
 };
