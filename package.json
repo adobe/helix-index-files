@@ -19,6 +19,7 @@
   "wsk": {
     "name": "helix-observation/index-files@${version}",
     "memory": 512,
+    "awsRole": "arn:aws:iam::118435662149:role/helix-service-role-s3-rw",
     "testUrl": "/_status_check/healthcheck.json",
     "target": "aws"
   },
