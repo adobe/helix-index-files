@@ -323,6 +323,13 @@ async function main(req, context) {
   const { env, log } = context;
 
   const {
+    runtime: {
+      region,
+      accountId,
+    },
+  } = context;
+
+  const {
     owner, repo, ref, '.deliveryCount': deliveryCount = 0,
   } = context.data;
 
@@ -337,7 +344,7 @@ async function main(req, context) {
 
   const config = context.config.index.toJSON();
   const indices = createHandlers(Object.values(config.indices), {
-    ...env, owner, repo, ref,
+    AWS_REGION: region, AWS_ACCOUNT_ID: accountId, ...env, owner, repo, ref,
   }, log);
 
   let responses;
