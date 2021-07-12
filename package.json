@@ -35,7 +35,6 @@
   "homepage": "https://github.com/adobe/helix-index-files#readme",
   "dependencies": {
     "@adobe/helix-fetch": "2.2.0",
-    "@adobe/helix-shared": "8.0.2",
     "@adobe/helix-shared-body-data": "1.0.3",
     "@adobe/helix-shared-config": "1.0.3",
     "@adobe/helix-shared-wrap": "1.0.0",
