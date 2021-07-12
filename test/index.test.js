@@ -140,21 +140,22 @@ describe('Index Tests', () => {
       if (filename.endsWith('.json')) {
         const name = filename.substring(0, filename.length - 5);
         const { input, queue } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
-        if (queue) {
-          it(`Testing ${name} against Excel`, async () => {
-            await main(input, {
-              AWS_REGION: 'foo',
-              AWS_ACCOUNT_ID: 'bar',
-              AWS_SQS_QUEUE_NAME: name,
-            }, {}, true);
+
+        it(`Testing ${name} against Excel`, async () => {
+          await main(input, {
+            AWS_REGION: 'foo',
+            AWS_ACCOUNT_ID: 'bar',
+            AWS_SQS_QUEUE_NAME: name,
+          }, {}, true);
+          if (queue) {
             if (!input.observation && queues[name]) {
               // eslint-disable-next-line no-param-reassign
               queues[name].forEach(({ record }) => delete record.eventTime);
             }
             const result = queues[name] || [];
             assert.deepStrictEqual(result, queue);
-          }).timeout(60000);
-        }
+          }
+        }).timeout(60000);
       }
     });
   });

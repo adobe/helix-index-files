@@ -74,3 +74,16 @@ indices:
     include:
       - /pages/jp/*
     target: https://adobe.sharepoint.com/excel-jp
+
+  unknown:
+    source: html
+    fetch: https://{repo}-{owner}.project-helix.page/{path}
+    include:
+      - /pages/**
+    exclude:
+      - '**/Document.*'
+    properties:
+      sourceHash:
+        select: head > meta[name="x-source-hash"]
+        value: |
+          attribute(el, 'content')
