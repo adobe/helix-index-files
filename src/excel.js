@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Adobe. All rights reserved.
+ * Copyright 2021 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -12,28 +12,24 @@
 
 'use strict';
 
-const { ServiceBusClient } = require('@azure/service-bus');
+const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
+const uuid = require('uuid');
 
 const mapResult = require('./mapResult.js');
 
-/**
- * Excel provider that assembles all excel based indices to optimize the number of
- * messages sent to the queue. It collects all the index update and delete
- * operations for a path and packs them into one message sent to the queue.
- */
 class Excel {
   constructor(params, configs, log) {
     const {
-      owner, repo, ref,
+      owner, repo,
+      AWS_REGION: region,
+      AWS_ACCOUNT_ID: accountId,
+      AWS_SQS_QUEUE_NAME: queueName = `https://sqs.${region}.amazonaws.com/${accountId}/helix-excel-${owner}-${repo}.fifo`,
     } = params;
 
-    const {
-      AZURE_SERVICE_BUS_CONN_STRING: connectionString,
-      AZURE_SERVICE_BUS_QUEUE_NAME: queueName = `excel-indexer/${owner}/${repo}/${ref}`,
-    } = params;
+    this._client = new SQSClient({ region });
 
-    this._connectionString = connectionString;
     this._queueName = queueName;
+    this._groupId = uuid.v4();
     this._log = log;
 
     this._deletes = [];
@@ -54,11 +50,6 @@ class Excel {
   static createProvider(params, configs, log) {
     const excel = new Excel(params, configs, log);
     return excel.indices;
-  }
-
-  async _init() {
-    this._sbClient = new ServiceBusClient(this._connectionString);
-    this._sender = this._sbClient.createSender(this._queueName);
   }
 
   /**
@@ -105,10 +96,13 @@ class Excel {
    */
   async _send(op) {
     try {
-      await this._init();
-      await this._sender.sendMessages({
-        body: op,
+      const command = new SendMessageCommand({
+        MessageBody: JSON.stringify(op),
+        MessageDeduplicationId: uuid.v4(),
+        MessageGroupId: this._groupId,
+        QueueUrl: this._queueName,
       });
+      await this._client.send(command);
       this._log.info(`Sent message to queue (${this._queueName}):`, op);
     } finally {
       await this._close();
@@ -116,11 +110,10 @@ class Excel {
   }
 
   async _close() {
-    if (this._sender) {
-      await this._sender.close();
-      await this._sbClient.close();
+    if (this._client) {
+      this._client.destroy();
 
-      this._sender = null;
+      this._client = null;
     }
   }
 
@@ -131,7 +124,7 @@ class Excel {
 
 module.exports = {
   name: 'Excel',
-  required: ['AZURE_SERVICE_BUS_CONN_STRING'],
+  required: ['AWS_REGION', 'AWS_ACCOUNT_ID', 'AWS_SQS_QUEUE_NAME'],
   match: (url) => url && /^https:\/\/[^/]+\.sharepoint\.com\//.test(url),
   create: (params, configs, log) => Excel.createProvider(params, configs, log),
 };

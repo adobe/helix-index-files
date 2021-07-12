@@ -25,17 +25,15 @@ const Change = require('./Change.js');
 const contains = require('./contains.js');
 const indexPipelines = require('./index-pipelines.js').run;
 
-const algolia = require('./providers/algolia.js');
-const azure = require('./providers/azure.js');
-const excel = require('./providers/excel.js');
-const mapResult = require('./providers/mapResult.js');
+const excel = require('./excel.js');
+const mapResult = require('./mapResult.js');
 const recordsWrap = require('./records-wrapper.js');
 
 /**
  * List of known index providers.
  */
 const providers = [
-  algolia, azure, excel,
+  excel,
 ];
 
 /**

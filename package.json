@@ -41,16 +41,14 @@
     "@adobe/helix-status": "9.1.6",
     "@adobe/helix-universal": "1.5.0",
     "@adobe/helix-universal-logger": "1.0.3",
-    "@azure/service-bus": "7.2.0",
-    "algoliasearch": "4.9.3",
+    "@aws-sdk/client-sqs": "3.21.0",
     "jsdom": "16.6.0",
     "jsep": "0.4.0",
     "lodash.flatten": "4.4.0",
     "lodash.pick": "4.4.0",
     "micromatch": "4.0.4",
     "moment": "2.29.1",
-    "request": "2.88.2",
-    "request-promise-native": "1.0.9",
+    "uuid": "8.3.2",
     "yaml": "1.10.2"
   },
   "devDependencies": {

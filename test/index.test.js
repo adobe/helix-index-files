@@ -22,9 +22,6 @@ const nock = require('nock');
 const p = require('path');
 const proxyquire = require('proxyquire');
 
-const AlgoliaIndex = require('./mock/AlgoliaIndex.js');
-const AzureIndex = require('./mock/AzureIndex.js');
-
 const { retrofit } = require('./utils.js');
 
 const SPEC_ROOT = p.resolve(__dirname, 'specs');
@@ -35,42 +32,38 @@ const SPEC_ROOT = p.resolve(__dirname, 'specs');
 const queues = [];
 
 /**
- * Replacement for ServiceBusClient.
- */
-const ServiceBusClient = require('./mock/ServiceBusClient.js')(queues);
-
-/**
- * Azure index
- */
-let azureIndex;
-
-/**
  * Proxy our real OW action and its requirements.
  *
  * @param {Function} invoke OW action to invoke
  */
 const { main: proxyMain } = proxyquire('../src/index.js', {
-  './providers/algolia.js': proxyquire('../src/providers/algolia.js', {
-    algoliasearch: () => ({
-      initIndex: (name) => new AlgoliaIndex(name),
-    }),
-  }),
-  './providers/excel.js': proxyquire('../src/providers/excel.js', {
-    '@azure/service-bus': {
-      ServiceBusClient,
-    },
-  }),
-  './providers/azure.js': proxyquire('../src/providers/azure.js', {
-    'request-promise-native': {
-      defaults: () => azureIndex,
-      get: (uri, opts) => azureIndex.get(uri, opts),
-      post: (uri, opts) => azureIndex.post(uri, opts),
+  '../src/excel.js': proxyquire('../src/excel.js', {
+    '@aws-sdk/client-sqs': {
+      SQSClient: class {
+        // eslint-disable-next-line class-methods-use-this
+        send({ input: { MessageBody, QueueUrl: name } }) {
+          if (!queues[name]) {
+            queues[name] = [];
+          }
+          queues[name].push(JSON.parse(MessageBody));
+        }
+
+        // eslint-disable-next-line class-methods-use-this
+        destroy() {
+          this._queue = null;
+        }
+      },
     },
   }),
 });
 
 describe('Index Tests', () => {
   const main = retrofit(proxyMain);
+  const env = {
+    AWS_REGION: 'foo',
+    AWS_ACCOUNT_ID: 'bar',
+    AWS_SQS_QUEUE_NAME: 'baz',
+  };
 
   before(async () => {
     nock('https://raw.githubusercontent.com')
@@ -87,14 +80,14 @@ describe('Index Tests', () => {
 
   describe('Argument checking', () => {
     it('index function returns 400 if owner/repo/ref is missing', async () => {
-      assert.strictEqual((await main({})).statusCode, 400);
+      assert.strictEqual((await main({}, env)).statusCode, 400);
       assert.strictEqual((await main({
         owner: 'foo',
-      })).statusCode, 400);
+      }, env)).statusCode, 400);
       assert.strictEqual((await main({
         owner: 'foo',
         repo: 'bar',
-      })).statusCode, 400);
+      }, env)).statusCode, 400);
     });
 
     it('index function returns 400 if path is missing', async () => {
@@ -102,7 +95,7 @@ describe('Index Tests', () => {
         owner: 'foo',
         repo: 'bar',
         ref: 'main',
-      })).statusCode, 400);
+      }, env)).statusCode, 400);
     });
 
     it('Indexing an incomplete document gives a 500', async () => {
@@ -111,10 +104,6 @@ describe('Index Tests', () => {
         repo: 'bar',
         ref: 'main',
         path: '/pages/en/incomplete.html',
-      };
-      const env = {
-        ALGOLIA_APP_ID: 'foo',
-        ALGOLIA_API_KEY: 'bar',
       };
       const res = await main(params, env);
       assert.strictEqual(res.statusCode, 500);
@@ -141,47 +130,6 @@ describe('Index Tests', () => {
       .persist();
   });
 
-  describe('Run tests against Algolia', () => {
-    const dir = p.resolve(SPEC_ROOT, 'units');
-    fse.readdirSync(dir).forEach((filename) => {
-      if (filename.endsWith('.json')) {
-        const name = filename.substring(0, filename.length - 5);
-        const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
-        it(`Testing ${name} against Algolia`, async () => {
-          const env = {
-            ALGOLIA_APP_ID: 'foo',
-            ALGOLIA_API_KEY: 'bar',
-          };
-          const [algolia] = JSON.parse((await main(input, env)).body);
-          delete algolia.name;
-          assert.deepStrictEqual(algolia, output);
-        }).timeout(60000);
-      }
-    });
-  });
-
-  describe('Run tests against Azure', () => {
-    beforeEach(() => {
-      azureIndex = new AzureIndex('azure');
-    });
-    const dir = p.resolve(SPEC_ROOT, 'units');
-    fse.readdirSync(dir).forEach((filename) => {
-      if (filename.endsWith('.json')) {
-        const name = filename.substring(0, filename.length - 5);
-        const { input, output } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
-        it(`Testing ${name} against Azure`, async () => {
-          const env = {
-            AZURE_SEARCH_API_KEY: 'foo',
-            AZURE_SEARCH_SERVICE_NAME: 'bar',
-          };
-          const [, azure] = JSON.parse((await main(input, env)).body);
-          delete azure.name;
-          assert.deepStrictEqual(azure, output);
-        }).timeout(60000);
-      }
-    });
-  });
-
   describe('Run tests against Excel', () => {
     /**
      * Excel pushes changes into a queue, so we don't check the immediate result, but
@@ -194,11 +142,11 @@ describe('Index Tests', () => {
         const { input, queue } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
         if (queue) {
           it(`Testing ${name} against Excel`, async () => {
-            const env = {
-              AZURE_SERVICE_BUS_CONN_STRING: 'foo',
-              AZURE_SERVICE_BUS_QUEUE_NAME: name,
-            };
-            await main(input, env, {}, true);
+            await main(input, {
+              AWS_REGION: 'foo',
+              AWS_ACCOUNT_ID: 'bar',
+              AWS_SQS_QUEUE_NAME: name,
+            }, {}, true);
             if (!input.observation && queues[name]) {
               // eslint-disable-next-line no-param-reassign
               queues[name].forEach(({ record }) => delete record.eventTime);
