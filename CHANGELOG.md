@@ -1,3 +1,15 @@
+# [4.0.0](https://github.com/adobe/helix-index-files/compare/v3.1.72...v4.0.0) (2021-07-14)
+
+
+### Features
+
+* support AWS SQS, remove other providers ([#365](https://github.com/adobe/helix-index-files/issues/365)) ([70a59d0](https://github.com/adobe/helix-index-files/commit/70a59d01ba69713e7b212685932b35b171e8282e))
+
+
+### BREAKING CHANGES
+
+* Removes support for Azure, Algolia and Excel via Azure Tables
+
 ## [3.1.72](https://github.com/adobe/helix-index-files/compare/v3.1.71...v3.1.72) (2021-07-11)
 
 
