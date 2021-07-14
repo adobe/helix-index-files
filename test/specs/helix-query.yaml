@@ -1,119 +1,6 @@
 version: 1
 ​
 indices:
-  algolia:
-    source: html
-    fetch: https://{repo}-{owner}.project-helix.page/{path}
-    include:
-      - /pages/**
-    exclude:
-      - '**/Document.*'
-    properties:
-      author:
-        select: main > div:nth-of-type(3) > p:nth-of-type(1)
-        value: |
-          match(el, 'by (.*)')
-        faceted: true
-      title:
-        select: h1:first-of-type
-        value: |
-          textContent(el)
-      date:
-        select: main > div:nth-of-type(3)
-        value: |
-          parseTimestamp(el, '[POSTED ON] MM-DD-YYYY')
-      topics:
-        select: main > div:last-of-type > p:first-of-type
-        values: |
-          match(el, '(Topics: )? ([^,]+)')
-      products:
-        select: main > div:last-of-type > p:nth-of-type(2)
-        values: |
-          match(el, '(Products: )? ([^,]+)')
-      hero:
-        select: main > div:nth-of-type(2) img:first-of-type
-        value: |
-          attribute(el, 'src')
-      paragraph:
-        select: main > div:nth-of-type(5)
-        value: |
-          innerHTML(el)
-      teaser:
-        select: main > div:nth-child(n+4) p
-        value: |
-          words(textContent(el), 0, 20)
-      sourceHash:
-        select: head > meta[name="x-source-hash"]
-        value: |
-          attribute(el, 'content')
-        faceted: true
-      external-path:
-        select: none
-        value: |
-          replace(path, '/test/specs/', '/')
-      last-modified:
-        select: none
-        value: |
-          parseTimestamp(headers['last-modified'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
-      missing-header:
-        select: none
-        value: |
-          parseTimestamp(headers['date'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
-      condition-unsupported:
-        select: meta[name="x-source-hash"]
-        value: |
-          attribute(el, 'content') ? attribute(el, 'content') : 'missing'
-      call-unknown-function:
-        select: meta[name="x-source-hash"]
-        value: |
-          unknown(el, 'content')
-      member-unknown-var:
-        select: none
-        value: |
-          myobj['prop']
-
-  azure:
-    source: html
-    fetch: https://{repo}-{owner}.project-helix.page/{path}
-    include:
-      - /pages/**
-    exclude:
-      - '**/Document.*'
-    target: azure:default
-    properties:
-      author:
-        select: main > div:nth-of-type(3) > p:nth-of-type(1)
-        value: |
-          match(el, 'by (.*)')
-      title:
-        select: h1:first-of-type
-        value: |
-          textContent(el)
-      date:
-        select: main > div:nth-of-type(3)
-        value: |
-          parseTimestamp(el, '[POSTED ON] MM-DD-YYYY')
-      topics:
-        select: main > div:last-of-type > p:first-of-type
-        values: |
-          match(el, '(Topics: )? ([^,]+)')
-      products:
-        select: main > div:last-of-type > p:nth-of-type(2)
-        values: |
-          match(el, '(Products: )? ([^,]+)')
-      hero:
-        select: main > div:nth-of-type(2) img:first-of-type
-        value: |
-          attribute(el, 'src')
-      teaser:
-        select: main > div:nth-child(n+4) p
-        value: |
-          words(textContent(el), 0, 20)
-      sourceHash:
-        select: head > meta[name="x-source-hash"]
-        value: |
-          attribute(el, 'content')
-
   excel: &default
     source: html
     fetch: https://{repo}-{owner}.project-helix.page/{path}
@@ -143,6 +30,38 @@ indices:
         select: head > meta[name="x-source-hash"]
         value: |
           attribute(el, 'content')
+      external-path:
+        select: none
+        value: |
+          replace(path, '/test/specs/', '/')
+      paragraph:
+        select: main > div:nth-of-type(5)
+        value: |
+          innerHTML(el)
+      teaser:
+        select: main > div:nth-child(n+4) p
+        value: |
+          words(textContent(el), 0, 20)
+      last-modified:
+        select: none
+        value: |
+          parseTimestamp(headers['last-modified'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
+      missing-header:
+        select: none
+        value: |
+          parseTimestamp(headers['date'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
+      condition-unsupported:
+        select: meta[name="x-source-hash"]
+        value: |
+          attribute(el, 'content') ? attribute(el, 'content') : 'missing'
+      call-unknown-function:
+        select: meta[name="x-source-hash"]
+        value: |
+          unknown(el, 'content')
+      member-unknown-var:
+        select: none
+        value: |
+          myobj['prop']
 
   excel-de:
     <<: *default
@@ -155,3 +74,16 @@ indices:
     include:
       - /pages/jp/*
     target: https://adobe.sharepoint.com/excel-jp
+
+  unknown:
+    source: html
+    fetch: https://{repo}-{owner}.project-helix.page/{path}
+    include:
+      - /pages/**
+    exclude:
+      - '**/Document.*'
+    properties:
+      sourceHash:
+        select: head > meta[name="x-source-hash"]
+        value: |
+          attribute(el, 'content')

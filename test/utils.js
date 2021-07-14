@@ -27,6 +27,9 @@ function retrofit(fn) {
       // eslint-disable-next-line no-underscore-dangle
       log: params.__ow_logger,
       invocation,
+      runtime: {
+        name: 'simulate',
+      },
     };
     let req;
     if (!sqs) {

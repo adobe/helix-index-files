@@ -15,30 +15,16 @@
 'use strict';
 
 const mapResult = {
-  created: (path, update) => ({
-    status: 201,
-    path,
-    update,
-  }),
   accepted: (attributes, update) => ({
     status: 202,
     update,
     ...attributes,
   }),
-  moved: (path, oldLocation, update) => ({
-    status: 301,
-    path,
-    movedFrom: oldLocation,
-    update,
+  notFound: (attributes) => ({
+    status: 404,
+    path: attributes.path,
+    reason: `Item not found with path: ${attributes.path}`,
   }),
-  notFound: (attributes, gone) => {
-    const name = 'path' in attributes ? 'path' : 'sourceHash';
-    return {
-      status: gone ? 204 : 404,
-      [name]: attributes[name],
-      reason: `Item ${gone ? 'gone' : 'not found'} with ${name}: ${attributes[name]}`,
-    };
-  },
   error: (path, reason) => ({
     status: 500,
     path,
