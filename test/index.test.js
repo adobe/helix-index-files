@@ -37,7 +37,7 @@ const queues = [];
  * @param {Function} invoke OW action to invoke
  */
 const { main: proxyMain } = proxyquire('../src/index.js', {
-  '../src/excel.js': proxyquire('../src/excel.js', {
+  './excel.js': proxyquire('../src/excel.js', {
     '@aws-sdk/client-sqs': {
       SQSClient: class {
         // eslint-disable-next-line class-methods-use-this
