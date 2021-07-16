@@ -60,7 +60,7 @@ describe('Outdated tests', () => {
     assert.strictEqual(result, false);
   });
 
-  it('returns true if change.time is older than the document`s last modification time', () => {
+  it('returns true if change.time is more recent than the document`s last modification time', () => {
     const result = isOutdated(
       { sourceHash: 'x' },
       new Headers({ 'Last-Modified': 'Mon, 22 Feb 2021 15:28:00 GMT' }),
