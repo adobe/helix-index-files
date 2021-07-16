@@ -117,10 +117,22 @@ describe('Index Tests', () => {
       };
       await assert.rejects(async () => main(params, env), /statusCode: 504/);
     }).timeout(60000);
+
+    it('Indexing a document that throws an error in fetch() rejects with a 500', async () => {
+      const params = {
+        owner: 'foo',
+        repo: 'bar',
+        ref: 'main',
+        path: '/pages/en/error.html',
+      };
+      await assert.rejects(async () => main(params, env), /statusCode: 500/);
+    }).timeout(60000);
   });
 
   before(async () => {
     nock('https://bar-foo.project-helix.page')
+      .get((uri) => uri.endsWith('/error.html'))
+      .replyWithError(new Error('Oops'))
       .get((uri) => uri.startsWith('/pages'))
       .reply((uri) => {
         let path = p.resolve(SPEC_ROOT, uri.substr(1));
