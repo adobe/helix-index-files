@@ -94,11 +94,13 @@ async function fetchHTML(url, log) {
   if (!resp.ok) {
     const snippet = body < 100 ? body : `${body.substr(0, 100)}...`;
     const message = `Fetching ${url.href} failed: statusCode: ${resp.status}, body: '${snippet}'`;
+    log.warn(message);
     return { error: { path: url.pathname, status: resp.status, message } };
   }
   const s = body.trim();
   if (s.substring(s.length - 7).toLowerCase() !== '</html>') {
     const message = `Document returned from ${url.href} seems incomplete (html end tag not found)`;
+    log.warn(message);
     return { error: { path: url.pathname, status: 500, message } };
   }
   return { body, headers: new Headers(resp.headers) };
