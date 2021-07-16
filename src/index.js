@@ -141,7 +141,7 @@ async function handleDelete({ config, handler }, change, log) {
   if (!handler) {
     return {
       status: 400,
-      reason: 'Handler not available, parameters missing or target unsuitable',
+      message: 'Handler not available, parameters missing or target unsuitable',
     };
   }
   try {
@@ -150,7 +150,7 @@ async function handleDelete({ config, handler }, change, log) {
     log.error(`An error occurred deleting record ${change.uid} in ${config.name}`, e);
     return {
       status: 500,
-      reason: e.message,
+      message: e.message,
     };
   }
 }
@@ -203,7 +203,7 @@ async function handleUpdate({
   if (!handler) {
     return {
       status: 400,
-      reason: 'Handler not available, parameters missing or target unsuitable',
+      message: 'Handler not available, parameters missing or target unsuitable',
     };
   }
   if (!url) {
@@ -220,13 +220,13 @@ async function handleUpdate({
         log.error(`An error occurred deleting record ${change.uid} in ${config.name}`, e);
         return {
           status: 500,
-          reason: e.message,
+          message: e.message,
         };
       }
     }
     return {
       status: 404,
-      reason: `Item path not in index definition: ${change.path}`,
+      message: `Item path not in index definition: ${change.path}`,
     };
   }
   const { error } = body;
@@ -256,7 +256,7 @@ async function handleUpdate({
     log.error(`An error occurred updating record ${path} in ${config.name}`, e);
     return {
       status: 500,
-      reason: e.message,
+      message: e.message,
     };
   }
 }
@@ -359,11 +359,15 @@ async function main(req, context) {
     ));
   }
   const results = flatten(responses);
-  const status = results.reduce(
-    (curr, r) => (r.status >= 500 ? r.status : curr), 207,
-  );
+  const failure = results.find((r) => r.status >= 500);
+  if (failure) {
+    const e = new Error(failure.message);
+    e.status = failure.status;
+    e.path = failure.path;
+    throw e;
+  }
   return new Response(JSON.stringify(results, null, 2), {
-    status,
+    status: 207,
   });
 }
 
@@ -372,5 +376,4 @@ module.exports.main = wrap(main)
   .with(bodyData)
   .with(recordsWrap)
   .with(helixStatus)
-  .with(logger.trace)
   .with(logger);
