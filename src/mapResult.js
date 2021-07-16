@@ -25,8 +25,8 @@ const mapResult = {
     path: attributes.path,
     message: `Item not found with path: ${attributes.path}`,
   }),
-  error: (path, message) => ({
-    status: 500,
+  error: (status, path, message) => ({
+    status,
     path,
     message,
   }),

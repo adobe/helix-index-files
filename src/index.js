@@ -241,12 +241,12 @@ async function handleUpdate({
       if (!record.sourceHash) {
         const message = `Unable to update ${path}: sourceHash in indexed document is empty.`;
         log.warn(message);
-        return mapResult.error(path, message);
+        return mapResult.error(400, path, message);
       }
       if (isOutdated(record, headers, change)) {
         const message = `Unable to update ${path}: indexed record is outdated.`;
         log.warn(message);
-        return mapResult.error(path, message);
+        return mapResult.error(409, path, message);
       }
     }
     return record

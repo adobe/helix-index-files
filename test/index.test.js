@@ -105,7 +105,7 @@ describe('Index Tests', () => {
         ref: 'main',
         path: '/pages/en/incomplete.html',
       };
-      await assert.rejects(async () => main(params, env), /statusCode: 500/);
+      await assert.rejects(async () => main(params, env), /incomplete/);
     }).timeout(60000);
 
     it('Indexing a document with a gateway timeout rejects with a 504', async () => {
