@@ -1,3 +1,10 @@
+## [4.0.1](https://github.com/adobe/helix-index-files/compare/v4.0.0...v4.0.1) (2021-07-17)
+
+
+### Bug Fixes
+
+* a 50x should be reported as invocation failure ([#366](https://github.com/adobe/helix-index-files/issues/366)) ([c16cd6e](https://github.com/adobe/helix-index-files/commit/c16cd6ee372b14d4af012c642f17b86698e72fe3))
+
 # [4.0.0](https://github.com/adobe/helix-index-files/compare/v3.1.72...v4.0.0) (2021-07-14)
 
 
