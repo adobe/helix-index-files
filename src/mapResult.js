@@ -23,12 +23,12 @@ const mapResult = {
   notFound: (attributes) => ({
     status: 404,
     path: attributes.path,
-    reason: `Item not found with path: ${attributes.path}`,
+    message: `Item not found with path: ${attributes.path}`,
   }),
-  error: (path, reason) => ({
-    status: 500,
+  error: (status, path, message) => ({
+    status,
     path,
-    reason,
+    message,
   }),
 };
 

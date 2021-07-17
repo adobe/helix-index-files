@@ -98,20 +98,41 @@ describe('Index Tests', () => {
       }, env)).statusCode, 400);
     });
 
-    it('Indexing an incomplete document gives a 500', async () => {
+    it('Indexing an incomplete document rejects with a 500', async () => {
       const params = {
         owner: 'foo',
         repo: 'bar',
         ref: 'main',
         path: '/pages/en/incomplete.html',
       };
-      const res = await main(params, env);
-      assert.strictEqual(res.statusCode, 500);
+      await assert.rejects(async () => main(params, env), /incomplete/);
+    }).timeout(60000);
+
+    it('Indexing a document with a gateway timeout rejects with a 504', async () => {
+      const params = {
+        owner: 'foo',
+        repo: 'bar',
+        ref: 'main',
+        path: '/pages/en/gateway.html',
+      };
+      await assert.rejects(async () => main(params, env), /statusCode: 504/);
+    }).timeout(60000);
+
+    it('Indexing a document that throws an error in fetch() rejects with a 500', async () => {
+      const params = {
+        owner: 'foo',
+        repo: 'bar',
+        ref: 'main',
+        path: '/pages/en/error.html',
+      };
+      await assert.rejects(async () => main(params, env), /statusCode: 500/);
     }).timeout(60000);
   });
 
   before(async () => {
     nock('https://bar-foo.project-helix.page')
+      .get((uri) => uri.endsWith('/error.html'))
+      .replyWithError(new Error('Oops'))
       .get((uri) => uri.startsWith('/pages'))
       .reply((uri) => {
         let path = p.resolve(SPEC_ROOT, uri.substr(1));
@@ -122,10 +143,14 @@ describe('Index Tests', () => {
         if (!fse.existsSync(path)) {
           return [404, `File not found: ${path}`];
         }
-        return [200, fse.readFileSync(path, 'utf-8'), {
-          'last-modified': 'Mon, 22 Feb 2021 15:28:00 GMT',
-          server: 'nock',
-        }];
+        const metadata = `${path}.json`;
+        let status = 200;
+        let headers = { 'last-modified': 'Mon, 22 Feb 2021 15:28:00 GMT' };
+
+        if (fse.existsSync(metadata)) {
+          ({ status, headers } = fse.readJSONSync(metadata));
+        }
+        return [status, fse.readFileSync(path, 'utf-8'), headers];
       })
       .persist();
   });

@@ -28,6 +28,7 @@ const indexPipelines = require('./index-pipelines.js').run;
 const excel = require('./excel.js');
 const mapResult = require('./mapResult.js');
 const recordsWrap = require('./records-wrapper.js');
+const { isOutdated } = require('./utils.js');
 
 /**
  * List of known index providers.
@@ -141,7 +142,7 @@ async function handleDelete({ config, handler }, change, log) {
   if (!handler) {
     return {
       status: 400,
-      reason: 'Handler not available, parameters missing or target unsuitable',
+      message: 'Handler not available, parameters missing or target unsuitable',
     };
   }
   try {
@@ -150,44 +151,9 @@ async function handleDelete({ config, handler }, change, log) {
     log.error(`An error occurred deleting record ${change.uid} in ${config.name}`, e);
     return {
       status: 500,
-      reason: e.message,
+      message: e.message,
     };
   }
-}
-
-/**
- * Return a flag indicating whether a index record contains outdated data. This
- * is true if:
- *
- * - the change UID and the HTML UID (or source hash) are different
- * - the change event time is later than the last modified of the HTML
- *
- * In that case, the change reported relates to a different and more recent
- * item, so we shouldn't add an index record for an outdated item.
- *
- * @returns true if the record is outdated and shouldn't be used for indexing
- */
-function isOutdated(record, headers, change) {
-  if (!change.uid || record.sourceHash === change.uid) {
-    // this is consistent
-    return false;
-  }
-  const lastModified = headers.get('last-modified');
-  if (!lastModified || !change.time) {
-    // unable to determine whether there is a discrepancy without dates
-    return false;
-  }
-  const lastModifiedMs = Date.parse(lastModified);
-  if (Number.isNaN(lastModifiedMs)) {
-    // last modified date is unusable
-    return false;
-  }
-  const eventTimeMs = Date.parse(change.time);
-  if (Number.isNaN(eventTimeMs)) {
-    // event time is unusable
-    return false;
-  }
-  return eventTimeMs > lastModifiedMs;
 }
 
 /**
@@ -203,7 +169,7 @@ async function handleUpdate({
   if (!handler) {
     return {
       status: 400,
-      reason: 'Handler not available, parameters missing or target unsuitable',
+      message: 'Handler not available, parameters missing or target unsuitable',
     };
   }
   if (!url) {
@@ -220,13 +186,13 @@ async function handleUpdate({
         log.error(`An error occurred deleting record ${change.uid} in ${config.name}`, e);
         return {
           status: 500,
-          reason: e.message,
+          message: e.message,
         };
       }
     }
     return {
       status: 404,
-      reason: `Item path not in index definition: ${change.path}`,
+      message: `Item path not in index definition: ${change.path}`,
     };
   }
   const { error } = body;
@@ -241,12 +207,12 @@ async function handleUpdate({
       if (!record.sourceHash) {
         const message = `Unable to update ${path}: sourceHash in indexed document is empty.`;
         log.warn(message);
-        return mapResult.error(path, message);
+        return mapResult.error(400, path, message);
       }
       if (isOutdated(record, headers, change)) {
         const message = `Unable to update ${path}: indexed record is outdated.`;
         log.warn(message);
-        return mapResult.error(path, message);
+        return mapResult.error(409, path, message);
       }
     }
     return record
@@ -256,7 +222,7 @@ async function handleUpdate({
     log.error(`An error occurred updating record ${path} in ${config.name}`, e);
     return {
       status: 500,
-      reason: e.message,
+      message: e.message,
     };
   }
 }
@@ -359,11 +325,15 @@ async function main(req, context) {
     ));
   }
   const results = flatten(responses);
-  const status = results.reduce(
-    (curr, r) => (r.status >= 500 ? r.status : curr), 207,
-  );
+  const failure = results.find((r) => r.status >= 500);
+  if (failure) {
+    const e = new Error(failure.message);
+    e.status = failure.status;
+    e.path = failure.path;
+    throw e;
+  }
   return new Response(JSON.stringify(results, null, 2), {
-    status,
+    status: 207,
   });
 }
 
@@ -372,5 +342,4 @@ module.exports.main = wrap(main)
   .with(bodyData)
   .with(recordsWrap)
   .with(helixStatus)
-  .with(logger.trace)
   .with(logger);
