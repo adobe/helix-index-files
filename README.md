@@ -14,20 +14,39 @@
 
 The following components are required before installation:
 
+1. An AWS SQS FIFO queue, used as destination (see next section for more details)
 1. A GitHub repository with your `helix-query.yaml` configuration
-2. A IaaS provider: either Algolia, Azure Search or an Excel workbook in SharePoint
+1. One or more Excel workbooks in SharePoint that will contain the indexed records
 
-If all of this is given, deploy the OpenWhisk action in a package of your choice. For more
+If all of this is given, deploy the AWS Lambda action. For more
 information on the parameters expected by the action, see the next section.
 ## Usage
 
-The following parameters should be passed when invoking the action manually:
+The following parameters are expected by the action:
 - `owner`: GitHub repository owner
 - `repo`: GitHub repository name
 - `ref`: GitHub repository reference or branch
 - `path`: path to the document to be indexed
 
-Note: the first three parameters also determine the location where the `helix-query.yaml` configuration file is downloaded from.
+Note: the first three parameters also determine the location where the `helix-query.yaml` configuration file is downloaded from. The Excel
+Workbook updated is determined by the `target` property in your index definition, located in the same file.
+
+The AWS SQS FIFO destination queue's name is given as:
+```
+https://sqs.<aws-region>.amazonaws.com/<aws-account>/helix-excel--<owner>--<repo>.fifo
+```
+
+The action will store indexed records in that queue, ready to be picked up by [Helix Excel Indexer](https://github.com/adobe/helix-excel-indexer)
+
+## Automatic invocation with changes in SharePoint
+
+This action can be invoked automatically when documents in SharePoint are created, deleted or modified. This requires a simultaneous deployment
+of the [Helix OneDrive Listener](https://github.com/adobe/helix-onedrive-listener). This is how to proceed:
+
+1. Determine the queue for sending changes processed by `Helix Onedrive Listener`, it should be named `helix-onedrive--<owner>--<repo>`
+2. Add a trigger to that queue, that automatically invokes this action, with a batch size of `1`
+3. Optionally, add a dead letter queue, with a non-zero delivery count, so the action is re-executed if
+   there's an intermittent error preventing the document to be indexed
 
 ## Reference
 
