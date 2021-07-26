@@ -16,11 +16,12 @@ const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 const uuid = require('uuid');
 
 const mapResult = require('./mapResult.js');
+const { getFetchURL } = require('./utils.js');
 
 class Excel {
   constructor(params, configs, log) {
     const {
-      owner, repo,
+      owner, repo, ref,
       AWS_REGION: region,
       AWS_ACCOUNT_ID: accountId,
       AWS_SQS_QUEUE_NAME: queueName = `https://sqs.${region}.amazonaws.com/${accountId}/helix-excel--${owner}--${repo}.fifo`,
@@ -29,6 +30,9 @@ class Excel {
     log.info(`Using SQS client on: ${queueName}`);
     this._client = new SQSClient({ region });
 
+    this._owner = owner;
+    this._repo = repo;
+    this._ref = ref;
     this._queueName = queueName;
     this._groupId = uuid.v4();
     this._log = log;
@@ -37,6 +41,7 @@ class Excel {
     this._indices = configs.map((config) => ({
       update: async (record) => this._update(config.name, record),
       delete: async (attributes) => this._delete(attributes),
+      status: async (record) => this._status(config, record),
     }));
   }
 
@@ -51,6 +56,30 @@ class Excel {
   static createProvider(params, configs, log) {
     const excel = new Excel(params, configs, log);
     return excel.indices;
+  }
+
+  /**
+   * Return status about a given index and record.
+   * @param {string} config index configuration
+   * @param {object} record record to return status about
+   * @returns web response
+   */
+  async _status(config, record) {
+    const { path } = record;
+    const url = getFetchURL({
+      config, owner: this._owner, repo: this._repo, ref: this._ref, path,
+    });
+    if (url) {
+      return {
+        status: 200,
+        path,
+        fetch: url.href,
+      };
+    }
+    return {
+      status: 404,
+      message: `Item path not in index definition: ${path}`,
+    };
   }
 
   /**

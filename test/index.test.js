@@ -80,22 +80,20 @@ describe('Index Tests', () => {
 
   describe('Argument checking', () => {
     it('index function returns 400 if owner/repo/ref is missing', async () => {
-      assert.strictEqual((await main({}, env)).statusCode, 400);
-      assert.strictEqual((await main({
-        owner: 'foo',
-      }, env)).statusCode, 400);
-      assert.strictEqual((await main({
-        owner: 'foo',
-        repo: 'bar',
-      }, env)).statusCode, 400);
+      assert.strictEqual((await main({ env })).statusCode, 400);
+      assert.strictEqual((await main({ params: { owner: 'foo' }, env })).statusCode, 400);
+      assert.strictEqual((await main({ params: { owner: 'foo', repo: 'bar' }, env })).statusCode, 400);
     });
 
     it('index function returns 400 if path is missing', async () => {
       assert.strictEqual((await main({
-        owner: 'foo',
-        repo: 'bar',
-        ref: 'main',
-      }, env)).statusCode, 400);
+        params: {
+          owner: 'foo',
+          repo: 'bar',
+          ref: 'main',
+        },
+        env,
+      })).statusCode, 400);
     });
 
     it('Indexing an incomplete document rejects with a 500', async () => {
@@ -105,7 +103,7 @@ describe('Index Tests', () => {
         ref: 'main',
         path: '/pages/en/incomplete.html',
       };
-      await assert.rejects(async () => main(params, env), /incomplete/);
+      await assert.rejects(async () => main({ params, env }), /incomplete/);
     }).timeout(60000);
 
     it('Indexing a document with a gateway timeout rejects with a 504', async () => {
@@ -115,7 +113,7 @@ describe('Index Tests', () => {
         ref: 'main',
         path: '/pages/en/gateway.html',
       };
-      await assert.rejects(async () => main(params, env), /statusCode: 504/);
+      await assert.rejects(async () => main({ params, env }), /statusCode: 504/);
     }).timeout(60000);
 
     it('Indexing a document that throws an error in fetch() rejects with a 500', async () => {
@@ -125,8 +123,38 @@ describe('Index Tests', () => {
         ref: 'main',
         path: '/pages/en/error.html',
       };
-      await assert.rejects(async () => main(params, env), /statusCode: 500/);
+      await assert.rejects(async () => main({ params, env }), /statusCode: 500/);
     }).timeout(60000);
+  });
+
+  it('Testing status', async () => {
+    const params = {
+      owner: 'foo',
+      repo: 'bar',
+      ref: 'main',
+      path: '/pages/en/brown.html',
+    };
+    const result = await main({
+      method: 'GET',
+      params,
+      env,
+    });
+    assert.strictEqual(result.statusCode, 207);
+  });
+
+  it('Testing other method', async () => {
+    const params = {
+      owner: 'foo',
+      repo: 'bar',
+      ref: 'main',
+      path: '/pages/en/brown.html',
+    };
+    const result = await main({
+      method: 'DELETE',
+      params,
+      env,
+    });
+    assert.strictEqual(result.statusCode, 405);
   });
 
   before(async () => {
@@ -167,11 +195,16 @@ describe('Index Tests', () => {
         const { input, queue } = fse.readJSONSync(p.resolve(dir, filename), 'utf8');
 
         it(`Testing ${name} against Excel`, async () => {
-          await main(input, {
-            AWS_REGION: 'foo',
-            AWS_ACCOUNT_ID: 'bar',
-            AWS_SQS_QUEUE_NAME: name,
-          }, {}, true);
+          const records = [{ body: JSON.stringify(input) }];
+          await main({
+            method: null,
+            records,
+            env: {
+              AWS_REGION: 'foo',
+              AWS_ACCOUNT_ID: 'bar',
+              AWS_SQS_QUEUE_NAME: name,
+            },
+          });
           if (queue) {
             if (!input.observation && queues[name]) {
               // eslint-disable-next-line no-param-reassign
