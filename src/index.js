@@ -22,13 +22,12 @@ const { wrap: helixStatus } = require('@adobe/helix-status');
 const { Response } = require('@adobe/helix-universal');
 
 const Change = require('./Change.js');
-const contains = require('./contains.js');
 const indexPipelines = require('./index-pipelines.js').run;
 
 const excel = require('./excel.js');
 const mapResult = require('./mapResult.js');
 const recordsWrap = require('./records-wrapper.js');
-const { isOutdated } = require('./utils.js');
+const { getFetchURL, isOutdated } = require('./utils.js');
 
 /**
  * List of known index providers.
@@ -132,7 +131,32 @@ function getChange(params) {
 }
 
 /**
- * Handle deletion of an item for all index handlers.
+ * Handle status of an item for an index handlers.
+ *
+ * @param {object} param0 parameters
+ * @param {Change} change change containing deletion
+ * @param {object} log logger
+ */
+async function handleStatus({ config, handler }, change, log) {
+  if (!handler) {
+    return {
+      status: 400,
+      message: 'Handler not available, parameters missing or target unsuitable',
+    };
+  }
+  try {
+    return await handler.status({ path: change.path });
+  } catch (e) {
+    log.error(`An error obtaining status for ${change.path} in ${config.name}`, e);
+    return {
+      status: 500,
+      message: e.message,
+    };
+  }
+}
+
+/**
+ * Handle deletion of an item for an index handlers.
  *
  * @param {object} param0 parameters
  * @param {Change} change change containing deletion
@@ -228,21 +252,6 @@ async function handleUpdate({
 }
 
 /**
- * Replace an extension in a path. If the path has no extension,
- * nothing is replaced.
- *
- * @param {string} path path
- * @param {string} ext extension
- */
-function replaceExt(path, ext) {
-  const dot = path.lastIndexOf('.');
-  if (dot > path.lastIndexOf('/')) {
-    return `${path.substr(0, dot)}.${ext}`;
-  }
-  return path;
-}
-
-/**
  * Run indexing for all indices configured.
  *
  * @param {object} indices index configurations
@@ -260,14 +269,9 @@ async function runPipeline(indices, change, params, log) {
     .map(({ config, handler }) => ({
       config,
       handler,
-      url: handler && contains(config, change.path)
-        ? new URL(config.fetch
-          .replace(/\{owner\}/g, owner)
-          .replace(/\{repo\}/g, repo)
-          .replace(/\{ref\}/g, ref)
-          .replace(/\{path\}/g, replaceExt(change.path, config.source))
-          .replace(/(?<!:)\/\/+/g, '/')) // remove multiple slashes not preceded by colon
-        : null,
+      url: handler && getFetchURL({
+        config, owner, repo, ref, path: change.path,
+      }),
     }));
   await Promise.all(values
     .filter((value) => value.url)
@@ -313,16 +317,32 @@ async function main(req, context) {
     AWS_REGION: region, AWS_ACCOUNT_ID: accountId, ...env, owner, repo, ref,
   }, log);
 
+  const method = req.method.toUpperCase();
   let responses;
-  if (change.deleted) {
+
+  if (method === 'GET') {
     responses = await Promise.all(indices.map(
-      async (index) => ({ name: index.config.name, ...await handleDelete(index, change, log) }),
+      async (index) => (
+        { name: index.config.name, ...await handleStatus(index, change, log) }
+      ),
     ));
+  } else if (method === 'POST') {
+    if (change.deleted) {
+      responses = await Promise.all(indices.map(
+        async (index) => (
+          { name: index.config.name, ...await handleDelete(index, change, log) }
+        ),
+      ));
+    } else {
+      const records = await runPipeline(indices, change, context.data, log);
+      responses = await Promise.all(records.map(
+        async (record) => (
+          { name: record.config.name, ...await handleUpdate(record, change, log) }
+        ),
+      ));
+    }
   } else {
-    const records = await runPipeline(indices, change, context.data, log);
-    responses = await Promise.all(records.map(
-      async (record) => ({ name: record.config.name, ...await handleUpdate(record, change, log) }),
-    ));
+    return new Response('Method not allowed', { status: 405 });
   }
   const results = flatten(responses);
   const failure = results.find((r) => r.status >= 500);

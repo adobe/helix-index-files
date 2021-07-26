@@ -12,6 +12,8 @@
 
 'use strict';
 
+const contains = require('./contains.js');
+
 /**
  * Return a flag indicating whether a index record contains outdated data. This
  * is true if:
@@ -47,6 +49,38 @@ function isOutdated(record, headers, change) {
   return eventTimeMs > lastModifiedMs;
 }
 
+/**
+ * Replace an extension in a path. If the path has no extension,
+ * nothing is replaced.
+ *
+ * @param {string} path path
+ * @param {string} ext extension
+ */
+function replaceExt(path, ext) {
+  const dot = path.lastIndexOf('.');
+  if (dot > path.lastIndexOf('/')) {
+    return `${path.substr(0, dot)}.${ext}`;
+  }
+  return path;
+}
+
+/**
+ * Determine fetch URL.
+ */
+function getFetchURL({
+  config, owner, repo, ref, path,
+}) {
+  return contains(config, path)
+    ? new URL(config.fetch
+      .replace(/\{owner\}/g, owner)
+      .replace(/\{repo\}/g, repo)
+      .replace(/\{ref\}/g, ref)
+      .replace(/\{path\}/g, replaceExt(path, config.source))
+      .replace(/(?<!:)\/\/+/g, '/')) // remove multiple slashes not preceded by colon
+    : null;
+}
+
 module.exports = {
+  getFetchURL,
   isOutdated,
 };

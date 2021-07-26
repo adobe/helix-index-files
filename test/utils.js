@@ -15,34 +15,33 @@
 const { Request } = require('@adobe/helix-fetch');
 
 function retrofit(fn) {
-  const resolver = {
-    createURL({ package: pkg, name, version }) {
-      return new URL(`https://adobeioruntime.net/api/v1/web/helix/${pkg}/${name}@${version}`);
-    },
-  };
-  return async (params = {}, env = {}, invocation = {}, sqs = false) => {
+  return async ({
+    method = 'POST', params = null, env = {}, records = null,
+  }) => {
     const context = {
-      resolver,
-      env,
-      // eslint-disable-next-line no-underscore-dangle
-      log: params.__ow_logger,
-      invocation,
-      runtime: {
-        name: 'simulate',
-      },
+      env, invocation: {}, runtime: { name: 'simulate' }, records,
     };
-    let req;
-    if (!sqs) {
-      req = new Request('https://helix-service.com/publish', {
-        method: 'POST',
-        body: params,
-      });
-    } else {
-      req = new Request('https://helix-service.com/publish');
-      context.records = [{
-        body: JSON.stringify(params),
-      }];
+
+    let url = 'https://helix-service.com/publish';
+    let body = null;
+
+    if (params) {
+      if (method === 'GET') {
+        const searchParams = new URLSearchParams();
+        Object.getOwnPropertyNames(params).forEach((k) => {
+          searchParams.append(k, params[k]);
+        });
+        url = `${url}?${searchParams.toString()}`;
+      } else {
+        body = params;
+      }
     }
+
+    const req = new Request(url, {
+      method,
+      body,
+    });
+
     const resp = await fn(req, context);
     return {
       statusCode: resp.status,
