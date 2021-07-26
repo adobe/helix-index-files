@@ -1,3 +1,10 @@
+# [4.1.0](https://github.com/adobe/helix-index-files/compare/v4.0.3...v4.1.0) (2021-07-26)
+
+
+### Features
+
+* show status when method is GET ([#369](https://github.com/adobe/helix-index-files/issues/369)) ([f22b133](https://github.com/adobe/helix-index-files/commit/f22b133529f6a489d17c6f420762df362bcc7348))
+
 ## [4.0.3](https://github.com/adobe/helix-index-files/compare/v4.0.2...v4.0.3) (2021-07-24)
 
 
