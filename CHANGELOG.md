@@ -1,3 +1,10 @@
+## [4.1.1](https://github.com/adobe/helix-index-files/compare/v4.1.0...v4.1.1) (2021-08-01)
+
+
+### Bug Fixes
+
+* **deps:** update external fixes ([#370](https://github.com/adobe/helix-index-files/issues/370)) ([d30158e](https://github.com/adobe/helix-index-files/commit/d30158e0be4218b951a9ff2c47f014522b20700e))
+
 # [4.1.0](https://github.com/adobe/helix-index-files/compare/v4.0.3...v4.1.0) (2021-07-26)
 
 
