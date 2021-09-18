@@ -41,7 +41,7 @@
     "@adobe/helix-status": "9.1.6",
     "@adobe/helix-universal": "1.6.5",
     "@adobe/helix-universal-logger": "1.0.3",
-    "@aws-sdk/client-sqs": "3.31.0",
+    "@aws-sdk/client-sqs": "3.32.0",
     "jsdom": "17.0.0",
     "jsep": "0.4.0",
     "lodash.flatten": "4.4.0",
