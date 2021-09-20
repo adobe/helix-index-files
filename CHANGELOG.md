@@ -1,3 +1,10 @@
+## [4.1.9](https://github.com/adobe/helix-index-files/compare/v4.1.8...v4.1.9) (2021-09-20)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @aws-sdk/client-sqs to v3.32.0 ([#380](https://github.com/adobe/helix-index-files/issues/380)) ([1feb7b1](https://github.com/adobe/helix-index-files/commit/1feb7b1f0fcd670f9d9c775d797a4e608a755574))
+
 ## [4.1.8](https://github.com/adobe/helix-index-files/compare/v4.1.7...v4.1.8) (2021-09-11)
 
 
