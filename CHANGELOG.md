@@ -1,3 +1,10 @@
+## [4.1.11](https://github.com/adobe/helix-index-files/compare/v4.1.10...v4.1.11) (2021-10-18)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-fetch to v3 ([35a0d92](https://github.com/adobe/helix-index-files/commit/35a0d924c2d36e938fc762a408c37a1cc0f427dd))
+
 ## [4.1.10](https://github.com/adobe/helix-index-files/compare/v4.1.9...v4.1.10) (2021-09-27)
 
 
