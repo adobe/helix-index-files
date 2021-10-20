@@ -35,11 +35,11 @@
   "homepage": "https://github.com/adobe/helix-index-files#readme",
   "dependencies": {
     "@adobe/helix-fetch": "3.0.0",
-    "@adobe/helix-shared-body-data": "1.1.4",
+    "@adobe/helix-shared-body-data": "1.1.5",
     "@adobe/helix-shared-config": "1.4.3",
     "@adobe/helix-shared-wrap": "1.0.0",
     "@adobe/helix-status": "9.2.4",
-    "@adobe/helix-universal": "1.8.1",
+    "@adobe/helix-universal": "1.9.0",
     "@adobe/helix-universal-logger": "1.1.1",
     "@aws-sdk/client-sqs": "3.37.0",
     "jsdom": "18.0.0",
