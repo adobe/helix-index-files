@@ -1,3 +1,10 @@
+## [4.1.14](https://github.com/adobe/helix-index-files/compare/v4.1.13...v4.1.14) (2021-10-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-universal-logger to v2 ([#389](https://github.com/adobe/helix-index-files/issues/389)) ([4a396fa](https://github.com/adobe/helix-index-files/commit/4a396fa69a56fa3c3946626880d9b346b1c34a0a))
+
 ## [4.1.13](https://github.com/adobe/helix-index-files/compare/v4.1.12...v4.1.13) (2021-10-21)
 
 
