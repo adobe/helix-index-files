@@ -1,3 +1,10 @@
+## [4.1.23](https://github.com/adobe/helix-index-files/compare/v4.1.22...v4.1.23) (2021-11-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-universal to v1.9.1 ([#407](https://github.com/adobe/helix-index-files/issues/407)) ([ca6d8cd](https://github.com/adobe/helix-index-files/commit/ca6d8cdcc5dfdf9b245d1d15317d7d83a9c2cc48))
+
 ## [4.1.22](https://github.com/adobe/helix-index-files/compare/v4.1.21...v4.1.22) (2021-11-22)
 
 
