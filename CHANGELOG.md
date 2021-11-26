@@ -1,3 +1,10 @@
+## [4.1.24](https://github.com/adobe/helix-index-files/compare/v4.1.23...v4.1.24) (2021-11-26)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-shared-body-data to v1.1.6 ([#408](https://github.com/adobe/helix-index-files/issues/408)) ([5b2f040](https://github.com/adobe/helix-index-files/commit/5b2f040b3fd017cb12d612de591a9c3184e36faa))
+
 ## [4.1.23](https://github.com/adobe/helix-index-files/compare/v4.1.22...v4.1.23) (2021-11-26)
 
 
