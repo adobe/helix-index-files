@@ -1,3 +1,10 @@
+## [4.1.28](https://github.com/adobe/helix-index-files/compare/v4.1.27...v4.1.28) (2021-12-04)
+
+
+### Bug Fixes
+
+* **deps:** update dependency @adobe/helix-shared-config to v1.7.0 ([#413](https://github.com/adobe/helix-index-files/issues/413)) ([202b462](https://github.com/adobe/helix-index-files/commit/202b4625e84852d0cee2e77c235b4992ba26e79f))
+
 ## [4.1.27](https://github.com/adobe/helix-index-files/compare/v4.1.26...v4.1.27) (2021-12-04)
 
 
