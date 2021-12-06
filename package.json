@@ -42,7 +42,7 @@
     "@adobe/helix-universal": "1.9.1",
     "@adobe/helix-universal-logger": "2.0.0",
     "@aws-sdk/client-sqs": "3.43.0",
-    "jsdom": "18.1.1",
+    "jsdom": "19.0.0",
     "jsep": "1.2.0",
     "lodash.flatten": "4.4.0",
     "lodash.pick": "4.4.0",
