@@ -1,3 +1,10 @@
+## [4.1.29](https://github.com/adobe/helix-index-files/compare/v4.1.28...v4.1.29) (2021-12-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency jsdom to v19 ([#415](https://github.com/adobe/helix-index-files/issues/415)) ([dc4906e](https://github.com/adobe/helix-index-files/commit/dc4906e69552bec343bdf1065fedff3999634f52))
+
 ## [4.1.28](https://github.com/adobe/helix-index-files/compare/v4.1.27...v4.1.28) (2021-12-04)
 
 
