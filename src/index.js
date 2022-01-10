@@ -19,7 +19,7 @@ const { requiredConfig } = require('@adobe/helix-shared-config');
 const bodyData = require('@adobe/helix-shared-body-data');
 const wrap = require('@adobe/helix-shared-wrap');
 const { wrap: helixStatus } = require('@adobe/helix-status');
-const { Response } = require('@adobe/helix-universal');
+const { Response } = require('@adobe/helix-fetch');
 
 const Change = require('./Change.js');
 const indexPipelines = require('./index-pipelines.js').run;
