@@ -1,3 +1,5 @@
+> **Note: this repository and respective service is no longer maintained**
+
 # Helix Index File
 
 > Send indexable files to an IaaS (Index as a Service)
